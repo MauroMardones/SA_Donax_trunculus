@@ -99,15 +99,14 @@ library(ss3sim) # evaluación de sesgo
 ```{r message=FALSE, warning=FALSE}
 dir1<-here("s1")# test 1
 dir2<-here("s2") # test2 
-dir3l<-here("s3_longer") # Version nueva 20(2021) con datos krill 
-dir3<-here("~s3") # version antigua SS3 data krill preeliminar
-dir4<-here("s4") # Version nueva con predator fleet
-dir5<-here("s5") # Version nueva con predator small fleet provista añadiendo datos de s3 longer (que aun no funciona 17-04-23)
-dir6<-here("s6") # ejemplo base small predator fleet provista por Ian Taylor (corriendo) no usar o borrar.
+dir3<-here("s3") # 
+dir4<-here("s4") # 
+dir5<-here("s5") # 
+dir6<-here("s6") # 
 dir7<-here("s7")
-dir8<-here("s8") # same 5 but with proporttion in lentgh data compositions
-dir9<-here("s9") # same 5 but with  3.30.21 v
-dir10<-here("s10") # Same 9 with areas (SubStrata) as fleet. Dif size comoposition and dif CPUE
+dir8<-here("s8") # 
+dir9<-here("s9") # 
+dir10<-here("s10") # 
 ```
 ## 3.1. Principales salidas de modelos y variables poblacionales
 
@@ -134,11 +133,9 @@ r4ss::run_SS_models(dirvec = path.1, model = './ss_osx',
 
 Corro escenario por separado 1 Full data
 
-```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
-dir1<-here("s1")
-r4ss::run_SS_models(dirvec = dir1, model = './ss_osx', 
-                    skipfinished = FALSE)
 
+
+```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
 r4ss::run(
   dir = dir1,
   exe = "ss_osx",
@@ -173,14 +170,16 @@ r4ss::run_SS_models(dirvec = dir3, model = './ss_osx',
 ```{r echo=F, include=F,message=F}
 #Leo las salidas del modelo seleccionado. 
 
-dir3<-here("s3")
-base.model3 <- SS_output(dir=dir3,covar=F,forecast=F)
+dir1<-here("s1")
+base.model1 <- SS_output(dir=dir1,
+                         covar=F,
+                         forecast=F)
 ```
 
 Data disponible para este escenario. Espinel es la serie mas consistente del conjunto de datos.
 
 ```{r}
-SSplotData(base.model3, subplot = 2, 
+SSplotData(base.model1, subplots = 2, 
            fleetnames = c("Espinel", "Enmalle"),
            fleetcol = c(2,5))
 ```
