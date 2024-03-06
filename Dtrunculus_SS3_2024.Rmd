@@ -1,5 +1,5 @@
 ---
-title: "![](logo_ifop.png){width=4cm}"
+title: "![](IEO-logo.jpg){width=4cm}"
 output:
   pdf_document:
     includes:
@@ -8,7 +8,7 @@ output:
     number_sections: no
     toc: true
     toc_depth: 3
-bibliography: reineta.bib
+bibliography: Donax.bib
 csl: apa.csl
 link-citations: yes
 linkcolor: blue
@@ -33,13 +33,11 @@ header-includes:
 
 ## 1.1. Descripción y objetivo del documento
 
-Este documento contiene el flujo de análisis y modelación de los distintos escenarios de *Brama australis* Reineta para la zona centro sur de Chile como parte de la asesoría técnica que lleva a cabo el IFOP, mediante el Grupo Técnico Demersal y Crustáceos del Departamento de Evaluación de Recursos.
 
 # 2. METODOLOGÍA
 
 ## 2.2. Área de estudio
 
-El área de estudio comprende la principal área de operación de la flota arrastrera correspondiente a la zona centro sur de Chile entre el límite norte de la IV región y los 41°28'S. Donde a lo largo de la costa operan las flotas artesanal con redes de enmalle y espinel, mientras que la flota de industrial desarrolla su operación de captura con arrastre.
 
 ```{r echo=FALSE, out.width = "130%", fig.align='center', fig.cap= "Zona de Estudio Reineta Assessment"}
 knitr::include_graphics("images/area.jpeg")
@@ -49,18 +47,11 @@ knitr::include_graphics("images/area.jpeg")
 
 ## 2.3. Datos utilizados
 
-a.  Desembarque industrial y artesanal del período (1994-2021), provenientes de las estadisticas oficiales de Sernapesca (Subsecretaria de Pesca, 2021). Cabe señalar que en esta pesquería aun no se realizan procesos de corrección de desembarques.
-b.  Información del Programa de Seguimiento de la pesquería de pesquerías demersales del Instituto de Fomento Pesquero.
 
-La información proviene del monitoreo artesanal en la zona centro-sur de Chile, obteniendose datos de: i) estructura de tamaños, ii) composiciones por edad, iii) parámetros de crecimiento y iv) peso anuales por edad/talla y años.
-
-c.  En el caso de la pesquería industrial, se cuenta con una abundancia a la edad entre los años 2017 y 2021.
-
-El esquema considera un enfoque de modelación secuencial por flotas artesanal e industrial. Al disponer de los desembarques oficiales por flota, es posible segregar información oficial por flotas, siendo factible a la vez disponer de datos oficiales (reportados).
 
 ## 2.4. Modelo de evaluación
 
-El modelo de dinámica poblacional de la reinenta, corresponde a un enfoque de evaluación del tipo estadístico con estructura de edad, donde la dinámica progresa avanzando en el tiempo t, y las capturas son causantes de la mortalidad por pesca F, la mortalidad natural es constante M = 0,35. La relación entre la población y las capturas responde a la base de la ecuación de Baranov, y se consideran para el modelo y estimaciones el rango de edad entre 2 a 12+ (años). Sin embargo, las estimaciones del modelo tienen su origen en la edad cero sobre la base de una condición inicial estado estable. La dinámica esta modelada por un reclutamiento tipo Beverton y Holt.
+El modelo de dinámica poblacional de la coquina, corresponde a un enfoque de evaluación del tipo estadístico con estructura de edad, donde la dinámica progresa avanzando en el tiempo t, y las capturas son causantes de la mortalidad por pesca F, la mortalidad natural es constante M = 0.2. La relación entre la población y las capturas responde a la base de la ecuación de Baranov, y se consideran para el modelo y estimaciones el rango de edad entre 2 a 5+ (años). Sin embargo, las estimaciones del modelo tienen su origen en la edad cero sobre la base de una condición inicial estado estable. La dinámica esta modelada por un reclutamiento tipo Beverton y Holt.
 
 Para avanzar en la implenteación metodológica, se establece con fines comparativos modelo por flotas artesanales, donde un modelo utiliza la información de enmalle artesanal, para luego sumar la flota enmalle artesanal, para terminar incorporando la información de la flota industrial (Tabla 1).
 
@@ -80,11 +71,7 @@ Los modelos implementados fueron configurados utilizando Stock Synthesis (SS3 de
 
 Se realiza una modelación con la plataforma SS3 (V.3.30.19) y sus outputs leídos con la librería "r4ss" [@Taylor2019]
 
-Modelo base de evaluación de *Brama australis* en la zona Centro Sur de Chile integrando la información relativa a las tres flotas que operan en el recurso. A saber;
 
--   Espinel Artesanal (1)
--   Enmalle Artesanal (2)
--   Industrial (3)
 
 \pagebreak
 
@@ -107,6 +94,19 @@ library(ss3sim) # evaluación de sesgo
 ```
 
 
+```{r message=FALSE, warning=FALSE}
+dir1<-here("s1")# test 1
+dir2<-here("s2") # test2 
+dir3l<-here("s3_longer") # Version nueva 20(2021) con datos krill 
+dir3<-here("~s3") # version antigua SS3 data krill preeliminar
+dir4<-here("s4") # Version nueva con predator fleet
+dir5<-here("s5") # Version nueva con predator small fleet provista añadiendo datos de s3 longer (que aun no funciona 17-04-23)
+dir6<-here("s6") # ejemplo base small predator fleet provista por Ian Taylor (corriendo) no usar o borrar.
+dir7<-here("s7")
+dir8<-here("s8") # same 5 but with proporttion in lentgh data compositions
+dir9<-here("s9") # same 5 but with  3.30.21 v
+dir10<-here("s10") # Same 9 with areas (SubStrata) as fleet. Dif size comoposition and dif CPUE
+```
 ## 3.1. Principales salidas de modelos y variables poblacionales
 
 
@@ -136,6 +136,13 @@ Corro escenario por separado 1 Full data
 dir1<-here("s1")
 r4ss::run_SS_models(dirvec = dir1, model = './ss_osx', 
                     skipfinished = FALSE)
+
+r4ss::run(
+  dir = dir1,
+  exe = "ss_osx",
+  skipfinished = FALSE, # TRUE will skip running if Report.sso present
+  show_in_console = TRUE # change to true to watch the output go past
+)
 ```
 
 
