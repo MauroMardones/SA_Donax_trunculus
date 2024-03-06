@@ -39,6 +39,8 @@ header-includes:
 ## 2.2. Área de estudio
 
 
+
+
 ```{r echo=FALSE, out.width = "130%", fig.align='center', fig.cap= "Zona de Estudio Reineta Assessment"}
 knitr::include_graphics("images/area.jpeg")
 ```
