@@ -151,43 +151,33 @@ r4ss::run(
 ```
 
 
-### 3.1.2. Mod s2 (Flota Artesanal Enmalle)
-
-*(Este modelo está por implemetar. Cambiar versión de SS3.)*
-
-```{r eval= F,message=FALSE, warning=FALSE, include=FALSE}
-dir2<-here("s2")
-
-r4ss::run_SS_models(dirvec = dir2, model = './ss_osx', 
-                    skipfinished = FALSE)
-```
-
-
-### 3.1.3. Mod s3 (Flotas artesanales (Espinel y Enmalle)
-
-Este modelo está implementado pero falta resolver los niveles de convergencia y los warning.
-
-
-```{r eval= F,message=FALSE, warning=FALSE, include=FALSE}
-r4ss::run_SS_models(dirvec = dir3, model = './ss_osx', 
-                    skipfinished = FALSE)
-```
 
 ```{r echo=F, include=F,message=F}
 #Leo las salidas del modelo seleccionado. 
 
 dir1<-here("s1")
 base.model1 <- SS_output(dir=dir1,
-                         covar=F,
-                         forecast=F)
+                         covar=T,
+                         forecast=T)
+
+SS_plots(base.model1,
+         uncertainty=T,
+         datplot = T, 
+         png=T, 
+         aalresids = F,
+         btarg=0.40,
+         minbthresh=0.20, 
+         forecast=T)
+
 ```
 
 Data disponible para este escenario. Espinel es la serie mas consistente del conjunto de datos.
 
 ```{r}
 SSplotData(base.model1, subplots = 2, 
-           fleetnames = c("Espinel", "Enmalle"),
-           fleetcol = c(2,5))
+           fleetnames = c("COMERCIAL", "POBLACIONAL"),
+           fleetcol = c("#2c7fb8","#31a354"),
+           maxsize = 0.5)
 ```
 Read in Stock Synthesis files
 
@@ -247,7 +237,7 @@ SSplotCatch(base.model3, subplots = 2, fleetnames = c("Espinel", "Enmalle"),
 Respecto a los valores y parametros biologicos modelados, los siguientes graficos identifican los estimadores puntuales del recurso
 
 ```{r}
-SSplotBiology(base.model3, subplots =1, labels = c("Length (cm)", "Age (yr)", "Maturity", "Mean weight (kg) in last year",
+SSplotBiology(base.model13, subplots =1, labels = c("Length (cm)", "Age (yr)", "Maturity", "Mean weight (kg) in last year",
     "Spawning output", "Length (cm, beginning of the year)", "Natural mortality",
     "Female weight (kg)", "Female length (cm)", "Fecundity", "Default fecundity label",
     "Year", "Hermaphroditism transition rate", "Fraction females by age at equilibrium"),
