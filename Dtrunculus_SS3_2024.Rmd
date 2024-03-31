@@ -151,8 +151,7 @@ r4ss::run(
 ```
 
 
-
-```{r echo=F, include=F,message=F}
+```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
 #Leo las salidas del modelo seleccionado. 
 
 dir1<-here("s1")
