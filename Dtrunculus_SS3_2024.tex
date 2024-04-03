@@ -1,0 +1,271 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lfoot[\thepage]{}
+\rfoot[]{\thepage}
+\fontsize{12}{20}
+\selectfont
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\title{\includegraphics[width=5cm,height=\textheight]{IEO-logo.jpg}}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+
+\pagenumbering{gobble}
+
+%\begin{titlepage}
+\begin{flushleft}
+\Large{\textbf{Reporte 1 Stock Assessment}}\\
+\vspace*{2\baselineskip}
+\LARGE{\textbf{Implementación metodológica de evaluación de stock en coquina \textit{Donax trunculus} en SS3 en el Golfo de Cádiz, España}}\\
+\vspace*{5\baselineskip}
+\Large{Grupo de Trabajo FEMP 04}\\
+\vspace*{1\baselineskip}
+\Large{Instituto Español de Oceanografía, Cádiz }\\
+\vspace*{4\baselineskip}
+\end{flushleft}
+\begin{flushright}
+\large{\textit{Mauricio Mardones Inostroza}}\\
+\vspace*{1\baselineskip}
+\normalsize{\textbf{Fecha}}\\
+Abril, 2024
+\end{flushright}
+
+% \end{titlepage}
+
+
+\hypersetup{linkcolor = black}
+\newpage
+\pagenumbering{roman}
+%\tableofcontents
+%\addcontentsline{toc}{section}{\contentsname}
+
+\newpage
+
+
+
+\pagenumbering{arabic}
+\hypersetup{linkcolor = blue}
+
+{
+\hypersetup{linkcolor=}
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+\pagebreak
+
+\hypertarget{antecedentes}{%
+\section{1. ANTECEDENTES}\label{antecedentes}}
+
+La idea de este documento es la implementación metodológica de la evaluación de stock mediante un modelo integrado con datos en talla y dinamica en edad implemetnado en Stock Synthesis (SS3) (v.3.30.21) (\protect\hyperlink{ref-Methot2023}{Richard D. Methot et al., 2023}; \protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}) para la zona del Golfo de Cádiz, España, como parte de la asesoría científica que lleva a cabo el Instituto Español de Oceanografía (IEO) realizado por el grupo de investigadores asociados al proyecto FEMP 04
+
+\hypertarget{metodologuxeda}{%
+\section{2. METODOLOGÍA}\label{metodologuxeda}}
+
+El flujo de trabajo asociado a la modelación de stock, tanto componentes como fuentes de datos está representado de forma genérica en el siguiente diagrama de flujo (Figura \ref{fig:esq});
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{FIg/Diagrama_Modelo} 
+
+}
+
+\caption{\label{esq}Esquema de modelación de coquina}\label{fig:esq}
+\end{figure}
+
+\pagebreak
+
+\hypertarget{datos-utilizados}{%
+\subsection{2.1. Datos utilizados}\label{datos-utilizados}}
+
+Los datos analizados que formaron parte de los inputs del modelo fueron clasificados de acuerdo a su origen. A saber;
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi}.}
+\item
+  Desembarque artesanal del período (2004-2024), provenientes de las estadisticas oficiales de \href{https://www.juntadeandalucia.es/agriculturaypesca/idapes/servlet/FrontController}{IDAPES} asociados al sector de marisquería del Parque Doñana y cercanías. Cabe señalar que en esta pesquería aun no se realizan procesos de corrección de desembarques y que serán propuestos como escenarios de modelación.
+\item
+  Información de los programas de monitoreo poblacional y comercial que lleva a cabo el IEO desee el año 2013. En este monitoreo se recopila información biológica, pesquera y ambiental.
+\end{enumerate}
+
+c . Información relativa a los parámetros de historia de vida de la coquina a nivel europeo y local. Esta información está contenida en artículos científicos y reportes que fueron compilados con el fin de parametrizar los modelos de evaluación.
+
+toda esta información, codigos fuente, bases de datos y Analisis Exploratorio de Datos puede ser encontrado en el siguiente enlace: \href{https://mauromardones.github.io/EDA_Donux_trunculus_2023/}{Data coquina}.
+
+\hypertarget{population-dynamics-model}{%
+\subsection{Population Dynamics Model}\label{population-dynamics-model}}
+
+In a simple way, the core of Stock Synthesis is its population dynamics model, which represents the dynamics of krill populations over time. This model incorporates key biological parameters such as growth rates, mortality rates, recruitment, and spawning biomass. The model is typically formulated using mathematical equations that describe how these parameters interact to determine the abundance and distribution of krill in the study area.
+
+A typical state-space model for krill population dynamics can be represented as:
+
+\[
+N_t = N_{t-1} \cdot e^{(r - M)} + R
+\]
+
+Where:
+- \(N_t\) is the abundance of krill at time \(t\).
+- \(N_{t-1}\) is the abundance of krill at the previous time step.
+- \(r\) is the intrinsic growth rate of the population.
+- \(M\) is the mortality rate.
+- \(R\) is the recruitment of new individuals into the population.
+
+This equation represents the basic dynamics of the krill population, with abundance changing over time due to growth, mortality, and recruitment.
+
+\hypertarget{modelo-de-evaluaciuxf3n}{%
+\subsection{2.4. Modelo de evaluación}\label{modelo-de-evaluaciuxf3n}}
+
+El modelo de dinámica poblacional de la coquina, corresponde a un enfoque de evaluación del tipo estadístico con estructura de edad, donde la dinámica progresa avanzando en el tiempo t, y las capturas son causantes de la mortalidad por pesca F, la mortalidad natural es constante M = 0.2. La relación entre la población y las capturas responde a la base de la ecuación de Baranov, y se consideran para el modelo y estimaciones el rango de edad entre 2 a 5+ (años). Sin embargo, las estimaciones del modelo tienen su origen en la edad cero sobre la base de una condición inicial estado estable. La dinámica esta modelada por un reclutamiento tipo Beverton y Holt.
+
+Para avanzar en la implenteación metodológica, se establece con fines comparativos modelo por flotas artesanales, donde un modelo utiliza la información de enmalle artesanal, para luego sumar la flota enmalle artesanal, para terminar incorporando la información de la flota industrial (Tabla 1).
+
+\pagebreak
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.2157}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.7843}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Escenario
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Descripción
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+s01 & Solo desembarque e Indice. \\
+s1 & Flota comercial y poblacional. \\
+s2 & Flota comercial y poblacional. Vector Desembarques desde 1990 asumido \\
+s3 & Flotas artesanales (Espinel y Enmalle) \\
+s4 & Flota Artesanal Espinel \\
+s5 & Indice Biomasa Zhou (Zhou et al., 2008. \\
+\end{longtable}
+
+\hypertarget{plataforma-de-modelaciuxf3n}{%
+\subsection{2.5. Plataforma de modelación}\label{plataforma-de-modelaciuxf3n}}
+
+Los modelos implementados fueron configurados utilizando Stock Synthesis (SS3 de aqui en mas)(\url{https://vlab.noaa.gov/web/stock-synthesis}), que es un modelo de evaluación de stock edad y talla estrucuturado, en la clase de modelo denominado ``Modelo de análisis integrado''. SS tiene un sub-modelo poblacional de stock que simula crecimiento, madurez, fecundidad, reclutamiento, movimiento, y procesos de mortalidad, y sub-modelos de observation y valores esperados para diferentes tipos de datos. El modelo es codificado en C++ con parámetros de estimación activados por diferenciación automática (ADMB) (\protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}). El análisis de resultados y salidas emplea herramientas de R e interfase gráfica de la librería \emph{r4ss} (\url{https://github.com/r4ss/r4ss}) (\protect\hyperlink{ref-Taylor2019}{Taylor, 2019}).
+
+Se realiza una modelación con la plataforma SS3 (V.3.30.19) y sus outputs leídos con la librería ``r4ss'' (\protect\hyperlink{ref-Taylor2019}{Taylor, 2019})
+
+\hypertarget{refs}{}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-Methot2013}{}}%
+Methot, Richard D., \& Wetzel, C. R. (2013). {Stock synthesis: A biological and statistical framework for fish stock assessment and fishery management}. \emph{Fisheries Research}, \emph{142}, 86--99. \url{https://doi.org/10.1016/j.fishres.2012.10.012}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Methot2023}{}}%
+Methot, Richard D., Wetzel, C. R., Taylor, I. G., Doering, K., \& Jhonson, K. (2023). \emph{{Stock Synthesis User Manual Version 3.30.21}}. NOAA Fisheries Seattle, WA.
+
+\leavevmode\vadjust pre{\hypertarget{ref-Taylor2019}{}}%
+Taylor, I. (2019). {Using R for Stock Synthesis Installing R and getting R4SS}. \emph{Fisheries Science}, \emph{November}.
+
+\end{CSLReferences}
+
+\end{document}

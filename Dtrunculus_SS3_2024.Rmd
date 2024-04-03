@@ -1,7 +1,7 @@
 ---
-title: "![](IEO-logo.jpg){width=4cm}"
+title: "![](IEO-logo.jpg){width=5cm}"
 output:
-  pdf_document:
+  bookdown::pdf_document2
     includes:
       before_body: titulo.sty
     keep_tex: yes
@@ -19,16 +19,9 @@ header-includes:
 - \fancyhf{}
 - \lfoot[\thepage]{}
 - \rfoot[]{\thepage}
+- \fontsize{12}{20}
+- \selectfont
 ---
-
-
-
-
-
-```{=tex}
-\fontsize{12}{20}
-\selectfont
-```
 
 \pagebreak
 
@@ -36,47 +29,208 @@ header-includes:
 
 # 1. ANTECEDENTES
 
-## 1.1. Descripción y objetivo del documento
+La idea de este documento es la implementación metodológica de la evaluación de stock mediante un modelo integrado con datos en talla y dinamica en edad implemetnado en Stock Synthesis (SS3) (v.3.30.21) [@Methot2013; @Methot2023] para la zona del Golfo de Cádiz, España, como parte de la asesoría científica que lleva a cabo el Instituto Español de Oceanografía (IEO) realizado por el grupo de investigadores asociados al proyecto FEMP 04.
 
 
 # 2. METODOLOGÍA
 
-## 2.2. Área de estudio
+El flujo de trabajo asociado a la modelación de stock, tanto componentes como fuentes de datos está representado de forma genérica en el siguiente diagrama de flujo (Figura \ref{fig:esq});
 
 
-
-
-```{r echo=FALSE, out.width = "130%", fig.align='center', fig.cap= "Zona de Estudio Reineta Assessment"}
-knitr::include_graphics("images/area.jpeg")
+```{r esq, echo=FALSE, out.width = "100%", fig.align='center', fig.cap="\\label{fig:esq}Esquema de modelación de coquina"}
+knitr::include_graphics("FIg/Diagrama_Modelo.png")
 ```
 
+```{r setup1, echo=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.align = 'center',
+                      fig.pos = "H",
+                      dev = 'jpeg',
+                      dpi = 300)
+#XQuartz is a mess, put this in your onload to default to cairo instead
+options(bitmapType = "cairo") 
+# (https://github.com/tidyverse/ggplot2/issues/2655)
+# Lo mapas se hacen mas rapido
+```
+
+```{r lib, eval=TRUE, echo=F}
+# install.packages("devtools")
+# install.packages("caTools")
+# library("caTools")
+# # install.packages("r4ss")
+paquetes <- c("stringr", 
+              "tidyverse", 
+              "kableExtra","ggplot2",
+              "ggthemes",
+               "patchwork",
+              "dplyr","reshape","here","r4ss",
+              "zoo","ss3diags","pdftools",
+              "forcats","ggpubr")
+lapply(paquetes, require, character.only = TRUE)
+```
+
+
+```{r eval=FALSE, echo=FALSE}
+dir01<-here("s01")# Modelo solo con 
+dir1<-here("s1")# test 1
+dir2<-here("s2") # test2 
+dir3<-here("s3") # 
+dir4<-here("s4") # 
+dir5<-here("s5") # 
+```
+
+
+```{r}
+# leo archivos para plotear y hacer tablas
+start1 <- SS_readstarter(file = file.path(dir1,
+                                               "starter.ss"),
+                              verbose = FALSE)
+# note the data and control file names can vary, so are determined from the 
+# starter file.
+dat1 <- SS_readdat(file = file.path(dir1, start$datfile),
+                        verbose = FALSE)
+# Read in ctl file. Note that the data fileR object is needed so that SS_readctl
+# assumes the correct data structure
+ctl1 <- SS_readctl(file = file.path(dir1,
+                                    start$ctlfil),
+                        verbose = FALSE,
+                        use_datlist = TRUE, 
+                   datlist = dat1)
+fore1 <- r4ss::SS_readforecast(file = file.path(dir1, 
+                                                "forecast.ss"),
+                              verbose = FALSE)
+# can also read in wtatage.ss for an empirical wt at age model using
+# r4ss::SS_readwtatage()
+```
+
+
+
 \pagebreak
 
-## 2.3. Datos utilizados
+## 2.1. Datos utilizados
+
+Los datos analizados que formaron parte de los inputs del modelo fueron clasificados de acuerdo a su origen. A saber;
+
+a.  Desembarque  artesanal del período (2004-2024), provenientes de las estadisticas oficiales de [IDAPES](https://www.juntadeandalucia.es/agriculturaypesca/idapes/servlet/FrontController) asociados al sector de marisquería del Parque Doñana y cercanías. Cabe señalar que en esta pesquería aun no se realizan procesos de corrección de desembarques y que serán propuestos como escenarios de modelación.
+
+
+b.  Información de los programas de monitoreo poblacional y comercial que lleva a cabo el IEO desee el año 2013. En este monitoreo se recopila información biológica, pesquera y ambiental. 
+
+c . Información relativa a los parámetros de historia de vida de la coquina a nivel europeo y local. Esta información está contenida en artículos científicos y reportes que fueron compilados con el fin de parametrizar los modelos de evaluación.
+
+Toda esta información, codigos fuente, bases de datos y Analisis Exploratorio de Datos puede ser encontrado en el siguiente enlace: [Data coquina](https://mauromardones.github.io/EDA_Donux_trunculus_2023/). La cobertura temporal de las fuentes de datos varia de acuerdo a la disponibilidad asociada al programa y fuente (Figura \ref{fig:data});
+
+
+```{r data, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:data}Cobertura temporal de las distintas fuentes de datos usadas en el modelo implementado en SS3 para coquina"}
+knitr::include_graphics("s1/plots/data_plot.png")
+```
+La estimación de la biomasa desovante se realizó a inicios de año, mientras que el reclutamiento se consideró como un evento doble que ocurre hacia junio y fines de año.  En el proceso de estimación del reclutamiento, se incorporó una relación stock-recluta difusa (steepness 0.7), y las variaciones en el reclutamiento se modelaron como desviaciones del reclutamiento virginal `R0`, asumiendo 2004 como año inicial (Tabla \ref{Tab1}).
+
+La mortalidad por pesca se estimó como el promedio simple de la FFF de las clases de edad 1 y 2, lo que en el modelo corresponde a la opción 5 del método `F híbrido` recomendado en SS3 [@Methot2013]. Se asume que la densidad es un proxi de las biomasas estimadas [@Caddy2004] en los muestreos poblacionales y que son proporcionales a la biomasa vulnerable de la población, con la capturabilidad (`q`) estimada en el modelo. Los parámetros qqq fueron estimados a patir de parámetros iniciales especificados en la Tabla \ref{Tab1} para los datos del monitoreo poblacional , así como del comercial. Todos los patrones de selectividad, que relacionan las composiciones de tallas observadas de la flota comercial y poblacional con la dinámica, fueron estimados mediante una función logística. Los parámetros `p1` (talla en la inflexión de la curva) y `p2` (selección al 95%) son estimados por el modelo a partir de los valores iniciales especificados en la Tabla \ref{Tab1}.
+
+```{r}
+ parbio<-ctl1$MG_parms[1:10,c(1:3,7)]
+ row.names( parbio)<-c("Nat M",
+                       "Lmin", 
+                       "Lmax",
+                       "VonBert K",
+                       "CV young",
+                       "CV old", 
+                       "Wt a", 
+                       "Wt b",
+                       "L50%", 
+                       "Mat slope")
+
+ SRpar<-ctl1$SR_parms[1:5,c(1:3,7)]
+ Qpar<-ctl1$Q_parms[1:2,c(1:3,7)]
+ Selpar<-ctl1$size_selex_parms[1:4,c(1:3,7)]
+ parInit<-rbind(parbio,SRpar,Qpar,Selpar)
+
+parInit %>%
+  kbl(booktabs = T,
+      format = "latex",
+      position="ht!",
+      align="c",
+    caption = "\\label{Tab1}Parámetros de entrada al modelo inicial SS3 de coquina (S1). Cada línea de parámetro contiene un valor mínimo (LO), máximo (HI) e inicial (INIT). Si la fase (PHASE) para el parámetro es negativa, el parámetro es fijo de entrada") %>%
+  kable_paper("hover", 
+              full_width = F)%>%
+  kable_styling(latex_options = c("striped",
+                                  "condensed"),
+                full_width = FALSE,
+                font_size=9)%>% 
+  pack_rows(index = c("Mortalidad natural" = 1,
+                        "Crecimiento"= 5,
+                        "Relación longitud-peso" = 2,
+                        "Ojiva de madurez"=2,
+                        "Relación stock-recluta"=5,
+                        "Capturabilidad"=2,
+                        "Selectividad"=4))
+
+```
+
+## 2.2. Modelo de la dinámica poblacional
+
+El modelo de dinámica poblacional de la coquina, corresponde a un enfoque de evaluación del tipo estadístico con estructura de edad, donde la dinámica progresa avanzando en el tiempo t, y las capturas son causantes de la mortalidad por pesca F, la mortalidad natural es constante `M = 0.99` (\ref{Tab1}). La relación entre la población y las capturas responde a la base de la ecuación de Baranov, y se consideran para el modelo y estimaciones el rango de edad entre 1 a 5+ (años). Sin embargo, las estimaciones del modelo tienen su origen en la edad cero sobre la base de una condición inicial estado estable. La dinámica esta modelada por un reclutamiento tipo Beverton y Holt.
+
+
+De manera sencilla, el fondo de SS3 es su modelo de dinámica poblacional, el cual se representa la dinámica de las poblaciones de coquina a lo largo del tiempo. Este modelo incorpora parámetros biológicos clave como tasas de crecimiento, tasas de mortalidad, reclutamiento y biomasa desovante. Normalmente, el modelo se formula utilizando ecuaciones matemáticas que describen cómo estos parámetros interactúan para determinar la abundancia y distribución de coquina en el área de estudio.
+
+La ecuación de estado de creciiento poblacional de coquina puede representarse como:
+
+\[
+N_t = N_{t-1} \cdot e^{(r - M)} + R
+\]
+
+Where:
+- \(N_t\) es abundancia de coquina en el tiempo \(t\).
+- \(N_{t-1}\) abundancia de krill en pasos de tiempo previos.
+- \(r\) es la tasa de crecimiento poblacional intrinseca.
+- \(M\) es la tasa de mortalidad natural.
+- \(R\) es el reclutamiento de nuevos individuos al stock.
+
+Esta ecuación representa la dinámica básica de la población de coquina, con la abundancia cambiando con el tiempo debido al crecimiento, la mortalidad y el reclutamiento. Junto a esta ecuación, otros submodelos asociados como crecimiento individual, selectividad, madurez, captura a la edad entre otros estan dentro del proceso de estimación de SS3 [@Methot2023] 
+
+
+El modelo de evaluación fue configurados utilizando Stock Synthesis (SS3 de aqui en mas)(<https://vlab.noaa.gov/web/stock-synthesis>), que es un modelo de evaluación de stock edad y talla estrucuturado, en la clase de modelo denominado *Modelo de análisis integrado*. SS tiene un sub-modelo poblacional de stock que simula crecimiento, madurez, fecundidad, reclutamiento, movimiento, y procesos de mortalidad, y sub-modelos de observation y valores esperados para diferentes tipos de datos. El modelo es codificado en C++ con parámetros de estimación activados por diferenciación automática (ADMB) [@Methot2013]. El análisis de resultados y salidas emplea herramientas de R e interfase gráfica de la librería `r4ss` (<https://github.com/r4ss/r4ss>) [@Taylor2019] y`ss3diags`  [@Henning2023].
 
 
 
-## 2.4. Modelo de evaluación
+## 2.3. Escenarios
 
-El modelo de dinámica poblacional de la coquina, corresponde a un enfoque de evaluación del tipo estadístico con estructura de edad, donde la dinámica progresa avanzando en el tiempo t, y las capturas son causantes de la mortalidad por pesca F, la mortalidad natural es constante M = 0.2. La relación entre la población y las capturas responde a la base de la ecuación de Baranov, y se consideran para el modelo y estimaciones el rango de edad entre 2 a 5+ (años). Sin embargo, las estimaciones del modelo tienen su origen en la edad cero sobre la base de una condición inicial estado estable. La dinámica esta modelada por un reclutamiento tipo Beverton y Holt.
+Para avanzar en la implenteación metodológica, y considerando las fuentes de incertidumbre asociadas a la modelación de stock de coquina, se establecen una serie de modelos alternativos basados en piezas de datos y subreporte de los niveles de desembarque. Esto dado los niveles de furtivismo que no son reflejados en las cifras oficiales. Estos escenarios estan descritos en la Tabla \ref{Tab2}..
 
-Para avanzar en la implenteación metodológica, se establece con fines comparativos modelo por flotas artesanales, donde un modelo utiliza la información de enmalle artesanal, para luego sumar la flota enmalle artesanal, para terminar incorporando la información de la flota industrial (Tabla 1).
 
-\pagebreak
+```{r}
+esc<-c("S01","S1","S2","S3","S4","S5")
 
-| Escenario | Descripción                            |
-|-----------|----------------------------------------|
-| s1        | Todas las flotas                       |
-| s2        | Flota Artesanal Enmalle                |
-| s3        | Flotas artesanales (Espinel y Enmalle) |
-| s4        | Flota Artesanal Espinel                |
-| s5        | Indice Biomasa Zhou (Zhou et al., 2008.|
+descripcion<-c("Solo Desembarque e Índice",
+               "Flota comercial y poblacional, Desembarque, Índice, Composisiones de Tallas",
+               "S1 + Vector Desembarques desde 1990 asumido en 250 por año",
+               "S1 + Vector desembarques ponderado por 1.5",
+               "S1 + Vector desembarques ponderado por 2",
+               "S1 + Vector desembarques ponderado por 2.5")
 
-## 2.5. Plataforma de modelación
+ESC1<-cbind(esc,descripcion)
 
-Los modelos implementados fueron configurados utilizando Stock Synthesis (SS3 de aqui en mas)(<https://vlab.noaa.gov/web/stock-synthesis>), que es un modelo de evaluación de stock edad y talla estrucuturado, en la clase de modelo denominado "Modelo de análisis integrado". SS tiene un sub-modelo poblacional de stock que simula crecimiento, madurez, fecundidad, reclutamiento, movimiento, y procesos de mortalidad, y sub-modelos de observation y valores esperados para diferentes tipos de datos. El modelo es codificado en C++ con parámetros de estimación activados por diferenciación automática (ADMB) [@Methot2013]. El análisis de resultados y salidas emplea herramientas de R e interfase gráfica de la librería *r4ss* (<https://github.com/r4ss/r4ss>) [@Taylor2019].
+ESC1 %>% kbl(booktabs = T,
+             format = "latex",
+             position="h!",
+             align="l",
+        col.names = linebreak(c('Escenarios',
+                                "Descripción"),
+                              align="c"),
+        caption = "\\label{Tab2}Descripción de los escenarios alternativos al modelo base inicial (S1).") %>%
+  kable_paper("hover", 
+              full_width = F) %>% 
+    kable_styling(latex_options = c("striped", 
+                                    "condensed"),
+                  full_width = FALSE,
+                  font_size=10)
+```
 
-Se realiza una modelación con la plataforma SS3 (V.3.30.19) y sus outputs leídos con la librería "r4ss" [@Taylor2019]
 
 
 
@@ -86,34 +240,7 @@ Se realiza una modelación con la plataforma SS3 (V.3.30.19) y sus outputs leíd
 
 Instalación de las librerias necesarias
 
-```{r eval=TRUE, echo=F}
-# en caso no se tengan las dependencias
-# install.packages("devtools")
-# devtools::install_github("r4ss/r4ss", ref="development")
-# install.packages("caTools")
-# library("caTools")
-# # install.packages("r4ss")
-library(r4ss)
-library(here)
-#remotes::install_github("PIFSCstockassessments/ss3diags")
-library(ss3diags) # diagnosticos del modelo
-library(ss3sim) # evaluación de sesgo
 
-```
-
-
-```{r message=FALSE, warning=FALSE}
-dir1<-here("s1")# test 1
-dir2<-here("s2") # test2 
-dir3<-here("s3") # 
-dir4<-here("s4") # 
-dir5<-here("s5") # 
-dir6<-here("s6") # 
-dir7<-here("s7")
-dir8<-here("s8") # 
-dir9<-here("s9") # 
-dir10<-here("s10") # 
-```
 ## 3.1. Principales salidas de modelos y variables poblacionales
 
 
@@ -123,25 +250,33 @@ en términos estadísticos de ajuste a la información.
 Estos modelos, son los seleccionados para presentar en sus principales salidas para fines informativos de indicadores, puntos biológicos de referencia y estimaciones poblacionales.
 
 
-```{r eval=FALSE}
-# Es posible correr todos los modelos juntos
-path.1<- file.path(here(c("s1", "s2", "s3", "s4")))
-list.files (path =path.1)
+```{r eval=FALSE, message=F, include=FALSE}
+# Lista de directorios para correro tordos juntos
+directorios <- c("s01", 
+                 "s1", 
+                 "s2",
+                 "s3",
+                 "s4",
+                 "s5",
+                 "s6",
+                 "s7")  # Agrega aquí todos los nombres de las carpetas que deseas procesar
 
-# otra forma de correr
-r4ss::run_SS_models(dirvec = path.1, model = './ss_osx', 
-                    skipfinished = FALSE)
+# Bucle para ejecutar el código en cada directorio
+for (dir in directorios) {
+  r4ss::run(
+    dir = dir,
+    exe = "ss_osx",
+    skipfinished = FALSE,
+    show_in_console = TRUE
+  )
+}
 # Considerar que al correr el modelo dentro de cada `chunk` se cambia el directorio.
 ```
 
 
-### 3.1.1. Mod s1 ( Todas las flotas )
-
-Corro escenario por separado 1 Full data
-
-
 
 ```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
+# Corro escenario por separado 
 r4ss::run(
   dir = dir1,
   exe = "ss_osx",
@@ -236,7 +371,7 @@ SSplotCatch(base.model3, subplots = 2, fleetnames = c("Espinel", "Enmalle"),
 Respecto a los valores y parametros biologicos modelados, los siguientes graficos identifican los estimadores puntuales del recurso
 
 ```{r}
-SSplotBiology(base.model13, subplots =1, labels = c("Length (cm)", "Age (yr)", "Maturity", "Mean weight (kg) in last year",
+SSplotBiology(base.model1, subplots =1, labels = c("Length (cm)", "Age (yr)", "Maturity", "Mean weight (kg) in last year",
     "Spawning output", "Length (cm, beginning of the year)", "Natural mortality",
     "Female weight (kg)", "Female length (cm)", "Fecundity", "Default fecundity label",
     "Year", "Hermaphroditism transition rate", "Fraction females by age at equilibrium"),
@@ -424,6 +559,14 @@ TableCompare <- SStableComparisons(retroSummary,likenames=like, names=names,
                                    modelnames=c('B','-1','-2','-3','-4','-5'), csv=TRUE, csvfile="RetroRuns.csv",verbose=FALSE)
 
 ```
+
+
+Dado que la variabilidad del índice rho de Mohn depende de la historia de vida (usualmente
+mayor para especies de vida corta) y que el estadístico parece insensible a F, Hurtado-Ferro et al. (2015)
+propusieron que el patrón retrospectivo de alguna de las variables biológico-pesqueras indicadas es
+preocupante si los valores del índice Mohn’s rho son superiores a 0,20 o inferiores a -0,15 para especies
+de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida corta.
+
 
 \pagebreak
 
