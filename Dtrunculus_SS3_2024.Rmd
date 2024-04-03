@@ -56,7 +56,7 @@ options(bitmapType = "cairo")
 # Lo mapas se hacen mas rapido
 ```
 
-```{r lib, eval=TRUE, echo=F}
+```{r lib, eval=TRUE, echo=F, warning=FALSE}
 # install.packages("devtools")
 # install.packages("caTools")
 # library("caTools")
@@ -80,6 +80,7 @@ dir2<-here("s2") # test2
 dir3<-here("s3") # 
 dir4<-here("s4") # 
 dir5<-here("s5") # 
+fig_path<-here("Fig")
 ```
 
 
@@ -90,12 +91,12 @@ start1 <- SS_readstarter(file = file.path(dir1,
                               verbose = FALSE)
 # note the data and control file names can vary, so are determined from the 
 # starter file.
-dat1 <- SS_readdat(file = file.path(dir1, start$datfile),
+dat1 <- SS_readdat(file = file.path(dir1, start1$datfile),
                         verbose = FALSE)
 # Read in ctl file. Note that the data fileR object is needed so that SS_readctl
 # assumes the correct data structure
-ctl1 <- SS_readctl(file = file.path(dir1,
-                                    start$ctlfil),
+ctl1 <-  r4ss::SS_readctl(file = file.path(dir1,
+                                    start1$ctlfil),
                         verbose = FALSE,
                         use_datlist = TRUE, 
                    datlist = dat1)
@@ -200,14 +201,14 @@ El modelo de evaluación fue configurados utilizando Stock Synthesis (SS3 de aqu
 
 ## 2.3. Escenarios
 
-Para avanzar en la implenteación metodológica, y considerando las fuentes de incertidumbre asociadas a la modelación de stock de coquina, se establecen una serie de modelos alternativos basados en piezas de datos y subreporte de los niveles de desembarque. Esto dado los niveles de furtivismo que no son reflejados en las cifras oficiales. Estos escenarios estan descritos en la Tabla \ref{Tab2}..
+Para avanzar en la implenteación metodológica, y considerando las fuentes de incertidumbre asociadas a la modelación de stock de coquina, se establecen una serie de modelos alternativos basados en piezas de datos y subreporte de los niveles de desembarque. Esto dado los niveles de furtivismo que no son reflejados en las cifras oficiales. Estos escenarios estan descritos en la Tabla \ref{Tab2}.
 
 
 ```{r}
 esc<-c("S01","S1","S2","S3","S4","S5")
 
 descripcion<-c("Solo Desembarque e Índice",
-               "Flota comercial y poblacional, Desembarque, Índice, Composisiones de Tallas",
+               "Flota comercial y poblacional, Desembarque, Índice, Composiciones de Tallas",
                "S1 + Vector Desembarques desde 1990 asumido en 250 por año",
                "S1 + Vector desembarques ponderado por 1.5",
                "S1 + Vector desembarques ponderado por 2",
@@ -231,24 +232,9 @@ ESC1 %>% kbl(booktabs = T,
                   font_size=10)
 ```
 
-
-
-
 \pagebreak
 
-# 3. RESULTADOS
-
-Instalación de las librerias necesarias
-
-
-## 3.1. Principales salidas de modelos y variables poblacionales
-
-
-Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado
-en términos estadísticos de ajuste a la información. 
-
-Estos modelos, son los seleccionados para presentar en sus principales salidas para fines informativos de indicadores, puntos biológicos de referencia y estimaciones poblacionales.
-
+# 3. RESULTADOS (Modelo Base `s1`)
 
 ```{r eval=FALSE, message=F, include=FALSE}
 # Lista de directorios para correro tordos juntos
@@ -257,9 +243,7 @@ directorios <- c("s01",
                  "s2",
                  "s3",
                  "s4",
-                 "s5",
-                 "s6",
-                 "s7")  # Agrega aquí todos los nombres de las carpetas que deseas procesar
+                 "s5")  # Agrega aquí todos los nombres de las carpetas que deseas procesar
 
 # Bucle para ejecutar el código en cada directorio
 for (dir in directorios) {
@@ -273,12 +257,10 @@ for (dir in directorios) {
 # Considerar que al correr el modelo dentro de cada `chunk` se cambia el directorio.
 ```
 
-
-
 ```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
 # Corro escenario por separado 
 r4ss::run(
-  dir = dir1,
+  dir = dir2,
   exe = "ss_osx",
   skipfinished = FALSE, # TRUE will skip running if Report.sso present
   show_in_console = TRUE # change to true to watch the output go past
@@ -286,15 +268,16 @@ r4ss::run(
 ```
 
 
+
 ```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
 #Leo las salidas del modelo seleccionado. 
 
-dir1<-here("s1")
-base.model1 <- SS_output(dir=dir1,
+dir5<-here("s5")
+base.model5 <- SS_output(dir=dir5,
                          covar=T,
                          forecast=T)
 
-SS_plots(base.model1,
+SS_plots(base.model5,
          uncertainty=T,
          datplot = T, 
          png=T, 
@@ -305,66 +288,68 @@ SS_plots(base.model1,
 
 ```
 
-Data disponible para este escenario. Espinel es la serie mas consistente del conjunto de datos.
 
-```{r}
-SSplotData(base.model1, subplots = 2, 
-           fleetnames = c("COMERCIAL", "POBLACIONAL"),
-           fleetcol = c("#2c7fb8","#31a354"),
-           maxsize = 0.5)
-```
-Read in Stock Synthesis files
 
-Stock Synthesis files can be read in as list objects in R using the SS_read*() functions.
-```{r}
-start <- r4ss::SS_readstarter(file = file.path(new_mod_path, "starter.ss"), 
-                              verbose = FALSE)
-# note the data and control file names can vary, so are determined from the 
-# starter file.
-dat <- r4ss::SS_readdat(file = file.path(new_mod_path, start$datfile),
-                        verbose = FALSE)
-# Read in ctl file. Note that the data fileR object is needed so that SS_readctl
-# assumes the correct data structure
-ctl <- r4ss::SS_readctl(file = file.path(dir3, start$ctlfil),
-                        verbose = FALSE,
-                        use_datlist = TRUE, datlist = dat)
-fore <- r4ss::SS_readforecast(file = file.path(dir3, "forecast.ss"),
-                              verbose = FALSE)
-# can also read in wtatage.ss for an empirical wt at age model using
-# r4ss::SS_readwtatage()
+## 3.1 Ajustes y residuos
+
+En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional (Figura \ref{fig:fitpob}) y comercial (Figura \ref{fig:fitcom}).
+
+
+```{r fitpob, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:fitpob}Fits Length comps, whole catch, POBLACIONAL para coquina"}
+knitr::include_graphics("s1/plots/comp_lenfit_flt2mkt0.png")
 ```
 
 
+```{r fitcom, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:fitcom}Fits Length comps, whole catch, COMERCIAL para coquina"}
+knitr::include_graphics("s1/plots/comp_lenfit_flt1mkt0.png")
+```
+
+A su vezx, el modelo captura la tendencia de tallas medias
+
+file: comp_lenfit_data_weighting_TA1.8_POBLACIONAL.png
+
+## 3.2.  variables poblacionales
+
+
 ```{r}
-start <- r4ss::SS_readstarter(file = file.path(dir3, "starter.SS"), 
-                              verbose = FALSE)
-dat <- r4ss::SS_readdat(file = file.path(dir3, start$datfile),
-                        verbose = FALSE)
-ctl <- r4ss::SS_readctl(file = file.path(dir3, start$ctlfil),
-                        verbose = FALSE,
-                        use_datlist = TRUE, datlist = dat)
-class(dat)
-dat$lencomp
+replist <- SS_output(dir=dir1,verbose=TRUE,printstats=TRUE)
+summary <- read.table(here(dir1,
+                           "ss_summary.sso"),
+                      header=F,sep="",
+                      na="NA",fill=T) 
+
+# years<-seq(1989,2021,1)
+# ssb<-stdreptlist[3:35,]
+# recr<-stdreptlist[48:80,]
+# ft<-stdreptlist[134:166,]
+# bt<-summary[408:440,2]
+# catch<-summary[453:485,2]
+
+years<-seq(2004,2023,1)
+ssb<-replist$derived_quants[3:22,1:3]
+recr<-replist$derived_quants[48:80,1:3]
+ft<-replist$derived_quants[134:166,1:3]
+bt<-summary[408:440,2]
+catch<-summary[453:485,2]  #en trimestres
+data<-data.frame(yrs=years,Rt=round(as.numeric(recr$Value),0), BD=round(as.numeric(ssb$Value),0),Bt=round(as.numeric(bt),0),Ft=round(as.numeric(ft$Value),2),Ct=round(as.numeric(catch),0))
 
 ```
 
 
 
-```{r}
-parbio <-ctl$MG_parms
 
-kbl(parbio, booktabs = T,format = "latex",
-    caption = "\\label{t1}Parámetros biológicos") %>%
-    kable_styling(latex_options = c("striped",
-                                  "condensed","scale_down"),
-                full_width = FALSE,font_size=8) %>% 
-  landscape()
-```
+
+Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado
+en términos estadísticos de ajuste a la información. 
+
+Estos modelos, son los seleccionados para presentar en sus principales salidas para fines informativos de indicadores, puntos biológicos de referencia y estimaciones poblacionales.
+
 
 
 ```{r}
-SSplotCatch(base.model3, subplots = 2, fleetnames = c("Espinel", "Enmalle"),
-            fleetcols = c(2,5), forecastplot = T)
+SSplotCatch(base.model1, 
+            subplots = 2,
+            forecastplot = T)
 ```
 
 
@@ -406,45 +391,28 @@ SSplotTimeseries(base.model3, subplot = 1)
 ```
 
 
-### 3.1.4. Mod s4 (Flotas artesanal espinel)
 
-Este modelo está implementado pero falta resolver los niveles de convergencia y los warning. Este modelo ha sido el implementado en @Reineta2022
-
-
-```{r eval=F, message=FALSE, warning=FALSE, include=FALSE}
-dir4<-here("s4")
-
-r4ss::run_SS_models(dirvec = dir4, model = './ss_osx', 
-                    skipfinished = FALSE)
-```
-
-
-```{r echo=F, include=F, message=F}
-#Leo las salidas del modelo seleccionado. 
-
-dir4<-here("s4")
-base.model4 <- SS_output(dir=dir4,covar=F,forecast=F)
-```
-
-```{r}
-SSplotData(base.model4, fleetcol = 5, subplot = 2)
-
-```
-```{r eval=FALSE}
-p1 <-SS_readdat_3.30("s4/ss.dat", verbose = TRUE, echoall = FALSE,section = NULL)
-
-startfile <- SS_readstarter("s4/starter.ss_new")
-```
 
 
 Respecto a los valores y parametros biologicos modelados, los siguientes graficos identifican los estimadores puntuales del recurso
 
 ```{r}
-SSplotBiology(base.model4,  subplot=1, labels = c("Length (cm)", "Age (yr)", "Maturity", "Mean weight (kg) in last year",
-    "Spawning output", "Length (cm, beginning of the year)", "Natural mortality",
-    "Female weight (kg)", "Female length (cm)", "Fecundity", "Default fecundity label",
-    "Year", "Hermaphroditism transition rate", "Fraction females by age at equilibrium"),
- )
+SSplotBiology(base.model1,  
+              subplot=1, 
+              labels = c("Length (cm)",
+                         "Age (yr)",
+                         "Maturity", "Mean weight (kg) in last year",
+                         "Spawning output",
+                         "Length (cm, beginning of the year)", 
+                         "Natural mortality",
+                         "Female weight (kg)",
+                         "Female length (cm)",
+                         "Fecundity",
+                         "Default fecundity label",
+                         "Year", 
+                         "Hermaphroditism transition rate",
+                         "Fraction females by age at equilibrium"),
+              )
 ```
 
 ahora miro los ajustes de las tallas por flota
@@ -464,100 +432,37 @@ SSplotTimeseries(base.model4, subplot = 1)
 
 ```
 
-### 3.1.5. Mod s5 (Modelo Jerarquico. Indice Biomasa modelo Catch Based [@Zhou2009])
-
-Modelo no implemetado a la fecha
 
 
-```{r eval=F, message=FALSE, warning=FALSE, include=FALSE}
-dir5<-here("s5")
+## 2.5. DIAGNÓSTICO
 
-r4ss::run_SS_models(dirvec = dir5, model = './ss_osx', 
-                    skipfinished = FALSE)
-```
+### 2.5.1. Analisis del patron Retrospectivo
 
-
-
-
-
-\pagebreak
-
-# 4. COMPARACION DE MODELOS
-
-(En desarrollo)
-
-```{r eval=FALSE}
-#PLOT labels, name of each model run
-legend.labels <- c('dir1','dir2','dir3', 'dir4')
-
-#read in all model runs
-#note if cover=T you need a hessian; if covar=F you do not need a hessian
-biglist <- SSgetoutput(keyvec = NULL, dirvec = c(SSdir1,SSdir2,SSdir3),	getcovar = F)
-
-#create summary of model runs from list above
-summaryoutput <- SSsummarize(biglist)
-
-SSplotComparisons(summaryoutput, subplots = 1:20, plot = TRUE,
-                  print = T, endyrvec = "default", indexfleets = NULL, indexUncertainty = FALSE,
-                  indexQlabel = TRUE, indexQdigits = 4, indexSEvec = "default",
-                  indexPlotEach = FALSE, labels = c("Year", "Spawning biomass (t)",
-                                                    "Relative spawning biomass", "Age-0 recruits (1,000s)",
-                                                    "Recruitment deviations", "Index", "Log index", "1 - SPR", "Density",
-                                                    "Management target", "Minimum stock size threshold", "Spawning output",
-                                                    "Harvest rate"), col = NULL, shadecol = NULL, pch = NULL,
-                  lty = 1, lwd = 2, spacepoints = 10, staggerpoints = 1,
-                  initpoint = 0, tickEndYr = TRUE, shadeForecast = TRUE,
-                  xlim = "default", ylimAdj = 1, xaxs = "r", yaxs = "r",
-                  type = "o", uncertainty = TRUE, shadealpha = 0.1, legend = TRUE,
-                  legendlabels = "default", legendloc = "topright",
-                  legendorder = "default", legendncol = 1, sprtarg = NULL,
-                  btarg = NULL, minbthresh = NULL, pwidth = 6.5, pheight = 5,
-                  punits = "in", res = 300, ptsize = 10, cex.main = 1,
-                  plotdir = "C:\\Users\\mauricio.mardones\\Documents\\IFOP\\Loco_Assessment_AMERB\\SA_Loco", 
-                  filenameprefix = "", densitynames = c("SSB_Virgin","R0"), 
-                  densityxlabs = "default", densityscalex = 1,
-                  densityscaley = 1, densityadjust = 1, densitysymbols = TRUE,
-                  densitytails = TRUE, densitymiddle = FALSE, densitylwd = 1,
-                  fix0 = TRUE, new = TRUE, add = FALSE, 
-                  par = list(mar = c(5, 4, 1, 1) + 0.1), 
-                  verbose = TRUE, mcmcVec = FALSE,
-                  show_equilibrium = TRUE)
-```
-
-Tablas comparativas
-
-
-```{r eval=F}
-SStableComparisons(summaryoutput,
-                   likenames = c("TOTAL", "Survey", "Length_comp", "Age_comp", "priors",
-                                 "Size_at_age"), names = c("Recr_Virgin", "R0", "steep", "NatM",
-                                                           "L_at_Amax", "VonBert_K", "SSB_Virg", "Bratio_2017", "SPRratio_2016"),
-                   digits = NULL, modelnames = "default", csv = FALSE,
-                   csvdir = "C:\\Users\\mauricio.mardones\\Documents\\IFOP\\Loco_Assessment_AMERB\\SA_Loco",
-                   csvfile = "parameter_comparison_table.csv", verbose = TRUE,
-                   mcmc = FALSE)
-```
-
-\pagebreak
-# 5. DIAGNÓSTICO
+Se siguieron los procedimientos explicados en el objetivo 1 de este reporte, para evaluar la idoneidad
+del modelo y dichos procedimientos se han probado en 6 implementaciones (escenarios) diferentes del
+modelo inicial (S1). 
 
 ```{r eval=F}
 
 #do retrospective model runs
-SS_doRetro(dir4, '', newsubdir = "retrospectives",
-           subdirstart = "retro", years = 0:-5, overwrite = TRUE, exefile = "ss",
-           extras = "-nox -nohess", intern = FALSE, CallType = "system",
-           RemoveBlocks = FALSE)
-retroModels <- SSgetoutput(dirvec=file.path(dir4, "retrospectives",paste("retro",0:-5,sep="")))
-retroSummary <- SSsummarize(retroModels)
-
-
-endyrvec <- retroSummary$endyrs + 0:-5
-SSplotComparisons(retroSummary, endyrvec=endyrvec, legendlabels=paste("Data",0:-5,"years"),
-                  plotdir='month\\',plot=TRUE,print=T)
-TableCompare <- SStableComparisons(retroSummary,likenames=like, names=names, 
-                                   modelnames=c('B','-1','-2','-3','-4','-5'), csv=TRUE, csvfile="RetroRuns.csv",verbose=FALSE)
-
+retro(dir=dir1, oldsubdir="", 
+      newsubdir="Retrospective", 
+      years= 0:-5,
+      exe="ss_osx",
+      extras = "-nox", 
+      skipfinished = F)
+#s1
+retroModels1 <- SSgetoutput(dirvec=file.path(dir1,
+                                            "Retrospective",
+                                            paste("retro",0:-5,
+                                                  sep="")))
+retroSummary <- SSsummarize(retroModels1)
+# plots
+retro1 <- SSplotRetro(retroSummary,
+            add=T,
+            forecast = F,
+            legend = T,
+            verbose=F)
 ```
 
 
@@ -566,6 +471,101 @@ mayor para especies de vida corta) y que el estadístico parece insensible a F, 
 propusieron que el patrón retrospectivo de alguna de las variables biológico-pesqueras indicadas es
 preocupante si los valores del índice Mohn’s rho son superiores a 0,20 o inferiores a -0,15 para especies
 de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida corta.
+
+
+\pagebreak
+
+## 3.5 Comparision de resultados entre modelos
+
+```{r echo=FALSE}
+#PLOT labels, name of each model run
+legend.labels <- c( #"s01",
+                  "s1",
+                 "s2",
+                 "s3",
+                 "s4",
+                 "s5")
+
+#read in all model runs
+#note if cover=T you need a hessian; if covar=F you do not need a hessian
+biglist <- SSgetoutput(keyvec = NULL,
+                       dirvec = c(#dir01,
+                                  dir1,
+                                  dir2,
+                                  dir3,
+                                  dir4,
+                                  dir5),
+                       getcovar = F)
+
+#create summary of model runs from list above
+summaryoutput <- SSsummarize(biglist)
+
+SSplotComparisons(summaryoutput,
+                  legendlabels = legend.labels,
+                 labels = c("Year", 
+                            "Spawning biomass (t)",
+                            "Relative spawning biomass", 
+                            "Age-0 recruits (1,000s)",
+                            "Recruitment deviations", 
+                            "Index", "Log index", 
+                            "1 - SPR", 
+                            "Density",
+                            "Management target", 
+                            "Minimum stock size threshold",
+                            "Spawning output",
+                            "Harvest rate"))
+
+comp <- SSplotComparisons(summaryoutput,
+                  legendlabels = c(#"s01",
+                                   "s1",
+                                   "s2",
+                 "s3",
+                 "s4",
+                 "s5"),
+                 pheight=4.5,
+                 png=TRUE,
+                 plotdir=fig_path)
+
+```
+
+
+```{r}
+comtable <- SStableComparisons(summaryoutput,
+                   likenames = c("TOTAL", 
+                                 "Survey", 
+                                 "Length_comp",
+                                 "Age_comp", 
+                                 "priors",
+                                 "Size_at_age"), 
+                   names = c("Recr_Virgin",
+                             "R0", 
+                             "steep",
+                             "NatM",
+                             "L_at_Amax", 
+                             "VonBert_K", 
+                             "SSB_Virg", 
+                             "Bratio_2017",
+                             "SPRratio_2016"),
+                   digits = NULL,
+                   modelnames = c("s01", "s1","s2",
+                 "s3",
+                 "s4",
+                 "s5",
+                 "s6",
+                 "s7"),
+                   csv = FALSE,
+                   csvdir =~"/DOCAS/SA_Krill",
+                   csvfile = "parameter_comparison_table.csv",
+                 verbose = TRUE,
+                   mcmc = FALSE)
+kbl(comtable, booktabs = T,format = "latex",
+    caption = "Comparacion likelihood y parámetros s01, s1, s2, s3, s4, s5, s6 y s7")  %>% 
+    kable_styling(latex_options = "scale_down")
+
+```
+
+\pagebreak
+
 
 
 \pagebreak
