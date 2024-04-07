@@ -6,19 +6,16 @@
 \documentclass[
 ]{article}
 \usepackage{amsmath,amssymb}
+\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math} % this also loads fontspec
+  \usepackage{unicode-math}
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
-\fi
-\usepackage{lmodern}
-\ifPDFTeX\else
-  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -114,7 +111,7 @@
 \fi
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same}
+\urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
   colorlinks=true,
   linkcolor={blue},
@@ -247,7 +244,7 @@ Donde:
 
 La ecuación descrita en el punto \texttt{2.2} describe la dinámica básica de la población de coquina, con la abundancia cambiando con el tiempo debido al crecimiento, la mortalidad y el reclutamiento. Junto a esta ecuación, otros submodelos asociados como crecimiento individual, selectividad, madurez, captura a la edad entre otros estan configurados en SS3. Este plataforma de evaluación de stock está diseñada como un modelo estructurado con dinámica en edad y datos en talla, en la clase de modelo denominado \emph{Modelo de análisis integrado}. SS3 tiene un sub-modelo poblacional de stock que simula crecimiento, madurez, fecundidad, reclutamiento, movimiento, y procesos de mortalidad, y sub-modelos de observation y valores esperados para diferentes tipos de datos. El modelo es codificado en C++ con parámetros de estimación activados por diferenciación automática (ADMB) (\protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}). El análisis de resultados y salidas emplea herramientas de R e interfase gráfica de la librería \texttt{r4ss} (\url{https://github.com/r4ss/r4ss}) (\protect\hyperlink{ref-Taylor2019}{Taylor, 2019}) y \texttt{ss3diags} (\protect\hyperlink{ref-Henning2023}{Winker et al., 2023}).
 
-Las rutinas y datos de este proceso metodologico de evaluaciónpueden ser encontrados en el repositorio de \href{https://github.com/MauroMardones/SA_Donax_trunculus.}{SA\_Donax\_trunculus}
+Las rutinas y datos de este proceso metodologico de evaluaciónpueden ser encontrados en el repositorio de \href{https://github.com/MauroMardones/SA_Donax_trunculus}{SA\_Donax\_trunculus}
 
 \hypertarget{modelo-base-condicionamiento}{%
 \subsection{2.4. Modelo Base (Condicionamiento)}\label{modelo-base-condicionamiento}}
@@ -257,7 +254,7 @@ La estimación de la biomasa desovante se realizó a inicios de año, mientras q
 La mortalidad por pesca se estimó como el promedio simple de la \texttt{F} de las clases de edad 1 y 2, lo que en el modelo corresponde a la opción 5 del método \texttt{F\ híbrido} recomendado en SS3 (\protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}). Se asume que la densidad es un proxi de las biomasas estimadas (\protect\hyperlink{ref-Caddy2004}{Caddy, 2004}) obtenida desde los muestreos poblacionales y que son proporcionales a la biomasa vulnerable de la población, con la capturabilidad (\texttt{q}) estimada en el modelo. Los parámetros \texttt{q} fueron estimados a patir de parámetros iniciales especificados en la Tabla \ref{Tab1} para los datos del monitoreo poblacional , así como del comercial. Todos los patrones de selectividad, que relacionan las composiciones de tallas observadas de la flota comercial y poblacional con la dinámica, fueron estimados mediante una función logística. Los parámetros \texttt{p1} (talla en la inflexión de la curva) y \texttt{p2} (selección al 95\%) son estimados por el modelo a partir de los valores iniciales especificados en la Tabla \ref{Tab1}.
 
 \begin{table}[ht!]
-\centering\centering
+
 \caption{\label{tab:unnamed-chunk-8}\label{Tab1}Parámetros de entrada al modelo inicial SS3 de coquina (S1). Cada línea de parámetro contiene un valor mínimo (LO), máximo (HI) e inicial (INIT). Si la fase (PHASE) para el parámetro es negativa, el parámetro es fijo de entrada}
 \centering
 \fontsize{9}{11}\selectfont
@@ -267,61 +264,61 @@ La mortalidad por pesca se estimó como el promedio simple de la \texttt{F} de l
 \midrule
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Mortalidad natural}}\\
-\hspace{1em}\cellcolor{gray!10}{Nat M} & \cellcolor{gray!10}{0.05} & \cellcolor{gray!10}{2.00} & \cellcolor{gray!10}{0.9900} & \cellcolor{gray!10}{-3}\\
+\hspace{1em}\cellcolor{gray!6}{Nat M} & \cellcolor{gray!6}{0.05} & \cellcolor{gray!6}{2.00} & \cellcolor{gray!6}{0.9900} & \cellcolor{gray!6}{-3}\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Crecimiento}}\\
 \hspace{1em}Lmin & 1.00 & 3.50 & 2.3000 & 5\\
-\hspace{1em}\cellcolor{gray!10}{Lmax} & \cellcolor{gray!10}{2.00} & \cellcolor{gray!10}{8.00} & \cellcolor{gray!10}{4.9000} & \cellcolor{gray!10}{-3}\\
+\hspace{1em}\cellcolor{gray!6}{Lmax} & \cellcolor{gray!6}{2.00} & \cellcolor{gray!6}{8.00} & \cellcolor{gray!6}{4.9000} & \cellcolor{gray!6}{-3}\\
 \hspace{1em}VonBert K & 0.08 & 0.80 & 0.4800 & -1\\
-\hspace{1em}\cellcolor{gray!10}{CV young} & \cellcolor{gray!10}{0.05} & \cellcolor{gray!10}{0.50} & \cellcolor{gray!10}{0.3000} & \cellcolor{gray!10}{-3}\\
+\hspace{1em}\cellcolor{gray!6}{CV young} & \cellcolor{gray!6}{0.05} & \cellcolor{gray!6}{0.50} & \cellcolor{gray!6}{0.3000} & \cellcolor{gray!6}{-3}\\
 \hspace{1em}CV old & 0.05 & 0.25 & 0.1000 & -3\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Relación longitud-peso}}\\
-\hspace{1em}\cellcolor{gray!10}{Wt a} & \cellcolor{gray!10}{0.00} & \cellcolor{gray!10}{3.00} & \cellcolor{gray!10}{0.0003} & \cellcolor{gray!10}{-5}\\
+\hspace{1em}\cellcolor{gray!6}{Wt a} & \cellcolor{gray!6}{0.00} & \cellcolor{gray!6}{3.00} & \cellcolor{gray!6}{0.0003} & \cellcolor{gray!6}{-5}\\
 \hspace{1em}Wt b & 0.00 & 6.00 & 2.6800 & -5\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Ojiva de madurez}}\\
-\hspace{1em}\cellcolor{gray!10}{L50\%} & \cellcolor{gray!10}{0.00} & \cellcolor{gray!10}{3.00} & \cellcolor{gray!10}{1.0400} & \cellcolor{gray!10}{-5}\\
+\hspace{1em}\cellcolor{gray!6}{L50\%} & \cellcolor{gray!6}{0.00} & \cellcolor{gray!6}{3.00} & \cellcolor{gray!6}{1.0400} & \cellcolor{gray!6}{-5}\\
 \hspace{1em}Mat slope & -3.00 & 3.00 & -1.7000 & -3\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Relación stock-recluta}}\\
-\hspace{1em}\cellcolor{gray!10}{SR\_LN(R0)} & \cellcolor{gray!10}{3.00} & \cellcolor{gray!10}{50.00} & \cellcolor{gray!10}{25.0000} & \cellcolor{gray!10}{1}\\
+\hspace{1em}\cellcolor{gray!6}{SR\_LN(R0)} & \cellcolor{gray!6}{3.00} & \cellcolor{gray!6}{50.00} & \cellcolor{gray!6}{25.0000} & \cellcolor{gray!6}{1}\\
 \hspace{1em}SR\_BH\_steep & 0.20 & 1.00 & 0.7500 & 4\\
-\hspace{1em}\cellcolor{gray!10}{SR\_sigmaR} & \cellcolor{gray!10}{0.00} & \cellcolor{gray!10}{1.00} & \cellcolor{gray!10}{0.2000} & \cellcolor{gray!10}{-4}\\
+\hspace{1em}\cellcolor{gray!6}{SR\_sigmaR} & \cellcolor{gray!6}{0.00} & \cellcolor{gray!6}{1.00} & \cellcolor{gray!6}{0.2000} & \cellcolor{gray!6}{-4}\\
 \hspace{1em}SR\_regime & -5.00 & 5.00 & 0.1000 & -4\\
-\hspace{1em}\cellcolor{gray!10}{SR\_autocorr} & \cellcolor{gray!10}{0.00} & \cellcolor{gray!10}{0.00} & \cellcolor{gray!10}{0.0000} & \cellcolor{gray!10}{99}\\
+\hspace{1em}\cellcolor{gray!6}{SR\_autocorr} & \cellcolor{gray!6}{0.00} & \cellcolor{gray!6}{0.00} & \cellcolor{gray!6}{0.0000} & \cellcolor{gray!6}{99}\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Capturabilidad}}\\
 \hspace{1em}LnQ\_base\_COMERCIAL(1) & -15.00 & 1.50 & -10.0000 & 4\\
-\hspace{1em}\cellcolor{gray!10}{LnQ\_base\_POBLACIONAL(2)} & \cellcolor{gray!10}{-15.00} & \cellcolor{gray!10}{1.50} & \cellcolor{gray!10}{-5.0000} & \cellcolor{gray!10}{4}\\
+\hspace{1em}\cellcolor{gray!6}{LnQ\_base\_POBLACIONAL(2)} & \cellcolor{gray!6}{-15.00} & \cellcolor{gray!6}{1.50} & \cellcolor{gray!6}{-5.0000} & \cellcolor{gray!6}{4}\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Selectividad}}\\
 \hspace{1em}SizeSel\_P\_1\_COMERCIAL(1) & 0.02 & 4.00 & 0.5000 & 2\\
-\hspace{1em}\cellcolor{gray!10}{SizeSel\_P\_2\_COMERCIAL(1)} & \cellcolor{gray!10}{0.01} & \cellcolor{gray!10}{4.00} & \cellcolor{gray!10}{2.5000} & \cellcolor{gray!10}{2}\\
+\hspace{1em}\cellcolor{gray!6}{SizeSel\_P\_2\_COMERCIAL(1)} & \cellcolor{gray!6}{0.01} & \cellcolor{gray!6}{4.00} & \cellcolor{gray!6}{2.5000} & \cellcolor{gray!6}{2}\\
 \hspace{1em}SizeSel\_P\_1\_POBLACIONAL(2) & 0.02 & 3.00 & 0.5000 & 2\\
-\hspace{1em}\cellcolor{gray!10}{SizeSel\_P\_2\_POBLACIONAL(2)} & \cellcolor{gray!10}{0.01} & \cellcolor{gray!10}{3.00} & \cellcolor{gray!10}{0.5000} & \cellcolor{gray!10}{2}\\
+\hspace{1em}\cellcolor{gray!6}{SizeSel\_P\_2\_POBLACIONAL(2)} & \cellcolor{gray!6}{0.01} & \cellcolor{gray!6}{3.00} & \cellcolor{gray!6}{0.5000} & \cellcolor{gray!6}{2}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Respecto a los valores y parametros biologicos modelados, los siguientes graficos (Figura \ref{fig:bio}) identifican los estimadores puntuales del recurso
 
-\begin{figure}[H]
+\textbackslash begin\{figure\}{[}H{]}
 
-{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/bio-1} 
+\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/bio-1}
 
-}
+\}
 
-\caption{\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95\% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina}\label{fig:bio-1}
-\end{figure}
-\begin{figure}[H]
+\textbackslash caption\{\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95\% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina\}\label{fig:bio-1}
+\textbackslash end\{figure\}
+\textbackslash begin\{figure\}{[}H{]}
 
-{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/bio-2} 
+\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/bio-2}
 
-}
+\}
 
-\caption{\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95\% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina}\label{fig:bio-2}
-\end{figure}
+\textbackslash caption\{\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95\% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina\}\label{fig:bio-2}
+\textbackslash end\{figure\}
 
 Por otro lado, y al existir dos tipos de muestreos, uno poblacional y otro comercial, se modelan las selectividades por separado como se identifica en la Figura \ref{fig:sel}
 
@@ -340,7 +337,7 @@ Por otro lado, y al existir dos tipos de muestreos, uno poblacional y otro comer
 Para avanzar en la implementación metodológica, y considerando las fuentes de incertidumbre asociadas a la modelación de stock de coquina, se establecen una serie de modelos alternativo. Estos escenarios dicen relación con el subreporte de este tipo de pesquerias (Galicia paper ref) en particular, con la coquina (ref). Esto dado los niveles de furtivismo que no son reflejados en las cifras oficiales. Por ello, este ejercicio contempló una corrección al alza de los desembarques oficiales provistos por la Junta a traves de IDEASPA. Esto tiene como objetivo identificar el impacto del subreporte en la estimación de variables poblacionales, así como en el status del recurso. Estos escenarios estan descritos en la Tabla \ref{Tab2}.
 
 \begin{table}[h!]
-\centering\centering
+
 \caption{\label{tab:unnamed-chunk-9}\label{Tab2}Descripción de los escenarios alternativos al modelo base inicial (S1).}
 \centering
 \fontsize{10}{12}\selectfont
@@ -348,11 +345,11 @@ Para avanzar en la implementación metodológica, y considerando las fuentes de 
 \toprule
 Escenarios & Descripción\\
 \midrule
-\cellcolor{gray!10}{S01} & \cellcolor{gray!10}{Solo Desembarque e Índice}\\
+\cellcolor{gray!6}{S01} & \cellcolor{gray!6}{Solo Desembarque e Índice}\\
 S1 & Flota comercial y poblacional, Desembarque, Índice, Composiciones de Tallas\\
-\cellcolor{gray!10}{S2} & \cellcolor{gray!10}{S1 + Vector Desembarques desde 1990 asumido en 250 por año}\\
+\cellcolor{gray!6}{S2} & \cellcolor{gray!6}{S1 + Vector Desembarques desde 1990 asumido en 250 por año}\\
 S3 & S1 + Vector desembarques ponderado por 1.5\\
-\cellcolor{gray!10}{S4} & \cellcolor{gray!10}{S1 + Vector desembarques ponderado por 2}\\
+\cellcolor{gray!6}{S4} & \cellcolor{gray!6}{S1 + Vector desembarques ponderado por 2}\\
 \addlinespace
 S5 & S1 + Vector desembarques ponderado por 2.5\\
 \bottomrule
@@ -387,15 +384,13 @@ En relación a los análisis de bondad de ajuste más clásicos, los ajustes a l
 \caption{\label{fig:fitcom}Fits Length comps, whole catch, COMERCIAL para coquina}\label{fig:fitcom}
 \end{figure}
 
-A su vez, el modelo captura la tendencia de tallas medias tallas poblacional (Figura \ref{fig:lenfit}) y comercial (Figura \ref{fig:lenfit2}).
-
 \pagebreak
 
 \hypertarget{variables-poblacionales}{%
 \subsection{3.2. Variables poblacionales}\label{variables-poblacionales}}
 
 \begin{table}[ht!]
-\centering\centering
+
 \caption{\label{tab:unnamed-chunk-11}\label{Tab4}Series de tiempo estimados por el modelo inicial (S1). Reclutamiento (millones de ind.),  biomasa desovante (en toneladas), Captura (t) y mortalidad por pesca (año-1).}
 \centering
 \fontsize{9}{11}\selectfont
@@ -403,28 +398,28 @@ A su vez, el modelo captura la tendencia de tallas medias tallas poblacional (Fi
 \toprule
 Año & Reclutamientos & \makecell[c]{Biomasa\\desovante} & Captura & \makecell[c]{Mortalidad\\por pesca}\\
 \midrule
-\cellcolor{gray!10}{2004} & \cellcolor{gray!10}{62296.6} & \cellcolor{gray!10}{131.49} & \cellcolor{gray!10}{23.00} & \cellcolor{gray!10}{0.19}\\
+\cellcolor{gray!6}{2004} & \cellcolor{gray!6}{62296.6} & \cellcolor{gray!6}{131.49} & \cellcolor{gray!6}{23.00} & \cellcolor{gray!6}{0.19}\\
 2005 & 61230.7 & 129.68 & 50.00 & 0.48\\
-\cellcolor{gray!10}{2006} & \cellcolor{gray!10}{59486.4} & \cellcolor{gray!10}{116.10} & \cellcolor{gray!10}{38.00} & \cellcolor{gray!10}{0.41}\\
+\cellcolor{gray!6}{2006} & \cellcolor{gray!6}{59486.4} & \cellcolor{gray!6}{116.10} & \cellcolor{gray!6}{38.00} & \cellcolor{gray!6}{0.41}\\
 2007 & 56959.7 & 97.43 & 56.01 & 0.68\\
-\cellcolor{gray!10}{2008} & \cellcolor{gray!10}{53952.3} & \cellcolor{gray!10}{91.39} & \cellcolor{gray!10}{70.11} & \cellcolor{gray!10}{1.09}\\
+\cellcolor{gray!6}{2008} & \cellcolor{gray!6}{53952.3} & \cellcolor{gray!6}{91.39} & \cellcolor{gray!6}{70.11} & \cellcolor{gray!6}{1.09}\\
 \addlinespace
 2009 & 49618.8 & 75.70 & 73.90 & 1.58\\
-\cellcolor{gray!10}{2010} & \cellcolor{gray!10}{46620.0} & \cellcolor{gray!10}{57.28} & \cellcolor{gray!10}{80.40} & \cellcolor{gray!10}{2.65}\\
+\cellcolor{gray!6}{2010} & \cellcolor{gray!6}{46620.0} & \cellcolor{gray!6}{57.28} & \cellcolor{gray!6}{80.40} & \cellcolor{gray!6}{2.65}\\
 2011 & 46487.8 & 41.16 & 30.01 & 0.84\\
-\cellcolor{gray!10}{2012} & \cellcolor{gray!10}{47197.6} & \cellcolor{gray!10}{33.12} & \cellcolor{gray!10}{85.27} & \cellcolor{gray!10}{2.95}\\
+\cellcolor{gray!6}{2012} & \cellcolor{gray!6}{47197.6} & \cellcolor{gray!6}{33.12} & \cellcolor{gray!6}{85.27} & \cellcolor{gray!6}{2.95}\\
 2013 & 54359.4 & 41.84 & 74.82 & 3.95\\
 \addlinespace
-\cellcolor{gray!10}{2014} & \cellcolor{gray!10}{31108.3} & \cellcolor{gray!10}{26.72} & \cellcolor{gray!10}{80.63} & \cellcolor{gray!10}{4.00}\\
+\cellcolor{gray!6}{2014} & \cellcolor{gray!6}{31108.3} & \cellcolor{gray!6}{26.72} & \cellcolor{gray!6}{80.63} & \cellcolor{gray!6}{4.00}\\
 2015 & 38914.1 & 27.11 & 48.49 & 3.94\\
-\cellcolor{gray!10}{2016} & \cellcolor{gray!10}{58124.2} & \cellcolor{gray!10}{17.08} & \cellcolor{gray!10}{34.99} & \cellcolor{gray!10}{1.57}\\
+\cellcolor{gray!6}{2016} & \cellcolor{gray!6}{58124.2} & \cellcolor{gray!6}{17.08} & \cellcolor{gray!6}{34.99} & \cellcolor{gray!6}{1.57}\\
 2017 & 52284.3 & 21.79 & 86.55 & 3.03\\
-\cellcolor{gray!10}{2018} & \cellcolor{gray!10}{119431.0} & \cellcolor{gray!10}{37.18} & \cellcolor{gray!10}{72.14} & \cellcolor{gray!10}{2.85}\\
+\cellcolor{gray!6}{2018} & \cellcolor{gray!6}{119431.0} & \cellcolor{gray!6}{37.18} & \cellcolor{gray!6}{72.14} & \cellcolor{gray!6}{2.85}\\
 \addlinespace
 2019 & 128653.0 & 31.37 & 176.82 & 4.00\\
-\cellcolor{gray!10}{2020} & \cellcolor{gray!10}{111082.0} & \cellcolor{gray!10}{59.33} & \cellcolor{gray!10}{191.15} & \cellcolor{gray!10}{4.00}\\
+\cellcolor{gray!6}{2020} & \cellcolor{gray!6}{111082.0} & \cellcolor{gray!6}{59.33} & \cellcolor{gray!6}{191.15} & \cellcolor{gray!6}{4.00}\\
 2021 & 103375.0 & 64.28 & 167.60 & 4.00\\
-\cellcolor{gray!10}{2022} & \cellcolor{gray!10}{46126.8} & \cellcolor{gray!10}{56.98} & \cellcolor{gray!10}{135.34} & \cellcolor{gray!10}{2.91}\\
+\cellcolor{gray!6}{2022} & \cellcolor{gray!6}{46126.8} & \cellcolor{gray!6}{56.98} & \cellcolor{gray!6}{135.34} & \cellcolor{gray!6}{2.91}\\
 2023 & 60944.1 & 55.60 & 24.72 & 0.58\\
 \bottomrule
 \end{tabular}
@@ -432,14 +427,22 @@ Año & Reclutamientos & \makecell[c]{Biomasa\\desovante} & Captura & \makecell[c
 
 Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información. Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico y biomasa desovante relativa (Figura \ref{fig:ssb}).
 
-\begin{figure}[H]
+\textbackslash begin\{figure\}{[}H{]}
 
-{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-1} \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-2} 
+\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-1}
 
-}
+\}
 
-\caption{\label{fig:ssb}Spawning output with forecast with ~95\% asymptotic intervals and relative spawining biomass to coquina}\label{fig:ssb}
-\end{figure}
+\textbackslash caption\{\label{fig:ssb}Spawning output with forecast with \textasciitilde95\% asymptotic intervals and relative spawining biomass to coquina\}\label{fig:ssb-1}
+\textbackslash end\{figure\}
+\textbackslash begin\{figure\}{[}H{]}
+
+\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-2}
+
+\}
+
+\textbackslash caption\{\label{fig:ssb}Spawning output with forecast with \textasciitilde95\% asymptotic intervals and relative spawining biomass to coquina\}\label{fig:ssb-2}
+\textbackslash end\{figure\}
 
 \hypertarget{anuxe1lisis-retrospectivo}{%
 \subsection{3.3. Análisis Retrospectivo}\label{anuxe1lisis-retrospectivo}}
@@ -474,7 +477,7 @@ accurately as a naïve baseline prediction; thus, the model has prediction skill
 \begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2} \end{center}
 
 \begin{table}[H]
-\centering
+
 \caption{\label{tab:unnamed-chunk-16}Rho parameter in SSB model s01}
 \centering
 \begin{tabular}[t]{llrr}
@@ -493,7 +496,7 @@ SSB & Combined & 0.6050453 & 0.5277967\\
 \end{table}
 
 \begin{table}[H]
-\centering
+
 \caption{\label{tab:unnamed-chunk-16}Rho parameter in F model s01}
 \centering
 \begin{tabular}[t]{llrr}
@@ -512,7 +515,7 @@ F & Combined & -0.2937244 & -0.0808450\\
 \end{table}
 
 \begin{table}[H]
-\centering
+
 \caption{\label{tab:unnamed-chunk-16}Rho parameter in SSB model s2}
 \centering
 \begin{tabular}[t]{llrr}
@@ -531,7 +534,7 @@ SSB & Combined & 0.6064675 & 0.4380795\\
 \end{table}
 
 \begin{table}[H]
-\centering
+
 \caption{\label{tab:unnamed-chunk-16}Rho parameter in F model s2}
 \centering
 \begin{tabular}[t]{llrr}
@@ -554,6 +557,46 @@ F & Combined & -0.3483503 & -0.0781881\\
 \hypertarget{comparaciuxf3n-de-resultados-entre-modelos}{%
 \subsection{3.5. Comparación de resultados entre modelos}\label{comparaciuxf3n-de-resultados-entre-modelos}}
 
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19} \end{center}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20} \end{center}
+
 \begin{verbatim}
 ##  [1] 3.065958e+02 3.518800e+02 9.995759e-01 1.035935e+00 1.363499e+00
 ##  [6] 1.488604e+00 4.200000e+00 6.514884e+00 2.799352e+05 3.403843e+05
@@ -574,7 +617,7 @@ Lo analisis comparados, muestran las estimaciones de cada escenario propuesto pa
 
 \begin{figure}[H]
 
-{\centering \includegraphics{Fig/compare12_recdevs_uncertainty} 
+{\centering \includegraphics[width=6.5in]{Fig/compare12_recdevs_uncertainty} 
 
 }
 

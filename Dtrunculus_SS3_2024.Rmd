@@ -255,6 +255,7 @@ La estimación de la biomasa desovante se realizó a inicios de año, mientras q
 
 La mortalidad por pesca se estimó como el promedio simple de la `F` de las clases de edad 1 y 2, lo que en el modelo corresponde a la opción 5 del método `F híbrido` recomendado en SS3 [@Methot2013]. Se asume que la densidad es un proxi de las biomasas estimadas [@Caddy2004] obtenida desde los muestreos poblacionales y que son proporcionales a la biomasa vulnerable de la población, con la capturabilidad (`q`) estimada en el modelo. Los parámetros `q` fueron estimados a patir de parámetros iniciales especificados en la Tabla \ref{Tab1} para los datos del monitoreo poblacional , así como del comercial. Todos los patrones de selectividad, que relacionan las composiciones de tallas observadas de la flota comercial y poblacional con la dinámica, fueron estimados mediante una función logística. Los parámetros `p1` (talla en la inflexión de la curva) y `p2` (selección al 95%) son estimados por el modelo a partir de los valores iniciales especificados en la Tabla \ref{Tab1}.
 
+
 ```{r}
  parbio<-ctl1$MG_parms[1:10,c(1:3,7)]
  row.names( parbio)<-c("Nat M",
@@ -297,7 +298,7 @@ parInit %>%
 
 Respecto a los valores y parametros biologicos modelados, los siguientes graficos (Figura \ref{fig:bio}) identifican los estimadores puntuales del recurso
 
-```{r bio, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina"}
+```{r bio, echo=FALSE, out.width = "80%",  fig.cap="\\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina"}
 SSplotBiology(base.model1,  
               subplot=c(1, 6))
 ```
@@ -305,7 +306,7 @@ SSplotBiology(base.model1,
 
 Por otro lado, y al existir dos tipos de muestreos, uno poblacional y otro comercial, se modelan las selectividades por separado como se identifica en la Figura \ref{fig:sel}
 
-```{r sel, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:sel}selectivity at length in end year for all fleets shown together para coquina"}
+```{r sel, echo=FALSE, out.width = "80%",  fig.cap="\\label{fig:sel}selectivity at length in end year for all fleets shown together para coquina"}
 SSplotSelex(base.model1, 
             subplots = 1)
 ```
@@ -360,24 +361,6 @@ knitr::include_graphics("s1/plots/comp_lenfit_flt2mkt0.png")
 knitr::include_graphics("s1/plots/comp_lenfit_flt1mkt0.png")
 ```
 
-A su vez, el modelo captura la tendencia de tallas medias tallas poblacional (Figura \ref{fig:lenfit}) y comercial (Figura \ref{fig:lenfit2}).
- 
-
-
-```{r lenfit, echo=FALSE,fig.keep='all', fig.show="hold", fig.cap="\\label{fig:lenfit}Fit length compositions"}
-par(mfrow=c(3,3), mar=c(1.5,5,3,2) + 0.1)
-SSplotComps(base.model1,
-            subplots = c(3,5,6,8))
-
-```
-
-
-```{r lenfit2, echo=FALSE,fig.keep='all', fig.show="hold", out.width="80%", fig.cap="\\label{fig:lenfit2}Spawning output with forecast with ~95% asymptotic intervals and relative spawining biomass to coquina"}
-SSplotComps(base.model1,
-            subplots = 5)
-SSplotComps(base.model1,
-            subplots = 8)
-```
 
 
 \pagebreak
@@ -427,7 +410,7 @@ kbl(booktabs = T,format = "latex",position="ht!",align="c",escape = FALSE,
 
 Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información.  Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico y biomasa desovante relativa (Figura \ref{fig:ssb}).
 
-```{r ssb, echo=FALSE,fig.keep='all', fig.show="hold", out.width="80%", fig.cap="\\label{fig:ssb}Spawning output with forecast with ~95% asymptotic intervals and relative spawining biomass to coquina"}
+```{r ssb, echo=FALSE, out.width="80%", fig.cap="\\label{fig:ssb}Spawning output with forecast with ~95% asymptotic intervals and relative spawining biomass to coquina"}
 SSplotTimeseries(base.model1,
                  subplot = 7)
 SSplotTimeseries(base.model1,
