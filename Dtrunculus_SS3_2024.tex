@@ -6,16 +6,19 @@
 \documentclass[
 ]{article}
 \usepackage{amsmath,amssymb}
-\usepackage{lmodern}
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -111,7 +114,7 @@
 \fi
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
+\urlstyle{same}
 \hypersetup{
   colorlinks=true,
   linkcolor={blue},
@@ -175,7 +178,7 @@ Abril, 2024
 \hypertarget{contexto}{%
 \section{1. CONTEXTO}\label{contexto}}
 
-El objetivo de este documento es la implementación metodológica de la evaluación de stock de coquina \emph{Donax trunculus} mediante un modelo integrado con datos en talla y dinamica en edad implemetnado en Stock Synthesis (SS3) (v.3.30.21) (\protect\hyperlink{ref-Methot2023}{Richard D. Methot et al., 2023}; \protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}) para la zona del Golfo de Cádiz, España. Este trabajo está en el marco de la asesoría científica que lleva a cabo el Instituto Español de Oceanografía (IEO) realizado por el grupo de investigadores asociados al proyecto FEMP 04.
+El objetivo de este documento es la implementación metodológica de la evaluación de stock de coquina \emph{Donax trunculus} mediante un modelo integrado con datos en talla y dinamica en edad implemetnado en Stock Synthesis (SS3) (v.3.30.21) (\protect\hyperlink{ref-Methot2023}{Methot et al., 2023}; \protect\hyperlink{ref-Methot2013}{Methot \& Wetzel, 2013}) para la zona del Golfo de Cádiz, España. Este trabajo está en el marco de la asesoría científica que lleva a cabo el Instituto Español de Oceanografía (IEO) realizado por el grupo de investigadores asociados al proyecto FEMP 04.
 
 A su vez, se destaca la utilidad de los programas de monitoreo de la población y la pesquería que se ejecutan desde el año 2013 por parte del IEO Cádiz, y con el cual se ha levantado informacion biológica, pesquera y ambiental que ha sido vital para estea implementación metodológica, consitituyendo así el primer ejercicio de evaluación de stock de coquina.
 
@@ -242,7 +245,7 @@ Donde:
 \hypertarget{plataforma-de-evaluacion-de-stock}{%
 \subsection{2.3. Plataforma de Evaluacion de Stock}\label{plataforma-de-evaluacion-de-stock}}
 
-La ecuación descrita en el punto \texttt{2.2} describe la dinámica básica de la población de coquina, con la abundancia cambiando con el tiempo debido al crecimiento, la mortalidad y el reclutamiento. Junto a esta ecuación, otros submodelos asociados como crecimiento individual, selectividad, madurez, captura a la edad entre otros estan configurados en SS3. Este plataforma de evaluación de stock está diseñada como un modelo estructurado con dinámica en edad y datos en talla, en la clase de modelo denominado \emph{Modelo de análisis integrado}. SS3 tiene un sub-modelo poblacional de stock que simula crecimiento, madurez, fecundidad, reclutamiento, movimiento, y procesos de mortalidad, y sub-modelos de observation y valores esperados para diferentes tipos de datos. El modelo es codificado en C++ con parámetros de estimación activados por diferenciación automática (ADMB) (\protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}). El análisis de resultados y salidas emplea herramientas de R e interfase gráfica de la librería \texttt{r4ss} (\url{https://github.com/r4ss/r4ss}) (\protect\hyperlink{ref-Taylor2019}{Taylor, 2019}) y \texttt{ss3diags} (\protect\hyperlink{ref-Henning2023}{Winker et al., 2023}).
+La ecuación descrita en el punto \texttt{2.2} describe la dinámica básica de la población de coquina, con la abundancia cambiando con el tiempo debido al crecimiento, la mortalidad y el reclutamiento. Junto a esta ecuación, otros submodelos asociados como crecimiento individual, selectividad, madurez, captura a la edad entre otros estan configurados en SS3. Este plataforma de evaluación de stock está diseñada como un modelo estructurado con dinámica en edad y datos en talla, en la clase de modelo denominado \emph{Modelo de análisis integrado}. SS3 tiene un sub-modelo poblacional de stock que simula crecimiento, madurez, fecundidad, reclutamiento, movimiento, y procesos de mortalidad, y sub-modelos de observation y valores esperados para diferentes tipos de datos. El modelo es codificado en C++ con parámetros de estimación activados por diferenciación automática (ADMB) (\protect\hyperlink{ref-Methot2013}{Methot \& Wetzel, 2013}). El análisis de resultados y salidas emplea herramientas de R e interfase gráfica de la librería \texttt{r4ss} (\url{https://github.com/r4ss/r4ss}) (\protect\hyperlink{ref-Taylor2019}{Taylor, 2019}) y \texttt{ss3diags} (\protect\hyperlink{ref-Henning2023}{Winker et al., 2023}).
 
 Las rutinas y datos de este proceso metodologico de evaluaciónpueden ser encontrados en el repositorio de \href{https://github.com/MauroMardones/SA_Donax_trunculus}{SA\_Donax\_trunculus}
 
@@ -251,14 +254,14 @@ Las rutinas y datos de este proceso metodologico de evaluaciónpueden ser encont
 
 La estimación de la biomasa desovante se realizó a inicios de año, mientras que el reclutamiento se consideró como un evento doble que ocurre hacia junio y fines de año. En el proceso de estimación del reclutamiento, se incorporó una relación stock-recluta difusa (steepness 0.7), y las variaciones en el reclutamiento se modelaron como desviaciones del reclutamiento virginal \texttt{R0}, asumiendo 2004 como año inicial (Tabla \ref{Tab1}).
 
-La mortalidad por pesca se estimó como el promedio simple de la \texttt{F} de las clases de edad 1 y 2, lo que en el modelo corresponde a la opción 5 del método \texttt{F\ híbrido} recomendado en SS3 (\protect\hyperlink{ref-Methot2013}{Richard D. Methot \& Wetzel, 2013}). Se asume que la densidad es un proxi de las biomasas estimadas (\protect\hyperlink{ref-Caddy2004}{Caddy, 2004}) obtenida desde los muestreos poblacionales y que son proporcionales a la biomasa vulnerable de la población, con la capturabilidad (\texttt{q}) estimada en el modelo. Los parámetros \texttt{q} fueron estimados a patir de parámetros iniciales especificados en la Tabla \ref{Tab1} para los datos del monitoreo poblacional , así como del comercial. Todos los patrones de selectividad, que relacionan las composiciones de tallas observadas de la flota comercial y poblacional con la dinámica, fueron estimados mediante una función logística. Los parámetros \texttt{p1} (talla en la inflexión de la curva) y \texttt{p2} (selección al 95\%) son estimados por el modelo a partir de los valores iniciales especificados en la Tabla \ref{Tab1}.
+La mortalidad por pesca se estimó como el promedio simple de la \texttt{F} de las clases de edad 1 y 2, lo que en el modelo corresponde a la opción 5 del método \texttt{F\ híbrido} recomendado en SS3 (\protect\hyperlink{ref-Methot2013}{Methot \& Wetzel, 2013}). Se asume que la densidad es un proxi de las biomasas estimadas (\protect\hyperlink{ref-Caddy2004}{Caddy, 2004}) obtenida desde los muestreos poblacionales y que son proporcionales a la biomasa vulnerable de la población, con la capturabilidad (\texttt{q}) estimada en el modelo. Los parámetros \texttt{q} fueron estimados a patir de parámetros iniciales especificados en la Tabla \ref{Tab1} para los datos del monitoreo poblacional , así como del comercial. Todos los patrones de selectividad, que relacionan las composiciones de tallas observadas de la flota comercial y poblacional con la dinámica, fueron estimados mediante una función logística. Los parámetros \texttt{p1} (talla en la inflexión de la curva) y \texttt{p2} (selección al 95\%) son estimados por el modelo a partir de los valores iniciales especificados en la Tabla \ref{Tab1}.
 
 \begin{table}[ht!]
 
 \caption{\label{tab:unnamed-chunk-8}\label{Tab1}Parámetros de entrada al modelo inicial SS3 de coquina (S1). Cada línea de parámetro contiene un valor mínimo (LO), máximo (HI) e inicial (INIT). Si la fase (PHASE) para el parámetro es negativa, el parámetro es fijo de entrada}
 \centering
 \fontsize{9}{11}\selectfont
-\begin{tabular}[t]{lcccc}
+\begin{tabular}[t]{lrrrr}
 \toprule
   & LO & HI & INIT & PHASE\\
 \midrule
@@ -300,25 +303,6 @@ La mortalidad por pesca se estimó como el promedio simple de la \texttt{F} de l
 \bottomrule
 \end{tabular}
 \end{table}
-
-Respecto a los valores y parametros biologicos modelados, los siguientes graficos (Figura \ref{fig:bio}) identifican los estimadores puntuales del recurso
-
-\textbackslash begin\{figure\}{[}H{]}
-
-\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/bio-1}
-
-\}
-
-\textbackslash caption\{\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95\% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina\}\label{fig:bio-1}
-\textbackslash end\{figure\}
-\textbackslash begin\{figure\}{[}H{]}
-
-\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/bio-2}
-
-\}
-
-\textbackslash caption\{\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95\% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina\}\label{fig:bio-2}
-\textbackslash end\{figure\}
 
 Por otro lado, y al existir dos tipos de muestreos, uno poblacional y otro comercial, se modelan las selectividades por separado como se identifica en la Figura \ref{fig:sel}
 
@@ -362,32 +346,33 @@ S5 & S1 + Vector desembarques ponderado por 2.5\\
 \section{\texorpdfstring{3. RESULTADOS (Modelo Base \texttt{s1})}{3. RESULTADOS (Modelo Base s1)}}\label{resultados-modelo-base-s1}}
 
 \hypertarget{ajustes-y-residuos}{%
-\subsection{3.1 Ajustes y residuos}\label{ajustes-y-residuos}}
+\subsection{3.1. Ajustes y residuos}\label{ajustes-y-residuos}}
 
-En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional (Figura \ref{fig:fitpob}) y comercial (Figura \ref{fig:fitcom}).
+En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional (Figura \ref{fig:fitpob}) y comercial (Figura \ref{fig:fitpob}).
 
 \begin{figure}[H]
 
-{\centering \includegraphics[width=0.8\linewidth]{s1/plots/comp_lenfit_flt2mkt0} 
+{\centering \includegraphics{Dtrunculus_SS3_2024_files/figure-latex/fitpob-1} 
 
 }
 
-\caption{\label{fig:fitpob}Fits Length comps, whole catch, POBLACIONAL para coquina}\label{fig:fitpob}
+\caption{\label{fig:fitpob}Fits Length comps whole catch COMERCIAL y POBLACIONAL para coquina}\label{fig:fitpob-1}
 \end{figure}
-
 \begin{figure}[H]
 
-{\centering \includegraphics[width=0.8\linewidth]{s1/plots/comp_lenfit_flt1mkt0} 
+{\centering \includegraphics{Dtrunculus_SS3_2024_files/figure-latex/fitpob-2} 
 
 }
 
-\caption{\label{fig:fitcom}Fits Length comps, whole catch, COMERCIAL para coquina}\label{fig:fitcom}
+\caption{\label{fig:fitpob}Fits Length comps whole catch COMERCIAL y POBLACIONAL para coquina}\label{fig:fitpob-2}
 \end{figure}
 
 \pagebreak
 
 \hypertarget{variables-poblacionales}{%
 \subsection{3.2. Variables poblacionales}\label{variables-poblacionales}}
+
+El modelo permite estimar diferentes variables poblacionales, las cuales se enlistan en la Tabla \ref{Tab4};
 
 \begin{table}[ht!]
 
@@ -425,24 +410,25 @@ Año & Reclutamientos & \makecell[c]{Biomasa\\desovante} & Captura & \makecell[c
 \end{tabular}
 \end{table}
 
-Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información. Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico y biomasa desovante relativa (Figura \ref{fig:ssb}).
+Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información. Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico (Figura \ref{fig:ssb}) y biomasa desovante relativa (Figura \ref{fig:ssb1}).
 
-\textbackslash begin\{figure\}{[}H{]}
+\begin{figure}[H]
 
-\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-1}
+{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-1} 
 
-\}
+}
 
-\textbackslash caption\{\label{fig:ssb}Spawning output with forecast with \textasciitilde95\% asymptotic intervals and relative spawining biomass to coquina\}\label{fig:ssb-1}
-\textbackslash end\{figure\}
-\textbackslash begin\{figure\}{[}H{]}
+\caption{\label{fig:ssb}Total biomass with forecast to coquina}\label{fig:ssb}
+\end{figure}
 
-\{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb-2}
+\begin{figure}[H]
 
-\}
+{\centering \includegraphics[width=0.8\linewidth]{Dtrunculus_SS3_2024_files/figure-latex/ssb1-1} 
 
-\textbackslash caption\{\label{fig:ssb}Spawning output with forecast with \textasciitilde95\% asymptotic intervals and relative spawining biomass to coquina\}\label{fig:ssb-2}
-\textbackslash end\{figure\}
+}
+
+\caption{\label{fig:ssb1}Spawning output with forecast with 95\% asymptotic intervals and relative spawining biomass to coquina}\label{fig:ssb1}
+\end{figure}
 
 \hypertarget{anuxe1lisis-retrospectivo}{%
 \subsection{3.3. Análisis Retrospectivo}\label{anuxe1lisis-retrospectivo}}
@@ -451,11 +437,7 @@ Se siguieron los procedimientos explicados en el objetivo 1 de este reporte, par
 del modelo y dichos procedimientos se han probado en 6 implementaciones (escenarios) diferentes del
 modelo inicial (S1).
 
-Dado que la variabilidad del índice rho de Mohn depende de la historia de vida (usualmente
-mayor para especies de vida corta) y que el estadístico parece insensible a F, Hurtado-ferro et al. (\protect\hyperlink{ref-Hurtado2014}{2015})
-propusieron que el patrón retrospectivo de alguna de las variables biológico-pesqueras indicadas es
-preocupante si los valores del índice Mohn's rho son superiores a 0,20 o inferiores a -0,15 para especies
-de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida corta. Esto es un factor relevante al momento de hacer diagnosis con recursos como la coquina. Los resultados de el análisis de sesgo para cada escenario son represetados por el parámetro de Rho en la Figura \ref{fig:retro}.
+Los resultados de el análisis de sesgo para cada escenario son represetados por el parámetro de Rho en la Figura \ref{fig:retro}.
 
 \begin{figure}[H]
 
@@ -466,19 +448,16 @@ de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida co
 \caption{\label{fig:retro}Patrón restrospectivo para cada esnario modelado en coquina}(\#fig:retro )
 \end{figure}
 
-\hypertarget{hindcast-cross-validation-and-prediction-skill}{%
-\subsection{3.4. Hindcast Cross-Validation and prediction skill}\label{hindcast-cross-validation-and-prediction-skill}}
-
-Implementing the Hindcast Cross-Validation (HCxval) diagnostic in Stock Synthesis requires the same model outputs generated by \texttt{r4ss:SS\_doRetro()}. As a robust measure of prediction skill, we implemented the mean absolute scaled error (MASE). In brief, the MASE score scales the mean absolute. Regarding (A MASE score \textgreater{} 1 indicates that the average model forecasts are worse than a random walk. Conversely, a MASE score of 0.5 indicates that the model forecasts twice as
-accurately as a naïve baseline prediction; thus, the model has prediction skill.
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-1} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2} \end{center}
+Dado que la variabilidad del índice rho de Mohn depende de la historia de vida (usualmente
+mayor para especies de vida corta) y que el estadístico parece insensible a F, Hurtado-ferro et al. (\protect\hyperlink{ref-Hurtado2014}{2015})
+propusieron que el patrón retrospectivo de alguna de las variables biológico-pesqueras indicadas es
+preocupante si los valores del índice Mohn's rho son superiores a 0,20 o inferiores a -0,15 para especies
+de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida corta. Esto es un factor relevante al momento de hacer diagnosis con recursos como la coquina.
+Por su parte, las Tablas \ref{mod1}, \ref{mod2}, \ref{mod3} , \ref{mod4}y \ref{mod5} muestran el parametro Rho estimado para cada modelo y cada variable (\texttt{F}y \texttt{SSB})
 
 \begin{table}[H]
 
-\caption{\label{tab:unnamed-chunk-16}Rho parameter in SSB model s01}
+\caption{\label{tab:unnamed-chunk-14}\label{mod1}Rho parameter in SSB and F model s01}
 \centering
 \begin{tabular}[t]{llrr}
 \toprule
@@ -491,24 +470,12 @@ SSB & 2019 & 1.2906896 & 0.2479760\\
 SSB & 2018 & 1.5609331 & 2.5961966\\
 \addlinespace
 SSB & Combined & 0.6050453 & 0.5277967\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-
-\caption{\label{tab:unnamed-chunk-16}Rho parameter in F model s01}
-\centering
-\begin{tabular}[t]{llrr}
-\toprule
-type & peel & Rho & ForcastRho\\
-\midrule
 F & 2022 & 0.0000000 & 0.3780084\\
 F & 2021 & 0.0000000 & 0.0000000\\
 F & 2020 & -0.1174900 & 0.0000000\\
 F & 2019 & -0.6487907 & 0.0000000\\
-F & 2018 & -0.7023415 & -0.7822336\\
 \addlinespace
+F & 2018 & -0.7023415 & -0.7822336\\
 F & Combined & -0.2937244 & -0.0808450\\
 \bottomrule
 \end{tabular}
@@ -516,7 +483,7 @@ F & Combined & -0.2937244 & -0.0808450\\
 
 \begin{table}[H]
 
-\caption{\label{tab:unnamed-chunk-16}Rho parameter in SSB model s2}
+\caption{\label{tab:unnamed-chunk-14}\label{mod2}Rho parameter in SSB  and F model s2}
 \centering
 \begin{tabular}[t]{llrr}
 \toprule
@@ -529,108 +496,117 @@ SSB & 2019 & 1.2680436 & 0.4409779\\
 SSB & 2018 & 1.2052425 & 1.8933489\\
 \addlinespace
 SSB & Combined & 0.6064675 & 0.4380795\\
+F & 2022 & -0.0925900 & 0.5192489\\
+F & 2021 & 0.0000000 & 0.0000000\\
+F & 2020 & -0.3751975 & 0.0000000\\
+F & 2019 & -0.6348327 & -0.1960775\\
+\addlinespace
+F & 2018 & -0.6391313 & -0.7141121\\
+F & Combined & -0.3483503 & -0.0781881\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[H]
 
-\caption{\label{tab:unnamed-chunk-16}Rho parameter in F model s2}
+\caption{\label{tab:unnamed-chunk-14}\label{mod3}Rho parameter in SSB  and F model s3}
 \centering
 \begin{tabular}[t]{llrr}
 \toprule
 type & peel & Rho & ForcastRho\\
 \midrule
-F & 2022 & -0.0925900 & 0.5192489\\
-F & 2021 & 0.0000000 & 0.0000000\\
-F & 2020 & -0.3751975 & 0.0000000\\
-F & 2019 & -0.6348327 & -0.1960775\\
-F & 2018 & -0.6391313 & -0.7141121\\
+SSB & 2022 & 0.0097544 & 0.0123383\\
+SSB & 2021 & -0.0000725 & 0.0014093\\
+SSB & 2020 & 0.0627174 & 0.0029631\\
+SSB & 2019 & 1.4116113 & 0.3632151\\
+SSB & 2018 & 1.7020079 & 3.0471431\\
 \addlinespace
-F & Combined & -0.3483503 & -0.0781881\\
+SSB & Combined & 0.6372037 & 0.6854138\\
+F & 2022 & 0.0000000 & 0.0000000\\
+F & 2021 & 0.0000000 & 0.0000000\\
+F & 2020 & 0.0000000 & 0.0000000\\
+F & 2019 & -0.6866577 & 0.0000000\\
+\addlinespace
+F & 2018 & -0.7401548 & -0.8224069\\
+F & Combined & -0.2853625 & -0.1644814\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-14}\label{mod4}Rho parameter in SSB  and F model s4}
+\centering
+\begin{tabular}[t]{llrr}
+\toprule
+type & peel & Rho & ForcastRho\\
+\midrule
+SSB & 2022 & 0.0097604 & 0.0123370\\
+SSB & 2021 & -0.0001312 & 0.0007093\\
+SSB & 2020 & 0.0674568 & 0.0036351\\
+SSB & 2019 & 1.4115407 & 0.3631969\\
+SSB & 2018 & 1.7019930 & 3.0471066\\
+\addlinespace
+SSB & Combined & 0.6381240 & 0.6853970\\
+F & 2022 & 0.0000000 & 0.0000000\\
+F & 2021 & 0.0000000 & 0.0000000\\
+F & 2020 & 0.0000000 & 0.0000000\\
+F & 2019 & -0.6866476 & 0.0000000\\
+\addlinespace
+F & 2018 & -0.7401548 & -0.8224054\\
+F & Combined & -0.2853605 & -0.1644811\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+
+\caption{\label{tab:unnamed-chunk-14}\label{mod5}Rho parameter in SSB  and F model s5}
+\centering
+\begin{tabular}[t]{llrr}
+\toprule
+type & peel & Rho & ForcastRho\\
+\midrule
+SSB & 2022 & 0.0092222 & 0.0112010\\
+SSB & 2021 & -0.0001125 & 0.0001678\\
+SSB & 2020 & 0.0665680 & 0.0040716\\
+SSB & 2019 & 1.4099662 & 0.3620489\\
+SSB & 2018 & 1.7008148 & 3.0445052\\
+\addlinespace
+SSB & Combined & 0.6372917 & 0.6843989\\
+F & 2022 & 0.0000000 & 0.0000000\\
+F & 2021 & 0.0000000 & 0.0000000\\
+F & 2020 & 0.0000000 & 0.0000000\\
+F & 2019 & -0.6866099 & 0.0000000\\
+\addlinespace
+F & 2018 & -0.7401086 & -0.8223871\\
+F & Combined & -0.2853437 & -0.1644774\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{hindcast-cross-validation-and-prediction-skill}{%
+\subsection{3.4. Hindcast Cross-Validation and prediction skill}\label{hindcast-cross-validation-and-prediction-skill}}
+
+Implementing the Hindcast Cross-Validation (HCxval) diagnostic in Stock Synthesis requires the same model outputs generated by \texttt{r4ss:SS\_doRetro()}. As a robust measure of prediction skill, we implemented the mean absolute scaled error (MASE). In brief, the MASE score scales the mean absolute. Regarding (A MASE score \textgreater{} 1 indicates that the average model forecasts are worse than a random walk. Conversely, a MASE score of 0.5 indicates that the model forecasts twice as
+accurately as a naïve baseline prediction; thus, the model has prediction skill.
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-16-1} \end{center}
 
 \pagebreak
 
 \hypertarget{comparaciuxf3n-de-resultados-entre-modelos}{%
 \subsection{3.5. Comparación de resultados entre modelos}\label{comparaciuxf3n-de-resultados-entre-modelos}}
 
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19} \end{center}
-
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20} \end{center}
-
-\begin{verbatim}
-##  [1] 3.065958e+02 3.518800e+02 9.995759e-01 1.035935e+00 1.363499e+00
-##  [6] 1.488604e+00 4.200000e+00 6.514884e+00 2.799352e+05 3.403843e+05
-## [11] 8.855721e-01 1.055893e+00 7.996957e+01 4.439662e+00 1.363499e+00
-## [16]           NA           NA
-\end{verbatim}
-
-Lo analisis comparados, muestran las estimaciones de cada escenario propuesto para los casos de fraccion de biomasa virginal (Figura \ref{fig:biov}), desvio de los reclutamientos (Figura \ref{fig:devrec}) y mortalidad por pesca (Figura \ref{fig:ftotal}).
+Lo analisis comparados, muestran las estimaciones de cada escenario propuesto para los casos de fraccion de biomasa virginal (Figura \ref{fig:biov}), desvio de los reclutamientos (Figura \ref{fig:devrec}) y mortalidad por pesca (Figura \ref{fig:ftotal}) y densidad de estimacion de SSB (Figura \ref{fig:denssb}).
 
 \begin{figure}[H]
 
-{\centering \includegraphics[width=0.8\linewidth]{Fig/compare4_Bratio_uncertainty} 
+{\centering \includegraphics{Dtrunculus_SS3_2024_files/figure-latex/devrec-1} 
 
 }
 
-\caption{\label{fig:biov}Comparación escenario de razon de Biomasa}\label{fig:biov}
-\end{figure}
-
-\begin{figure}[H]
-
-{\centering \includegraphics[width=6.5in]{Fig/compare12_recdevs_uncertainty} 
-
-}
-
-\caption{\label{fig:devrec}Comparación escenarios de desvios de reclutamiento}\label{fig:debrec}
-\end{figure}
-
-\begin{figure}[H]
-
-{\centering \includegraphics[width=0.8\linewidth]{Fig/compare8_Fvalue_uncertainty} 
-
-}
-
-\caption{\label{fig:ftotal}Comparación escenarios de Mortalidad por Pesca}\label{fig:ftotal}
+\caption{\label{fig:devrec}Comparación escenario de razon de Biomasa}\label{fig:devrec}
 \end{figure}
 
 \hypertarget{status}{%
@@ -642,7 +618,11 @@ Lo analisis comparados, muestran las estimaciones de cada escenario propuesto pa
 ## 
 \end{verbatim}
 
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1} \end{center}
+\begin{verbatim}
+## 
+##  starter.sso with Bratio: SSB/SSB0 and F: _abs_F 
+## 
+\end{verbatim}
 
 \begin{verbatim}
 ## 
@@ -650,7 +630,13 @@ Lo analisis comparados, muestran las estimaciones de cada escenario propuesto pa
 ## 
 \end{verbatim}
 
-\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-2} \end{center}
+\begin{verbatim}
+## 
+##  starter.sso with Bratio: SSB/SSB0 and F: _abs_F 
+## 
+\end{verbatim}
+
+\begin{center}\includegraphics{Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1} \end{center}
 
 \pagebreak
 
@@ -683,10 +669,10 @@ Caddy, J. F. (2004). {Current usage of fisheries indicators and reference points
 Hurtado-ferro, F., Szuwalski, C. S., Valero, J. L., Anderson, S. C., Cunningham, C. J., Johnson, K. F., Licandeo, R., Mcgilliard, C. R., Monnahan, C. C., Muradian, M. L., Ono, K., Vert-Pre, K. A., Whitten, A. R., \& Punt, A. E. (2015). {Looking in the rear-view mirror: bias and retrospective patterns in integrated, age-structured stock assessment models}. \emph{ICES Journal of Marine Science}, \emph{72}, 99--110.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Methot2013}{}}%
-Methot, Richard D., \& Wetzel, C. R. (2013). {Stock synthesis: A biological and statistical framework for fish stock assessment and fishery management}. \emph{Fisheries Research}, \emph{142}, 86--99. \url{https://doi.org/10.1016/j.fishres.2012.10.012}
+Methot, R., \& Wetzel, C. (2013). {Stock synthesis: A biological and statistical framework for fish stock assessment and fishery management}. \emph{Fisheries Research}, \emph{142}, 86--99. \url{https://doi.org/10.1016/j.fishres.2012.10.012}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Methot2023}{}}%
-Methot, Richard D., Wetzel, C. R., Taylor, I. G., Doering, K., \& Jhonson, K. (2023). \emph{{Stock Synthesis User Manual Version 3.30.21}}. NOAA Fisheries Seattle, WA.
+Methot, R., Wetzel, C., Taylor, I., Doering, K., \& Jhonson, K. (2023). \emph{{Stock Synthesis User Manual Version 3.30.21}}. NOAA Fisheries Seattle, WA.
 
 \leavevmode\vadjust pre{\hypertarget{ref-Taylor2019}{}}%
 Taylor, I. (2019). {Using R for Stock Synthesis Installing R and getting R4SS}. \emph{Fisheries Science}, \emph{November}.

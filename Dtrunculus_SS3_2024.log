@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.11.5)  7 APR 2024 13:16
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.11.5)  8 APR 2024 12:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -93,7 +93,17 @@ Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-)) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/lmodern.sty
+)) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
+) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/base/inputenc.sty
+Package: inputenc 2021/02/14 v1.3d Input encoding file
+\inpenc@prehook=\toks21
+\inpenc@posthook=\toks22
+) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/base/textcomp.sty
+Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
+) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/lmodern.sty
 Package: lmodern 2015/05/01 v1.6.1 Latin Modern Fonts
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> OT1/lmr/m/n on input line 22.
@@ -127,19 +137,6 @@ LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> OT1/lmr/bx/it on input line 37.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> OT1/lmtt/m/n on input line 38.
-) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty
-Package: iftex 2022/02/03 v1.0f TeX engine tests
-) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/base/fontenc.sty
-Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 112.
-(/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/t1lmr.fd
-File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/base/inputenc.sty
-Package: inputenc 2021/02/14 v1.3d Input encoding file
-\inpenc@prehook=\toks21
-\inpenc@posthook=\toks22
-) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/base/textcomp.sty
-Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
 ) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/microtype/microtype.sty
 Package: microtype 2022/06/23 v3.0f Micro-typographical refinements (RS)
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/graphics/keyval.sty
@@ -506,8 +503,11 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 28
 File: bkm-pdftex.def 2020-11-06 v1.29 bookmark driver for pdfTeX (HO)
 \BKM@id=\count313
 ))
-Package hyperref Info: Option `colorlinks' set `true' on input line 121.
-(/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+Package hyperref Info: Option `colorlinks' set `true' on input line 124.
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 130.
+(/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/t1lmr.fd
+File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2023-01-16 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count314
 \l__pdf_internal_box=\box74
@@ -519,68 +519,65 @@ LaTeX Warning: Label `fig:esq' multiply defined.
 LaTeX Warning: Label `fig:data' multiply defined.
 
 
-LaTeX Warning: Label `fig:bio' multiply defined.
-
-
 LaTeX Warning: Label `fig:sel' multiply defined.
 
 
 LaTeX Warning: Label `fig:fitpob' multiply defined.
 
 
-LaTeX Warning: Label `fig:fitcom' multiply defined.
-
-
 LaTeX Warning: Label `fig:ssb' multiply defined.
 
 
-LaTeX Warning: Label `tab:unnamed-chunk-16' multiply defined.
+LaTeX Warning: Label `fig:ssb1' multiply defined.
 
 
-LaTeX Warning: Label `tab:unnamed-chunk-16' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-14' multiply defined.
 
 
-LaTeX Warning: Label `tab:unnamed-chunk-16' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-14' multiply defined.
 
 
-LaTeX Warning: Label `fig:biov' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-14' multiply defined.
 
 
-LaTeX Warning: Label `fig:ftotal' multiply defined.
+LaTeX Warning: Label `tab:unnamed-chunk-14' multiply defined.
+
+
+LaTeX Warning: Label `fig:devrec' multiply defined.
 
 )
 \openout1 = `Dtrunculus_SS3_2024.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 127.
-LaTeX Font Info:    ... okay on input line 127.
-LaTeX Info: Redefining \microtypecontext on input line 127.
-Package microtype Info: Applying patch `item' on input line 127.
-Package microtype Info: Applying patch `toc' on input line 127.
-Package microtype Info: Applying patch `eqnum' on input line 127.
-Package microtype Info: Applying patch `footnote' on input line 127.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 130.
+LaTeX Font Info:    ... okay on input line 130.
+LaTeX Info: Redefining \microtypecontext on input line 130.
+Package microtype Info: Applying patch `item' on input line 130.
+Package microtype Info: Applying patch `toc' on input line 130.
+Package microtype Info: Applying patch `eqnum' on input line 130.
+Package microtype Info: Applying patch `footnote' on input line 130.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using protrusion set `basicmath'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 127.
+LaTeX Info: Redefining \showhyphens on input line 130.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -626,41 +623,41 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-Package hyperref Info: Link coloring ON on input line 127.
+Package hyperref Info: Link coloring ON on input line 130.
 <IEO-logo2.png, id=4, 353.32pt x 126.4725pt>
 File: IEO-logo2.png Graphic file (type png)
 <use IEO-logo2.png>
-Package pdftex.def Info: IEO-logo2.png  used on input line 129.
+Package pdftex.def Info: IEO-logo2.png  used on input line 132.
 (pdftex.def)             Requested size: 284.53253pt x 101.8497pt.
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 129.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 132.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 129.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 132.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 129.
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 132.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 129.
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 132.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 129.
+(Font)              <12> on input line 132.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 129.
+(Font)              <8> on input line 132.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 129.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 129.
+(Font)              <6> on input line 132.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 132.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 ) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 129.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 132.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/microtype/mt-msb.cfg
@@ -688,254 +685,104 @@ LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
 <FIg/Diagrama_Modelo.png, id=59, 911.405pt x 512.91624pt>
 File: FIg/Diagrama_Modelo.png Graphic file (type png)
 <use FIg/Diagrama_Modelo.png>
-Package pdftex.def Info: FIg/Diagrama_Modelo.png  used on input line 189.
+Package pdftex.def Info: FIg/Diagrama_Modelo.png  used on input line 192.
 (pdftex.def)             Requested size: 469.76126pt x 264.37004pt.
 [2 <./FIg/Diagrama_Modelo.png>]
 <s1/plots/data_plot.png, id=74, 1957.3125pt x 1957.3125pt>
 File: s1/plots/data_plot.png Graphic file (type png)
 <use s1/plots/data_plot.png>
-Package pdftex.def Info: s1/plots/data_plot.png  used on input line 217.
+Package pdftex.def Info: s1/plots/data_plot.png  used on input line 220.
 (pdftex.def)             Requested size: 375.80571pt x 375.80571pt.
 [3 <./s1/plots/data_plot.png>]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 261.
-
-Package hyperref Warning: Suppressing empty link on input line 304.
-
-[4]
-<Dtrunculus_SS3_2024_files/figure-latex/bio-1.jpeg, id=114, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/bio-1.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/bio-1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/bio-1.jpeg  used on input line 308.
-(pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[5]
-<Dtrunculus_SS3_2024_files/figure-latex/bio-2.jpeg, id=121, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/bio-2.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/bio-2.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/bio-2.jpeg  used on input line 316.
-(pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[6 <./Dtrunculus_SS3_2024_files/figure-latex/bio-1.jpeg> <./Dtrunculus_SS3_2024_files/figure-latex/bio-2.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg, id=128, 469.755pt x 325.215pt>
+(Font)              <9> on input line 264.
+<Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg, id=97, 469.755pt x 325.215pt>
 File: Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg Graphic file (type jpg)
 <use Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg  used on input line 327.
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg  used on input line 311.
 (pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[7 <./Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg>]
+[4] [5] [6 <./Dtrunculus_SS3_2024_files/figure-latex/sel-1.jpeg>]
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 362.
-<s1/plots/comp_lenfit_flt2mkt0.png, id=139, 1957.3125pt x 1957.3125pt>
-File: s1/plots/comp_lenfit_flt2mkt0.png Graphic file (type png)
-<use s1/plots/comp_lenfit_flt2mkt0.png>
-Package pdftex.def Info: s1/plots/comp_lenfit_flt2mkt0.png  used on input line 371.
-(pdftex.def)             Requested size: 375.80571pt x 375.80571pt.
-<s1/plots/comp_lenfit_flt1mkt0.png, id=140, 1957.3125pt x 1957.3125pt>
-File: s1/plots/comp_lenfit_flt1mkt0.png Graphic file (type png)
-<use s1/plots/comp_lenfit_flt1mkt0.png>
-Package pdftex.def Info: s1/plots/comp_lenfit_flt1mkt0.png  used on input line 380.
-(pdftex.def)             Requested size: 375.80571pt x 375.80571pt.
-[8 <./s1/plots/comp_lenfit_flt2mkt0.png>] [9 <./s1/plots/comp_lenfit_flt1mkt0.png>]
-
-Package hyperref Warning: Suppressing empty link on input line 428.
-
-<Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg, id=155, 469.755pt x 325.215pt>
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 346.
+<Dtrunculus_SS3_2024_files/figure-latex/fitpob-1.jpeg, id=132, 469.755pt x 325.215pt>
+File: Dtrunculus_SS3_2024_files/figure-latex/fitpob-1.jpeg Graphic file (type jpg)
+<use Dtrunculus_SS3_2024_files/figure-latex/fitpob-1.jpeg>
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/fitpob-1.jpeg  used on input line 355.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+<Dtrunculus_SS3_2024_files/figure-latex/fitpob-2.jpeg, id=133, 469.755pt x 325.215pt>
+File: Dtrunculus_SS3_2024_files/figure-latex/fitpob-2.jpeg Graphic file (type jpg)
+<use Dtrunculus_SS3_2024_files/figure-latex/fitpob-2.jpeg>
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/fitpob-2.jpeg  used on input line 363.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+[7 <./Dtrunculus_SS3_2024_files/figure-latex/fitpob-1.jpeg>] [8 <./Dtrunculus_SS3_2024_files/figure-latex/fitpob-2.jpeg>]
+<Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg, id=149, 469.755pt x 325.215pt>
 File: Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg Graphic file (type jpg)
 <use Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg  used on input line 432.
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg  used on input line 417.
 (pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[10]
-<Dtrunculus_SS3_2024_files/figure-latex/ssb-2.jpeg, id=163, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/ssb-2.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/ssb-2.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/ssb-2.jpeg  used on input line 440.
+[9]
+<Dtrunculus_SS3_2024_files/figure-latex/ssb1-1.jpeg, id=159, 469.755pt x 325.215pt>
+File: Dtrunculus_SS3_2024_files/figure-latex/ssb1-1.jpeg Graphic file (type jpg)
+<use Dtrunculus_SS3_2024_files/figure-latex/ssb1-1.jpeg>
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/ssb1-1.jpeg  used on input line 426.
 (pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[11 <./Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg> <./Dtrunculus_SS3_2024_files/figure-latex/ssb-2.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg, id=171, 469.755pt x 325.215pt>
+[10 <./Dtrunculus_SS3_2024_files/figure-latex/ssb-1.jpeg> <./Dtrunculus_SS3_2024_files/figure-latex/ssb1-1.jpeg>]
+<Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg, id=166, 469.755pt x 325.215pt>
 File: Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg Graphic file (type jpg)
 <use Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg  used on input line 462.
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg  used on input line 444.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-1.jpeg, id=172, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-1.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-1.jpeg  used on input line 475.
+[11 <./Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg>] [12] [13]
+<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-16-1.jpeg, id=193, 469.755pt x 325.215pt>
+File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-16-1.jpeg Graphic file (type jpg)
+<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-16-1.jpeg>
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-16-1.jpeg  used on input line 594.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[12 <./Dtrunculus_SS3_2024_files/figure-latex/retro -1.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2.jpeg, id=181, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2.jpeg  used on input line 477.
+[14 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-16-1.jpeg>]
+
+LaTeX Warning: Reference `fig:biov' on page 15 undefined on input line 601.
+
+
+LaTeX Warning: Reference `fig:ftotal' on page 15 undefined on input line 601.
+
+
+LaTeX Warning: Reference `fig:denssb' on page 15 undefined on input line 601.
+
+<Dtrunculus_SS3_2024_files/figure-latex/devrec-1.jpeg, id=200, 469.755pt x 325.215pt>
+File: Dtrunculus_SS3_2024_files/figure-latex/devrec-1.jpeg Graphic file (type jpg)
+<use Dtrunculus_SS3_2024_files/figure-latex/devrec-1.jpeg>
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/devrec-1.jpeg  used on input line 605.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[13 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-1.jpeg>] [14 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-15-2.jpeg>] [15]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1.jpeg, id=198, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1.jpeg  used on input line 560.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2.jpeg, id=199, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2.jpeg  used on input line 562.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[16 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-1.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3.jpeg, id=205, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3.jpeg  used on input line 564.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[17 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-2.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4.jpeg, id=210, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4.jpeg  used on input line 566.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[18 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-3.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5.jpeg, id=216, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5.jpeg  used on input line 568.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[19 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-4.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6.jpeg, id=221, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6.jpeg  used on input line 570.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[20 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-5.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7.jpeg, id=226, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7.jpeg  used on input line 572.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[21 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-6.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8.jpeg, id=231, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8.jpeg  used on input line 574.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[22 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-7.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9.jpeg, id=236, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9.jpeg  used on input line 576.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[23 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-8.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10.jpeg, id=241, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10.jpeg  used on input line 578.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[24 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-9.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11.jpeg, id=247, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11.jpeg  used on input line 580.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[25 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-10.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12.jpeg, id=252, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12.jpeg  used on input line 582.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[26 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-11.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13.jpeg, id=257, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13.jpeg  used on input line 584.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[27 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-12.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14.jpeg, id=262, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14.jpeg  used on input line 586.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[28 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-13.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15.jpeg, id=267, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15.jpeg  used on input line 588.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[29 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-14.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16.jpeg, id=272, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16.jpeg  used on input line 590.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[30 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-15.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17.jpeg, id=278, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17.jpeg  used on input line 592.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[31 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-16.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18.jpeg, id=283, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18.jpeg  used on input line 594.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[32 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-17.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19.jpeg, id=288, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19.jpeg  used on input line 596.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[33 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-18.jpeg>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20.jpeg, id=293, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20.jpeg  used on input line 598.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[34 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-19.jpeg>]
-<Fig/compare4_Bratio_uncertainty.png, id=301, 469.755pt x 325.215pt>
-File: Fig/compare4_Bratio_uncertainty.png Graphic file (type png)
-<use Fig/compare4_Bratio_uncertainty.png>
-Package pdftex.def Info: Fig/compare4_Bratio_uncertainty.png  used on input line 611.
-(pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[35 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-17-20.jpeg>]
-<Fig/compare12_recdevs_uncertainty.png, id=309, 469.755pt x 325.215pt>
-File: Fig/compare12_recdevs_uncertainty.png Graphic file (type png)
-<use Fig/compare12_recdevs_uncertainty.png>
-Package pdftex.def Info: Fig/compare12_recdevs_uncertainty.png  used on input line 620.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[36 <./Fig/compare4_Bratio_uncertainty.png (PNG copy)>]
-<Fig/compare8_Fvalue_uncertainty.png, id=315, 469.755pt x 325.215pt>
-File: Fig/compare8_Fvalue_uncertainty.png Graphic file (type png)
-<use Fig/compare8_Fvalue_uncertainty.png>
-Package pdftex.def Info: Fig/compare8_Fvalue_uncertainty.png  used on input line 629.
-(pdftex.def)             Requested size: 375.80452pt x 260.17235pt.
-[37 <./Fig/compare12_recdevs_uncertainty.png (PNG copy)>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg, id=321, 469.755pt x 325.215pt>
+<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg, id=201, 469.755pt x 325.215pt>
 File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg Graphic file (type jpg)
 <use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg  used on input line 645.
+Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg  used on input line 639.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[38 <./Fig/compare8_Fvalue_uncertainty.png (PNG copy)>]
-<Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-2.jpeg, id=327, 469.755pt x 325.215pt>
-File: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-2.jpeg Graphic file (type jpg)
-<use Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-2.jpeg>
-Package pdftex.def Info: Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-2.jpeg  used on input line 653.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[39 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg>] [40 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-2.jpeg>]
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 662.
+[15 <./Dtrunculus_SS3_2024_files/figure-latex/devrec-1.jpeg>] [16 <./Dtrunculus_SS3_2024_files/figure-latex/unnamed-chunk-19-1.jpeg>]
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 648.
 (/Users/mauriciomardones/Library/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [41] [42] (./Dtrunculus_SS3_2024.aux)
+) [17] [18] (./Dtrunculus_SS3_2024.aux)
+
+LaTeX Warning: There were undefined references.
+
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 16443 strings out of 478033
- 292016 string characters out of 5838239
+ 16027 strings out of 478033
+ 266879 string characters out of 5838239
  1872330 words of memory out of 5000000
- 35985 multiletter control sequences out of 15000+600000
- 591187 words of font info for 157 fonts, out of 8000000 for 9000
+ 35603 multiletter control sequences out of 15000+600000
+ 593389 words of font info for 166 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 77i,17n,81p,1302b,528s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 77i,17n,81p,1291b,530s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}</Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx9.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbxi10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri12.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/mauriciomardones/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on Dtrunculus_SS3_2024.pdf (43 pages, 5586036 bytes).
+Output written on Dtrunculus_SS3_2024.pdf (19 pages, 2321177 bytes).
 PDF statistics:
- 501 PDF objects out of 1000 (max. 8388607)
- 375 compressed objects within 4 object streams
- 102 named destinations out of 1000 (max. 500000)
- 43327 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 375 PDF objects out of 1000 (max. 8388607)
+ 301 compressed objects within 4 object streams
+ 79 named destinations out of 1000 (max. 500000)
+ 43197 words of extra memory for PDF output out of 51595 (max. 10000000)
 

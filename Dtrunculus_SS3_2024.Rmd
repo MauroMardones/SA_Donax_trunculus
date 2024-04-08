@@ -278,7 +278,6 @@ parInit %>%
   kbl(booktabs = T,
       format = "latex",
       position="ht!",
-      align="c",
     caption = "\\label{Tab1}Parámetros de entrada al modelo inicial SS3 de coquina (S1). Cada línea de parámetro contiene un valor mínimo (LO), máximo (HI) e inicial (INIT). Si la fase (PHASE) para el parámetro es negativa, el parámetro es fijo de entrada") %>%
   kable_paper("hover", 
               full_width = F)%>%
@@ -296,17 +295,10 @@ parInit %>%
 
 ```
 
-Respecto a los valores y parametros biologicos modelados, los siguientes graficos (Figura \ref{fig:bio}) identifican los estimadores puntuales del recurso
-
-```{r bio, echo=FALSE, out.width = "80%",  fig.cap="\\label{fig:bio}Función de crecimiento asumida en el modelo. El área sombreada indica una distribución del 95% de la talla por edad alrededor de la curva de crecimiento estimada y Ojiva de madurez por talla para coquina"}
-SSplotBiology(base.model1,  
-              subplot=c(1, 6))
-```
-
 
 Por otro lado, y al existir dos tipos de muestreos, uno poblacional y otro comercial, se modelan las selectividades por separado como se identifica en la Figura \ref{fig:sel}
 
-```{r sel, echo=FALSE, out.width = "80%",  fig.cap="\\label{fig:sel}selectivity at length in end year for all fleets shown together para coquina"}
+```{r sel, echo=FALSE, out.width = "80%", fig.cap="\\label{fig:sel}selectivity at length in end year for all fleets shown together para coquina"}
 SSplotSelex(base.model1, 
             subplots = 1)
 ```
@@ -347,18 +339,15 @@ ESC1 %>% kbl(booktabs = T,
 
 # 3. RESULTADOS (Modelo Base `s1`)
 
-## 3.1 Ajustes y residuos
+## 3.1. Ajustes y residuos
 
-En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional (Figura \ref{fig:fitpob}) y comercial (Figura \ref{fig:fitcom}).
-
-
-```{r fitpob, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:fitpob}Fits Length comps, whole catch, POBLACIONAL para coquina"}
-knitr::include_graphics("s1/plots/comp_lenfit_flt2mkt0.png")
-```
+En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional (Figura \ref{fig:fitpob}) y comercial (Figura \ref{fig:fitpob}).
 
 
-```{r fitcom, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:fitcom}Fits Length comps, whole catch, COMERCIAL para coquina"}
-knitr::include_graphics("s1/plots/comp_lenfit_flt1mkt0.png")
+```{r fitpob, echo=FALSE,  fig.align='center', fig.cap="\\label{fig:fitpob}Fits Length comps whole catch COMERCIAL y POBLACIONAL para coquina"}
+SSplotComps(base.model1,
+            subplots=1, 
+            cols = 6)
 ```
 
 
@@ -367,6 +356,8 @@ knitr::include_graphics("s1/plots/comp_lenfit_flt1mkt0.png")
 
 ## 3.2.  Variables poblacionales
 
+
+El modelo permite estimar diferentes variables poblacionales, las cuales se enlistan en la Tabla \ref{Tab4};
 
 ```{r message=FALSE, include=FALSE}
 replist <- SS_output(dir=dir1,verbose=TRUE,printstats=TRUE)
@@ -408,14 +399,17 @@ kbl(booktabs = T,format = "latex",position="ht!",align="c",escape = FALSE,
 
 ```
 
-Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información.  Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico y biomasa desovante relativa (Figura \ref{fig:ssb}).
+Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información.  Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico (Figura \ref{fig:ssb}) y biomasa desovante relativa (Figura \ref{fig:ssb1}).
 
-```{r ssb, echo=FALSE, out.width="80%", fig.cap="\\label{fig:ssb}Spawning output with forecast with ~95% asymptotic intervals and relative spawining biomass to coquina"}
+```{r ssb, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{fig:ssb}Total biomass with forecast to coquina"}
 SSplotTimeseries(base.model1,
                  subplot = 7)
+```
+
+
+```{r ssb1, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{fig:ssb1}Spawning output with forecast with 95% asymptotic intervals and relative spawining biomass to coquina"}
 SSplotTimeseries(base.model1,
                  subplot = 9)
-
 ```
 
 
@@ -485,11 +479,8 @@ retroModels5 <- SSgetoutput(dirvec=file.path(dir5,
 retroSummary5 <- SSsummarize(retroModels5)
 ```
 
-Dado que la variabilidad del índice rho de Mohn depende de la historia de vida (usualmente
-mayor para especies de vida corta) y que el estadístico parece insensible a F, @Hurtado2014
-propusieron que el patrón retrospectivo de alguna de las variables biológico-pesqueras indicadas es
-preocupante si los valores del índice Mohn’s rho son superiores a 0,20 o inferiores a -0,15 para especies
-de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida corta. Esto es un factor relevante al momento de hacer diagnosis con recursos como la coquina. Los resultados de el análisis de sesgo para cada escenario son represetados por el parámetro de Rho en la Figura \ref{fig:retro}.
+Los resultados de el análisis de sesgo para cada escenario son represetados por el parámetro de Rho en la Figura \ref{fig:retro}.
+
 ```{r retro ,echo=FALSE, message=FALSE, warning=FALSE, fig.keep='all', fig.show="hold", fig.cap="\\label{fig:retro}Patrón restrospectivo para cada esnario modelado en coquina"}
 #save(retroSummary, retroModels, file="retro5.Rdata")
 
@@ -536,6 +527,62 @@ retro5 <- SSplotRetro(retroSummary5,
             tickEndYr=TRUE)
 ```
 
+Dado que la variabilidad del índice rho de Mohn depende de la historia de vida (usualmente
+mayor para especies de vida corta) y que el estadístico parece insensible a F, @Hurtado2014
+propusieron que el patrón retrospectivo de alguna de las variables biológico-pesqueras indicadas es
+preocupante si los valores del índice Mohn’s rho son superiores a 0,20 o inferiores a -0,15 para especies
+de vida larga, o superiores a 0,30 o inferiores a -0,22 para especies de vida corta. Esto es un factor relevante al momento de hacer diagnosis con recursos como la coquina.
+Por su parte, las Tablas  \ref{mod1}, \ref{mod2}, \ref{mod3} , \ref{mod4}y \ref{mod5} muestran el parametro Rho estimado para cada modelo y cada variable (`F`y `SSB`)
+
+```{r echo=FALSE}
+
+# model01
+tablebias1 <- SShcbias(retroSummary1,quant="SSB",verbose=F)
+tablebias1b <- SShcbias(retroSummary1,quant="F",verbose=F)
+table1 <- rbind(tablebias1, tablebias1b)
+
+kbl(table1, booktabs = T,format = "latex",
+    caption = "\\label{mod1}Rho parameter in SSB and F model s1")  %>% 
+    kable_styling(latex_options = "HOLD_position")
+
+# model2
+tablebias2 <- SShcbias(retroSummary2,quant="SSB",verbose=F)
+tablebias2b <- SShcbias(retroSummary2,quant="F",verbose=F)
+table2 <- rbind(tablebias2, tablebias2b)
+
+kbl(table2, booktabs = T,format = "latex",
+    caption = "\\label{mod2}Rho parameter in SSB  and F model s2")  %>% 
+    kable_styling(latex_options = "HOLD_position")
+
+# model3
+tablebias3 <- SShcbias(retroSummary3,quant="SSB",verbose=F)
+tablebias3b <- SShcbias(retroSummary3,quant="F",verbose=F)
+table3 <- rbind(tablebias3, tablebias3b)
+
+kbl(table3, booktabs = T,format = "latex",
+    caption = "\\label{mod3}Rho parameter in SSB  and F model s3")  %>% 
+    kable_styling(latex_options = "HOLD_position")
+
+# model4
+tablebias4 <- SShcbias(retroSummary4,quant="SSB",verbose=F)
+tablebias4b <- SShcbias(retroSummary4,quant="F",verbose=F)
+table4 <- rbind(tablebias4, tablebias4b)
+
+kbl(table4, booktabs = T,format = "latex",
+    caption = "\\label{mod4}Rho parameter in SSB  and F model s4")  %>% 
+    kable_styling(latex_options = "HOLD_position")
+
+# model5
+tablebias5 <- SShcbias(retroSummary5,quant="SSB",verbose=F)
+tablebias5b <- SShcbias(retroSummary5,quant="F",verbose=F)
+table5 <- rbind(tablebias5, tablebias5b)
+
+kbl(table5, booktabs = T,format = "latex",
+    caption = "\\label{mod5}Rho parameter in SSB  and F model s5")  %>% 
+    kable_styling(latex_options = "HOLD_position")
+
+
+```
 
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
 #En bulcle
@@ -566,37 +613,22 @@ accurately as a naïve baseline prediction; thus, the model has prediction skill
 
 
 ```{r}
-hci = SSplotHCxval(retroSummary1, 
+sspar(mfrow = c(2, 2), plot.cex = 0.8)
+hcl = SSplotHCxval(retroSummary1, 
                    add = T, 
                    verbose = F, 
-                   legendcex = 0.7)
+                   ylimAdj = 1.3,
+                   legendcex = 0.7, 
+                   indexselect = c(1, 2))
+hcl2 = SSplotHCxval(retroSummary2, 
+                   add = T, 
+                   verbose = F, 
+                   ylimAdj = 1.3,
+                   legendcex = 0.7, 
+                   indexselect = c(1, 2))
 ```
 
-```{r echo=FALSE}
-# model01
-tablebias1 <- SShcbias(retroSummary1,quant="SSB",verbose=F)
-tablebias1b <- SShcbias(retroSummary1,quant="F",verbose=F)
 
-kbl(tablebias1, booktabs = T,format = "latex",
-    caption = "Rho parameter in SSB model s01")  %>% 
-    kable_styling(latex_options = "HOLD_position")
-
-kbl(tablebias1b, booktabs = T,format = "latex",
-    caption = "Rho parameter in F model s01")  %>% 
-    kable_styling(latex_options = "HOLD_position")
-
-# model2
-tablebias2 <- SShcbias(retroSummary2,quant="SSB",verbose=F)
-tablebias2b <- SShcbias(retroSummary2,quant="F",verbose=F)
-
-kbl(tablebias2, booktabs = T,format = "latex",
-    caption = "Rho parameter in SSB model s2")  %>% 
-    kable_styling(latex_options = "HOLD_position")
-
-kbl(tablebias2b, booktabs = T,format = "latex",
-    caption = "Rho parameter in F model s2")  %>% 
-    kable_styling(latex_options = "HOLD_position")
-```
 
 
 \pagebreak
@@ -625,8 +657,13 @@ biglist <- SSgetoutput(keyvec = NULL,
 
 #create summary of model runs from list above
 summaryoutput <- SSsummarize(biglist)
+```
+Lo analisis comparados, muestran las estimaciones de cada escenario propuesto para los casos de fraccion de biomasa virginal (Figura \ref{fig:biov}), desvio de los reclutamientos (Figura \ref{fig:devrec}) y mortalidad por pesca (Figura \ref{fig:ftotal}) y densidad de estimacion de SSB (Figura \ref{fig:denssb}).
 
-comp <- SSplotComparisons(summaryoutput,
+```{r biov, echo=FALSE, out.width = "80%",fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{fig:biov}Comparación escenario de razon de Biomasa"}
+
+SSplotComparisons(summaryoutput,
+                  subplot = 4,
                   legendlabels = c(#"s01",
                                    "s1",
                                    "s2",
@@ -636,8 +673,26 @@ comp <- SSplotComparisons(summaryoutput,
                  pheight=4.5,
                  png=TRUE,
                  plotdir=fig_path)
-comp
 ```
+
+```{r devrec, echo=FALSE, fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{fig:devrec}Comparación escenario de razon de Biomasa"}
+par(mfrow=c(2,2), mar=c(1.5,5,3,2) + 0.1)
+SSplotComparisons(summaryoutput,
+                  subplot = c(4, 12, 3, 16),
+                  legendlabels = c(#"s01",
+                                   "s1",
+                                   "s2",
+                 "s3",
+                 "s4",
+                 "s5"),
+                 pheight=4.5,
+                 png=TRUE,
+                 plotdir=fig_path)
+```
+
+
+
+
 
 
 ```{r eval=FALSE}
@@ -675,28 +730,13 @@ kbl(comtable, booktabs = T,format = "latex",
 
 ```
 
-Lo analisis comparados, muestran las estimaciones de cada escenario propuesto para los casos de fraccion de biomasa virginal (Figura \ref{fig:biov}), desvio de los reclutamientos (Figura \ref{fig:devrec}) y mortalidad por pesca (Figura \ref{fig:ftotal}).
-
-
-```{r biov, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:biov}Comparación escenario de razon de Biomasa"}
-knitr::include_graphics("Fig/compare4_Bratio_uncertainty.png")
-```
-
-
-```{r debrec, echo=FALSE,  fig.align='center', fig.cap="\\label{fig:devrec}Comparación escenarios de desvios de reclutamiento"}
-knitr::include_graphics("Fig/compare12_recdevs_uncertainty.png")
-```
-
-
-```{r ftotal, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:ftotal}Comparación escenarios de Mortalidad por Pesca"}
-knitr::include_graphics("Fig/compare8_Fvalue_uncertainty.png")
-```
 
 # 4. STATUS
 
 
 
-```{r message=F}
+```{r message=FALSE, warning=FALSE}
+sspar(mfrow = c(2, 2), plot.cex = 0.8)
 mvln1 <- SSdeltaMVLN(base.model1,
                    Fref = "MSY", 
                    plot = TRUE,
@@ -706,6 +746,18 @@ mvln1 <- SSdeltaMVLN(base.model1,
                    years=seq(2004,2023,1))
 
 mvln2 <-  SSdeltaMVLN(base.model2,
+                   Fref = "MSY", 
+                   plot = TRUE,
+                   addprj=TRUE,
+                   virgin = TRUE,
+                   mc=100)
+mvln3 <-  SSdeltaMVLN(base.model3,
+                   Fref = "MSY", 
+                   plot = TRUE,
+                   addprj=TRUE,
+                   virgin = TRUE,
+                   mc=100)
+mvln4 <-  SSdeltaMVLN(base.model4,
                    Fref = "MSY", 
                    plot = TRUE,
                    addprj=TRUE,
