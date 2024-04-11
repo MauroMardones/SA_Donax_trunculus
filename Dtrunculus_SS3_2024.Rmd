@@ -38,9 +38,13 @@ A su vez, se destaca la utilidad de los programas de monitoreo de la población 
 El flujo de trabajo asociado a la modelación de stock, tanto componentes como fuentes de datos está representado de forma genérica en el siguiente diagrama de flujo (Figura \ref{fig:esq});
 
 
-```{r esq, echo=FALSE, out.width = "100%", fig.align='center', fig.cap="\\label{fig:esq}Esquema de modelación de coquina"}
+\begin{landscape}
+
+```{r esq, echo=FALSE, out.width = "100%", fig.align='center', fig.cap="\\label{esq}Esquema de modelación de coquina"}
 knitr::include_graphics("FIg/Diagrama_Modelo.png")
 ```
+
+\end{landscape}
 
 ```{r setup1, echo=FALSE}
 rm(list = ls())
@@ -218,7 +222,7 @@ Toda esta información, codigos fuente, bases de datos y Analisis Exploratorio d
 
 
 
-```{r data, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{fig:data}Cobertura temporal de las distintas fuentes de datos usadas en el modelo implementado en SS3 para coquina"}
+```{r data, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{data}Cobertura temporal de las distintas fuentes de datos usadas en el modelo implementado en SS3 para coquina"}
 knitr::include_graphics("s1/plots/data_plot.png")
 ```
 
@@ -298,13 +302,13 @@ parInit %>%
 
 Por otro lado, y al existir dos tipos de muestreos, uno poblacional y otro comercial, se modelan las selectividades por separado como se identifica en la Figura \ref{fig:sel}
 
-```{r sel, echo=FALSE, out.width = "80%", fig.cap="\\label{fig:sel}selectivity at length in end year for all fleets shown together para coquina"}
+```{r sel, echo=FALSE, out.width = "80%", fig.cap="\\label{sel}selectivity at length in end year for all fleets shown together para coquina"}
 SSplotSelex(base.model1, 
             subplots = 1)
 ```
 ## 2.5. Modelos alternativos (Escenarios)
 
-Para avanzar en la implementación metodológica, y considerando las fuentes de incertidumbre asociadas a la modelación de stock de coquina, se establecen una serie de modelos alternativo. Estos escenarios dicen relación con el subreporte de este tipo de pesquerias (Galicia paper ref) en particular, con la coquina (ref). Esto dado los niveles de furtivismo que no son reflejados en las cifras oficiales. Por ello, este ejercicio contempló una corrección al alza de los desembarques oficiales provistos por la Junta a traves de IDEASPA. Esto tiene como objetivo identificar el impacto del subreporte en la estimación de variables poblacionales, así como en el status del recurso.  Estos escenarios estan descritos en la Tabla \ref{Tab2}.
+Para avanzar en la implementación metodológica, y considerando las fuentes de incertidumbre asociadas a la modelación de stock de coquina, se establecen una serie de modelos alternativo. Estos escenarios dicen relación con el subreporte de este tipo de pesquerias [@Ballesteros2024] en particular, con la coquina [@Sordo2023]. Estudios en pesca ilegal en coquina, si bien identifican el furtuvismo, no dimensionan cantidades ni magnitudes y que no son reflejados en las cifras oficiales. Por ello, este ejercicio contempló una corrección al alza de los desembarques oficiales provistos por la Junta a traves de IDEASPA. Esto tiene como objetivo identificar el impacto del subreporte en la estimación de variables poblacionales, así como en el status del recurso.  Estos escenarios estan descritos en la Tabla \ref{Tab2}.
 
 
 ```{r}
@@ -341,13 +345,14 @@ ESC1 %>% kbl(booktabs = T,
 
 ## 3.1. Ajustes y residuos
 
-En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional (Figura \ref{fig:fitpob}) y comercial (Figura \ref{fig:fitpob}).
+En relación a los análisis de bondad de ajuste más clásicos, los ajustes a las tallas muestran un adecuado desempeño, siguiento las modas anuales de la estructura de tallas poblacional y comercial (Figura \ref{fig:fitpob}).
 
 
 ```{r fitpob, echo=FALSE,  fig.align='center', fig.cap="\\label{fig:fitpob}Fits Length comps whole catch COMERCIAL y POBLACIONAL para coquina"}
 SSplotComps(base.model1,
             subplots=1, 
-            cols = 6)
+            cols = 6,
+            fleetnames = c("Comercial", "Poblacional"))
 ```
 
 
@@ -401,13 +406,13 @@ kbl(booktabs = T,format = "latex",position="ht!",align="c",escape = FALSE,
 
 Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información.  Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico (Figura \ref{fig:ssb}) y biomasa desovante relativa (Figura \ref{fig:ssb1}).
 
-```{r ssb, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{fig:ssb}Total biomass with forecast to coquina"}
+```{r ssb, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{ssb}Total biomass with forecast to coquina"}
 SSplotTimeseries(base.model1,
                  subplot = 7)
 ```
 
 
-```{r ssb1, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{fig:ssb1}Spawning output with forecast with 95% asymptotic intervals and relative spawining biomass to coquina"}
+```{r ssb1, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{ssb1}Spawning output with forecast with 95% asymptotic intervals and relative spawining biomass to coquina"}
 SSplotTimeseries(base.model1,
                  subplot = 9)
 ```
@@ -481,7 +486,7 @@ retroSummary5 <- SSsummarize(retroModels5)
 
 Los resultados de el análisis de sesgo para cada escenario son represetados por el parámetro de Rho en la Figura \ref{fig:retro}.
 
-```{r retro ,echo=FALSE, message=FALSE, warning=FALSE, fig.keep='all', fig.show="hold", fig.cap="\\label{fig:retro}Patrón restrospectivo para cada esnario modelado en coquina"}
+```{r retro ,echo=FALSE, message=FALSE, warning=FALSE, fig.keep='all', fig.show="hold", fig.cap="\\label{retro}Patrón restrospectivo para cada esnario modelado en coquina"}
 #save(retroSummary, retroModels, file="retro5.Rdata")
 
 # retro01 <- SSplotRetro(retroSummary01,
@@ -489,7 +494,7 @@ Los resultados de el análisis de sesgo para cada escenario son represetados por
 #             forecast = F,
 #             legend = T,
 #             verbose=F)
-par(mfrow=c(3,2), mar=c(1.5,5,3,2) + 0.1)
+par(mfrow=c(2,2), mar=c(1.5,5,3,2) + 0.1)
 retro1 <- SSplotRetro(retroSummary1,
             add=T,
             forecast = F,
@@ -607,25 +612,40 @@ for (i in 1:num_iteraciones) {
 
 ## 3.4. Hindcast Cross-Validation and prediction skill
 
-Implementing the Hindcast Cross-Validation (HCxval) diagnostic in Stock Synthesis requires the same model outputs generated by `r4ss:SS_doRetro()`. As a robust measure of prediction skill, we implemented the mean absolute scaled error (MASE). In brief, the MASE score scales the mean absolute. Regarding (A MASE score > 1 indicates that the average model forecasts are worse than a random walk. Conversely, a MASE score of 0.5 indicates that the model forecasts twice as
-accurately as a naïve baseline prediction; thus, the model has prediction skill.
+Como una medida robusta de habilidad de predicción en la modelación de la población de coquina, implementamos el error medio absoluto escalado (MASE por sus siglas en inglés). En resumen, el puntaje MASE escala el error medio absoluto. En cuanto a un puntaje MASE > 1 indica que las predicciones promedio del modelo son peores que un movimiento aleatorio. Por el contrario, un puntaje MASE de 0.5 indica que las predicciones del modelo son el doble de precisas que una predicción de referencia ingenua; por lo tanto, el modelo tiene habilidad de predicción. En la Figura \ref{fig:hind}.
 
-
-
-```{r}
-sspar(mfrow = c(2, 2), plot.cex = 0.8)
+```{r hind ,echo=FALSE, message=FALSE, warning=FALSE, fig.keep='all', fig.show="hold", fig.cap="\\label{fig:hind}Error medio absoluto escalado para cada escenario de modelación de coquina"}
+par(mfrow=c(3,2), mar=c(1.5,5,3,2) + 0.1)
 hcl = SSplotHCxval(retroSummary1, 
                    add = T, 
                    verbose = F, 
                    ylimAdj = 1.3,
                    legendcex = 0.7, 
-                   indexselect = c(1, 2))
+                   indexselect = 2)
 hcl2 = SSplotHCxval(retroSummary2, 
                    add = T, 
                    verbose = F, 
                    ylimAdj = 1.3,
                    legendcex = 0.7, 
-                   indexselect = c(1, 2))
+                   indexselect = 2)
+hcl3 = SSplotHCxval(retroSummary3, 
+                   add = T, 
+                   verbose = F, 
+                   ylimAdj = 1.3,
+                   legendcex = 0.7, 
+                   indexselect = 2)
+hcl4 = SSplotHCxval(retroSummary4, 
+                   add = T, 
+                   verbose = F, 
+                   ylimAdj = 1.3,
+                   legendcex = 0.7, 
+                   indexselect = 2)
+hcl5 = SSplotHCxval(retroSummary5, 
+                   add = T, 
+                   verbose = F, 
+                   ylimAdj = 1.3,
+                   legendcex = 0.7, 
+                   indexselect = 2)
 ```
 
 
@@ -678,7 +698,7 @@ SSplotComparisons(summaryoutput,
 ```{r devrec, echo=FALSE, fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{fig:devrec}Comparación escenario de razon de Biomasa"}
 par(mfrow=c(2,2), mar=c(1.5,5,3,2) + 0.1)
 SSplotComparisons(summaryoutput,
-                  subplot = c(4, 12, 3, 16),
+                  subplot = c(4, 12, 1, 13),
                   legendlabels = c(#"s01",
                                    "s1",
                                    "s2",
@@ -733,10 +753,10 @@ kbl(comtable, booktabs = T,format = "latex",
 
 # 4. STATUS
 
+Por otro lado, y de acuerdo a los Puntos Biologicos de Referencia propuestos para este recurso, los cuales indican como objetivo un 40% de la Biomasas desvante y un F40% de la Biomasa desovante virginal, la Figura \ref{fig:status}) muestra la trayectoria y simulacion de 100 salidas con MCMC del pronostico para cada escenario evaluado.
 
-
-```{r message=FALSE, warning=FALSE}
-sspar(mfrow = c(2, 2), plot.cex = 0.8)
+```{r status, echo=FALSE,fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{status}Status de explotación para la población de coquina para cada escenario evaluado"}
+par(mfrow=c(2,2))
 mvln1 <- SSdeltaMVLN(base.model1,
                    Fref = "MSY", 
                    plot = TRUE,
@@ -763,13 +783,25 @@ mvln4 <-  SSdeltaMVLN(base.model4,
                    addprj=TRUE,
                    virgin = TRUE,
                    mc=100)
+mvln5 <-  SSdeltaMVLN(base.model5,
+                   Fref = "MSY", 
+                   plot = TRUE,
+                   addprj=TRUE,
+                   virgin = TRUE,
+                   mc=100)
 
 ```
 
 
 \pagebreak
 
-# 5. PROGRESO
+# 5. DISCUSIÓN
+
+La pesquería de la coquina...
+
+\pagebreak
+
+# 6. PROGRESO
 
 - explicar PBR
 
@@ -781,4 +813,4 @@ mvln4 <-  SSdeltaMVLN(base.model4,
 
 \pagebreak
 
-# 6. REFERENCIAS
+# 7. REFERENCIAS
