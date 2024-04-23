@@ -26,6 +26,7 @@ header-includes:
 \pagebreak
 
 
+
 # 1. CONTEXTO
 
 El objetivo de este documento es la implementación metodológica de la evaluación de stock de coquina *Donax trunculus* mediante un modelo integrado con datos en talla y dinamica en edad implemetnado en Stock Synthesis (SS3) (v.3.30.21) [@Methot2013; @Methot2023] para la zona del Golfo de Cádiz, España. Este trabajo está en el marco de la asesoría científica que lleva a cabo el Instituto Español de Oceanografía (IEO) realizado por el grupo de investigadores asociados al proyecto FEMP 04.
