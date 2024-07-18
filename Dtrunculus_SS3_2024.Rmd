@@ -47,6 +47,26 @@ knitr::include_graphics("FIg/Diagrama_Modelo.png")
 
 \end{landscape}
 
+
+
+```{r, message=FALSE}
+# ## Load packages
+library(r4ss)
+library(ss3diags)
+library(mvtnorm)
+library(FLCore)
+library(ggplotFL)
+library(kobe)
+require(plyr)
+require(dplyr)
+require(reshape2)
+library(grid)
+library(png)
+library(kableExtra)
+library(here)
+
+```
+
 ```{r setup1, echo=FALSE}
 rm(list = ls())
 knitr::opts_chunk$set(echo = FALSE,
@@ -89,7 +109,7 @@ dir5<-here("s5") #
 fig_path<-here("Fig")
 ```
 
-
+## run Model
 
 ```{r eval=FALSE, message=F, include=FALSE}
 # Lista de directorios para correro tordos juntos
@@ -116,9 +136,9 @@ for (dir in directorios) {
 # Corro escenario por separado 
 r4ss::run(
   dir = dir1,
-  exe = "ss_osx",
-  skipfinished = FALSE, # TRUE will skip running if Report.sso present
-  show_in_console = TRUE # change to true to watch the output go past
+  exe  = "ss_osx",
+  skipfinished = FALSE,
+  show_in_console = TRUE# change to true to watch the output go past
 )
 ```
 
@@ -158,7 +178,6 @@ SS_plots(base.model1,
          btarg=0.40,
          minbthresh=0.20, 
          forecast=T)
-
 ```
 
 
@@ -221,6 +240,9 @@ c . Información relativa a los parámetros de historia de vida de la coquina a 
 
 Toda esta información, codigos fuente, bases de datos y Analisis Exploratorio de Datos puede ser encontrado en el siguiente enlace: [Data coquina](https://mauromardones.github.io/EDA_Donux_trunculus_2023/). La cobertura temporal de las fuentes de datos varia de acuerdo a la disponibilidad asociada al programa y fuente (Figura \ref{fig:data});
 
+```{r}
+SSplotData(base.model1)
+```
 
 
 ```{r data, echo=FALSE, out.width = "80%", fig.align='center', fig.cap="\\label{data}Cobertura temporal de las distintas fuentes de datos usadas en el modelo implementado en SS3 para coquina"}
@@ -353,7 +375,10 @@ En relación a los análisis de bondad de ajuste más clásicos, los ajustes a l
 SSplotComps(base.model1,
             subplots=1, 
             cols = 6,
-            fleetnames = c("Comercial", "Poblacional"))
+            fleetnames = c("Comercial", "Poblacional"),
+            maxrows = 5,
+            maxcols = 2,
+            linescol = 4)
 ```
 
 
@@ -417,7 +442,32 @@ SSplotTimeseries(base.model1,
 SSplotTimeseries(base.model1,
                  subplot = 9)
 ```
+Variables poblacionales unidas
 
+SSB y F
+
+```{r}
+sspar(mfrow = c(2, 2), plot.cex =0.9)
+SSplotEnsemble(mvln1$kb, 
+               ylabs = mvln1$labels, 
+               subplots = c("SSB", "F", "Recr", "Catch"),
+               add = T, 
+               verbose = F,
+              legend = F,
+              shadecol = "gray",
+              col = "black")
+```
+```{r}
+sspar(mfrow = c(1, 2), plot.cex = 0.9)
+SSplotEnsemble(mvln1$kb, 
+               ylabs = mvln1$labels, 
+               subplots = c("stock", "harvest"),
+               add = T, 
+               verbose = F,
+              legend = F,
+              shadecol = "gray",
+              col = "black")
+```
 
 
 ## 3.3. Análisis Retrospectivo
@@ -501,8 +551,8 @@ retro1 <- SSplotRetro(retroSummary1,
             forecast = F,
             legend = T,
             verbose=F,
-            subplots = "F",
-            tickEndYr=TRUE,
+            subplots = "SSB",
+            tickEndYr=F,
             legendloc="left")
 retro2 <- SSplotRetro(retroSummary2,
             add=T,
@@ -513,7 +563,7 @@ retro2 <- SSplotRetro(retroSummary2,
 retro3 <- SSplotRetro(retroSummary3,
             add=T,
             forecast = F,
-            legend = T,
+            legendloc = "topright",
             verbose=F,
             subplots = "F",
             tickEndYr=TRUE)
@@ -757,7 +807,7 @@ kbl(comtable, booktabs = T,format = "latex",
 Por otro lado, y de acuerdo a los Puntos Biologicos de Referencia propuestos para este recurso, los cuales indican como objetivo un 40% de la Biomasas desvante y un F40% de la Biomasa desovante virginal, la Figura \ref{fig:status}) muestra la trayectoria y simulacion de 100 salidas con MCMC del pronostico para cada escenario evaluado.
 
 ```{r status, echo=FALSE,fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{status}Status de explotación para la población de coquina para cada escenario evaluado"}
-par(mfrow=c(2,2))
+par(mfrow=c(2,3))
 mvln1 <- SSdeltaMVLN(base.model1,
                    Fref = "MSY", 
                    plot = TRUE,
@@ -794,24 +844,18 @@ mvln5 <-  SSdeltaMVLN(base.model5,
 ```
 
 
-\pagebreak
+```{r}
+sspar(mfrow = c(1, 1), plot.cex = 0.8)
+SSplotKobe(rbind(mvln1$kb, mcmc$kb), joint = F, xlab = mvln1$labels[1], ylab = mvln1$labels[2],
+fill = F)
+```
 
-# 5. DISCUSIÓN
-
-La pesquería de la coquina...
-
-\pagebreak
-
-# 6. PROGRESO
-
-- explicar PBR
-
-- Definir estatus
-
-- `S01` falta implementar modelo
-
-- Falta mirar perfiles de verosimilitud
 
 \pagebreak
 
-# 7. REFERENCIAS
+# 5. TRABAJO EN PROGRESO
+
+
+\pagebreak
+
+# 6. REFERENCIAS
