@@ -1,0 +1,336 @@
+---
+title: "Summary Advice Sheet for blackspot seabream in GSAs 1 and 3 (SBR 1,3)"
+
+author: 
+ - WGSAD-GFCM 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    number_sections: yes
+    #toc: yes
+    #keep_tex: false
+vignette: >
+  %\VignetteIndexEntry{ss3daigs Vignetted}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r wrap-hook, echo = FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+```
+
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "  " ,fig.align = 'center', cache=FALSE,tidy.opts=list(width.cutoff=80), tidy=TRUE)
+
+```
+
+# Background
+
+This vignette present the analysis to produce the output summary of the stock status for blackspot seabream in the GSAs 1 and 3 (GSA-1-3), including short- and long-term forecasts.
+
+
+## Load packages
+
+
+```{r,message=F,warning=F}
+library(r4ss)
+library(ss3diags)
+library(FLCore)
+library(FLBRP)
+library(FLasher)
+library(FLSRTMB)
+library(ggplotFL)
+library(FLRef)
+library(ggplot2)
+library(ss3om)
+library(FLRef)
+```
+
+# Stock Status
+
+Load reference case model
+
+
+```{r}
+model = "basecase"
+```
+
+Load reference model 
+
+```{r,eval=F}
+
+ss3rep = SS_output(model)
+
+dir.create("rdata",showWarnings = F)
+save(ss3rep,file="rdata/SBR_1_3_RefYr2023.rdata")
+
+```
+
+```{r}
+# 2023  reporting (data) year - reference case 
+load(file="rdata/SBR_1_3_RefYr2023.rdata",verbose=T)
+ref2023 = ss3rep
+years=1983:2023
+
+mvnbase= FLRef::ssmvln(ref2023,addprj = F, Fref="Btgt",verbose=T)
+```
+
+
+```{r}
+sstk = ss2FLStockR(mvnbase)
+# Add Bpa + Blim
+sstk@refpts = rbind(sstk@refpts,
+                FLPar(Bpa=sstk@refpts[[2]]*0.5,Blim=sstk@refpts[[2]]*0.25)) 
+# with uncertainty
+stki = ss2FLStockR(mvnbase,output="iters",thin=1) 
+stki@refpts = sstk@refpts= sstk@refpts[c(1,2,6,7)]
+```
+
+```{r fig31, warning=F,message=F, fig.height=7,fig.width=9, fig.cap = paste0("Estimated stock status trajectories with associated reference points for the 2024 base-case scenario of blackspot seabream in GSAs 1-3")}
+
+plotAdvice(FLStocks(CIs=stki,Fit=sstk))+
+   scale_fill_manual(values = c("dodgerblue","black"))+
+  scale_color_manual(values = c(0,"black"))+
+  theme(legend.position = "none")+scale_x_continuous(breaks=seq(min(years),max(years),2))+
+  theme(axis.text.x = element_text(size=8, angle=90))
+
+```
+
+
+
+# F-based forecasting 
+
+
+Load all runs in one go with `SSgetoutput`
+
+```{r}
+Ffrac = c(0.001,0.25,0.5,0.75,1,1.25)
+runs = c(paste0("Fsq",Ffrac),"Ftgt")
+fdirs = file.path("forecast",runs)
+
+```
+
+```{r,eval=F}
+fcs = SSgetoutput(dirvec = fdirs)
+save(fcs,file="rdata/forecasts.rdata")
+```
+
+```{r,echo=F}
+load("rdata/forecasts.rdata")
+```
+
+Create list with outputs from `SSdeltaMVLN`
+
+\pagebreak
+
+Convert to `FLR` format
+
+
+```{r}
+
+fstks = FLStocks(Map(function(x,y){
+  out = FLRef::ssmvln(x,Fref="Btgt",verbose=F,run=y,addprj=T)
+  out = window(ss2FLStockR(out,thin=1),start=2023)
+  
+  out@refpts =  sstk@refpts # Remove B0
+  return(out)
+},x=fcs,y=as.list(c(paste0(Ffrac,"Fcur"),"Ftgt"))))
+names(fstks) = c(paste0(c(0,Ffrac[-1]),"Fcur"),"Ftgt")
+
+```
+
+\pagebreak
+
+```{r p10, fig.height=6.5,fig.width=9, warning=F,message=F, fig.cap = paste0("Trajectories for the basecase run and forecast scanarios relative $F_{cur} = F_{2023}$ and for $F_{tgt}$ ")}
+
+# add ref
+pstks = FLStocks(c(FLStocks(Assessment = sstk), fstks))
+plotAdvice(window(pstks)) + geom_vline(xintercept = c(2023, 2024, 2030),
+linetype = 2) + scale_color_manual(values = c("black", sscol(length(fstks)))) +
+scale_x_continuous(breaks = seq(1985, 2045, 5)) + theme(axis.text.x = element_text(size = 8,
+angle = 90))
+
+```
+
+
+\pagebreak
+
+```{r}
+out.st  =FLRef::fwd2stars(fstks,eval.yrs = 2026,rel=T)
+out.lt = FLRef::fwd2stars(fstks,eval.yrs = 2042,rel=T)
+
+
+knitr::kable(out.st,"pipe",
+      align ="lccccc",caption="Summary of short-term forecast scenario results for 2026")
+
+knitr::kable(out.lt,"pipe",
+      align ="lccccc",caption="Summary of long-term forecast scenario results for 2042")
+
+```
+
+
+Save STAR data
+
+```{r}
+ 
+out = FLRef::flr2stars(stki)$timeseries
+mles = FLRef::flr2stars(sstk)
+# replace medians with mles (TODO: automise)
+out$Rec=mles$timeseries$Rec
+out$SSB=mles$timeseries$SSB
+out$Bratio=mles$timeseries$Bratio
+out$F=mles$timeseries$F
+out$Fratio=mles$timeseries$Fratio
+
+
+write.csv(out,file="sbr1.3.ts.stars.csv",row.names = F)
+write.csv(mles$refpts,file="sbr1.2.3.refpts.stars.csv",row.names = F)
+
+# Forecast
+
+fwdout= cbind(out.st,out.lt[-1])
+write.csv(fwdout,file="sbr1.3.fwd.stars.csv",row.names = F)
+
+
+```
+
+
+# ss3om
+
+## Build FLStock
+
+SS3 outputs are loaded with the `readFLSss3()` into an `FLStock` object. The folder that contains the model outputs has to be specified.
+
+In the following, the area outside is evaluated first.
+
+```{r}
+run = "basecase"
+stk = window(ss3om::readFLSss3(run,wtatage = TRUE,forecast=T),end=2023)
+sr = ss3om::readFLSRss3(run)
+stk@name = "SBR.1_3"
+stk@desc = "2024, GFCM, SS3"
+```
+
+Check that the fbar range is consistent with `ss.starter` input.
+
+```{r}
+range(stk)
+
+```
+```{r fig8a, message=FALSE,warning=FALSE,fig.height=10,fig.width=6, fig.cap = paste0("Seasonal  stock trajectories for SBR 1-3") }
+plot(stk)+theme_bw()+ylab("F")+xlab("Year")
+
+```
+
+\pagebreak
+
+
+```{r fig8b, message=FALSE,warning=FALSE,fig.height=7,fig.width=8, fig.cap = paste0("Combined Stock trajectories for SBR 1-3") }
+flqs= FLQuants(SSB=unitSums(ssb(stk)),Vuln.bio=unitSums(vb(stk)),Tot.bio=unitSums(stock(stk)),
+               H=unitSums(catch(stk))/unitSums(vb(stk)))
+plot(flqs)+theme_bw()+xlab("Year")+facet_wrap(~qname,scales="free_y")
+
+```
+
+
+```{r fig8c , message=FALSE,warning=FALSE,fig.height=7,fig.width=8, fig.cap = paste0("Combined Stock trajectories by sex for SBR 1-3") }
+flqs= FLQuants(SSB=(ssb(stk[,,1])),Vuln.bio=(vb(stk)),Tot.bio=(stock(stk)),N=(quantSums(stock.n(stk))))
+plot(flqs)+theme_bw()+xlab("Year")+facet_wrap(~qname,scales="free_y")
+
+```
+
+\pagebreak
+
+### Plot SS3 Stock Dynamics
+
+
+```{r fig1.1.2, fig.height=8,fig.width=6, fig.cap = paste0("Stock assessment trajectories at age")}
+
+plotdyn(stk)
+```
+
+\newpage 
+
+```{r fig1.1.3, fig.height=6, fig.cap = paste0("Stock biology trajectories at age")}
+
+plotbioyr(stk)+
+  ggtitle(paste0(stk@name))
+
+```
+
+\newpage 
+
+```{r fig1.1.4, fig.height=6, fig.cap = paste0("Annual stock quanties at age")}
+
+plotbioage(stk)+theme(legend.position = "none")
+```
+
+
+
+\pagebreak
+
+## Consistency checks using backcasting
+
+Set seed
+
+```{r}
+set.seed(1507)
+```
+
+Get bias adjusted recruitment deviations from ss3 model
+
+
+```{r}
+stk1 = FLCore::simplify(stk)
+out = ss3om::readOutputss3(run)
+yrs = an(dimnames(stk)$year)
+recruit = out$recruit[out$recruit$Yr%in%yrs,]
+dms <- list(year = yrs, season = out$spawnseas)
+sigR =  an(out$sigma_R_info[1,3]) # Realised sigR
+residuals <- FLQuant(exp(recruit$dev - 0.5 * recruit$biasadjuster *sigR^2), 
+        dimnames = c(age = 0, dms), units = "")
+residuals[is.na(residuals)] =1# exp(-0.5*sigR^2)
+
+
+```
+
+```{r}
+# TUNE
+for(i in 1:4){
+testF = fwd(stk1, sr=sr,
+  control=fwdControl(year=1984:2023, value=unitMeans(fbar(stk1)[, ac(1984:2023)]),
+  quant="fbar"),deviances=residuals)
+residuals= residuals*exp(log(rec(stk1))-log(rec(testF)))
+
+testF = fwd(stk1, sr=sr,
+  control=fwdControl(year=1984:2023, value=unitMeans(fbar(stk1)[, ac(1984:2023)]),
+  quant="fbar"),deviances=residuals)
+}
+```
+
+```{r hc1, message=FALSE,warning=FALSE,fig.width=9,fig.height=7, fig.cap = paste0("Comparison of stock trajectories from ss3om and backcasting") }
+
+testF = fwd(stk1, sr=sr,
+  control=fwdControl(year=1984:2023, value=unitMeans(fbar(stk1)[, ac(1984:2023)]),
+  quant="fbar"),deviances=residuals)
+
+testC = fwd(stk1, sr=sr,
+  control=fwdControl(year=1984:2023, value=catch(stk1)[, ac(1984:2023)],
+  quant="catch"),deviances=residuals)
+
+plot(window(FLStocks(ss3om=stk1,backtestF=testF,backtestC=testC),start=1983))+theme_bw()+facet_wrap(~qname,scale="free_y")
+
+```
+

@@ -1,0 +1,692 @@
+---
+title: "Documentation of the Stock Synthesis benchmarl model for blackspot seabream (Pagellus bogaraveo) in GSAs 1-3 through 2023 "
+
+author: 
+ - WGSAD Benchmark Session (GFCM)
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    #keep_tex: false
+vignette: >
+  %\VignetteIndexEntry{benchmark Vignetted}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r wrap-hook, echo = FALSE,warning=F,message=F}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+```
+
+```{r, echo = FALSE,warning=F,message=F}
+
+knitr::opts_chunk$set(collapse = TRUE, 
+                      comment = "  " ,
+                      fig.align = 'center', 
+                      cache=FALSE,
+                      tidy.opts=list(width.cutoff=80), 
+                      tidy=TRUE)
+```
+
+
+# Background
+
++ The Working Group on Stock Assessment of Demersal Species (WGSAD) of the General Fisheries Commission for the Mediterranean (GFCM) of the Food and Agriculture Organization of the United Nations (FAO) held a session towards the benchmark assessment of Blackspot seabream (Pagellus bogaraveo) in geographical subareas (GSA) 1-3, which was held at the GFCM Technical Unit for Western Mediterranean, Malaga, Spain on 22–25 April 2024 in a hybrid meeting format.  
+
++ The last benchmark assessment for blackspot seabream in GSAs 1 and 3 was completed in May 2020 using the gadget model: Globally applicable Area Disaggregated General Ecosystem Toolbox. It is  a forward simulation where the processes are usually modeled as dependent on length or age. The last update of this model for quantitative advice was completed in 2023 for the reference year 2022. 2020 benchmark was based on 15 age classes (3-17+) with two sexes separated. The model was a length-based model where the numbers at length in the fisheries are converted into ages using the von Bertalanffy growth function. The time series started in 1983 and it included 2 fleets: Moroccan longlines and Spanish “voracera” and one area, Strait of Gibraltar. The Gadget model showed some shortcomings because it is mostly driven by the length distributions and the biomass indexes are not taken into account. So, the experts considered that an alternated integrated model such as Stock Synthesis would perform better, would consider all the information available and will facilitate the development of the foreseen MSE process. 
+
++ The current benchmark session was preceded by two data preparation meetings, one held online on the on 9 April 2024 and a second one presential in Malaga on the 22 April 2024.The data preparation meetings analysed in depth all available data and reviewed thoroughly the two methods for standardization of CPUE: Boost regression trees for Moroccan nominal CPUES and Direct Principal Component (DPC) method in the case of Spanish nominal CPUEs. Both methods were deemed valid and the resulting standardized indices were included as input data in the absence of an independent survey for this species. However, additional efforts to use the same standardization and data processing methods in the future were agreed by the group.  
+
++ This document seeks to provide a detailed documentation of the finalised Benchmark Stock Stock Synthesis benchmark model.
+
+
+
+# Assessment data
+
+Load R packages 
+
+```{r,warning=F,message=F}
+library(r4ss)
+library(ss3diags)
+library(ggplot2)
+library(ggpubr)
+library(FLCore)
+library(ggplotFL)
+library(FLSRTMB)
+library(FLRef)
+library(ss3om)
+library(png)
+library(JARA)
+
+```
+
+Load a preliminary ss3 reference run for data extraction
+
+```{r}
+
+# 2023 reference case
+
+load("rdata/basecase.rdata",verbose=T)
+ref = ss3rep
+
+```
+
+## General Biology
+
++ Blackspot seabream (*Pagellus bogaraveo*) is a species belonging to the Sparidae family. They are bentho-pelagic species, inhabiting depth ranges from 300 to 700m throughout the eastern Atlantic and western Mediterranean. They are hermaphrodites, starting life as males but changing into females at 30-35 cm, when they are 4 to 6 years old. They grow slowly to a maximum size of 70 cm, weight of 4kg and an age of about 17 years, as corroborated by tagged recaptured. 
+
++ Blackspot seabream is found in the NE Atlantic, from South of Norway to Cape Blanc, in the Mediterranean Sea, and in the Azores, Madeira, and Canary Archipelagos (Desbrosses,1938). Adults inhabit depths ranging around 300-700 m. The vertical distribution of this species varies according to individual size (Desbrosses, 1938; Guegen, 1974; Silva et al., 1994 and Gil, 2006). This species is one of the most important commercial demersal species in the Strait of Gibraltar area. However, there is not much information available on the stock biology of blackspot seabream in this narrowsite. So, the usual way of stock separation is based in subareas boundaries that offer a better way of recording the available information. A project is now conducting (Transboran) aiming to study the identity and the boundaries of this stock. Migration patterns have been studied using tagging surveys in the GSA 01 Spanish Southern Mediterranean region and the Strait of Gibraltar area (Gil et al., 2001; Sobrino and Gil, 2001). Since 1997, 7066 individuals were tagged (juveniles + adults) and, at the moment, 545 recaptures were notified. Recaptures from juveniles showed displacements from GSA 01 nursery areas towards the Strait of Gibraltar fishing grounds. However, recaptures from tagged adults did not reflect big displacements, which are limited to feeding movements among the different fishing grounds where the “voracera” fleets works (Gil, 2006).
+
+### Age and growth
+
++ In the previous GADGET benchmark model, von Bertalanffy growth function was specified by fixing $L_{oo}=65.85$ cm and $t_0= -0.68$, while $k$ was estimated by the model. For this new benchmark assessment a lower $L_{oo}=62$ (Gill, 2010) is considered, also to not exceed the largest observed size class of 63 cm. 
+
++ To derive a preliminary set of growth parameters for a fixed $L_{oo}=62$, the original, otoliths-derived $L_a$ data were derived from [Sobrino and Gil (2001)](https://www.nafo.int/Portals/0/PDFs/sc/2001/scr01-087.pdf).
+
+```{r}
+gr = read.csv("ss3inp/growthdat.csv")
+knitr::kable(gr[,1:3],"pipe",
+      align ="ccc",caption="Length-at-age data with associated standard deviations from Sobrino and Gil (2001)")
+
+```
+ 
++ A von Bertalanffy growth model refitted to the data by fixing $L_{oo}=62$ and weighting the likelihood by the standard deviation of the $L_a$ data (excluding age-0). The estimated initial parameter values were $k=0.152$ and $t_0=-1.09$.
+
+
+```{r fig1, fig.height=5,fig.width=7, warning=F,message=F,fig.cap = paste0("Re-fitted growth curve with a fixed $L_{oo}=62$ cm based on $L_a$ data from Sobrino and Gil (2001)")}
+
+ggplot(gr)+geom_point(aes(Age,Length))+
+  geom_line(aes(Age,Lhat),col=2,linewidth=1)+
+  theme_bw()+
+  geom_errorbar(aes(Age,ymin=Length-Stdev, ymax=Length+Stdev), width=.2,
+                 position=position_dodge(.9))+
+  scale_x_continuous(expand = c(0., 0))+
+  scale_y_continuous(expand = c(0., 0),limits=c(0,65))+ylab("Total Length (cm)")
+
+```
+
+
++ The length-weight relationship was specified as $a = 0.0087$ (cm/kg), $b=3.14$.
+
++ Maximum age was assumed to be 17 years
+
+### Maturiy
+
++ Female maturity was assumed to have the form of a logistic ogive with a length at 50\% maturity ($L_{m_{50}}$) being attained 34.6 cm and a slope of -0.545266  1/cm (Figure 2). $L_{m_{50}}$ corresponds approximately to a female of age-4.
+
+```{r fig2, fig.height=5,fig.width=7, fig.cap = paste0("Assumed Maturity ogive for females.")}
+sspar(mfrow=c(1,1),plot.cex = 0.7)
+SSplotBiology(ref,subplots=6,main=F)
+
+```
+
+
++ The previous Gadget assumed an age-invariant $M=0.2$. For the purpose of this initial assessment, additional $M$ estimates were considered. 
+
++ First, the [Barefoot Ecologist Tool](http://barefootecologist.com.au/shiny_m.html) was used to approximate alternative $M$ values from 13 growth or maximum based empirical equations. This resulted in a mean instantaneous $M=0.275$.
+
+```{r}
+Ms = read.csv("ss3inp/empiricalM_Age17.csv")
+knitr::kable((Ms),"pipe",
+      align ="lc",caption="Empirical estimates of Natural Mortality (M)")
+
+```
+
++ Second two age-dependent M vectors were derived by scaling the Chen and Watanabe curve for $M_a$ to $M=0.2$ and $M=0.31$ for the reference age of 4 years (age at maturity). 
+
+```{r}
+Ma = read.csv("ss3inp/MaValues.csv")
+knitr::kable((Ma),"pipe",
+      align ="lcc",caption="Two alternative Chen and Watanabe M-at-age vectors, scaled to M=0.2 and M=0.275 for age 4")
+```
+
+\pagebreak
+
+## Fishery Data
+
++ A summary of the available input data time series is shown in Figure 3.
+
+```{r fig3, fig.height=10,fig.width=7, fig.cap = paste0("Illustration of time series data for catches, fisheries dependent LFDs and CPUE indices that were used as input for the Stock Synthesis model during the benchmark session for the 2023 preliminary reference model.")}
+
+SSplotData(ref,subplots=2)
+
+```
+
+### Spanish Fleet
+
++ The Spanish fishery targeting Blackspot seabream has been developing along the Strait of Gibraltar area (Gil et al., 2000) since the earliest 1980´s. It is almost a mono-specific fishery, with one clear target species which represents the 74\% from the total landed species, which constitutes a metier by itself (Silva et al., 2002). The “voracera”, a local mechanized hook line baited with sardine, is the gear used by the fleet from Tarifa and Algeciras ports. Fishing is carried out taking advantage of the turnover of the tides in bottoms from 200 to 400 fathoms. The number of hooks by boat is between 200 and 2000. Every boat can only use a maximum of 30 lines per day (each line attached a maximum of 100 hooks, usually 70) with a maximum legal length of 120 m. The legal dimensions of the hooks are a minimum length of 3.95 cm and a minimum width of1.4 cm. Number of boats decrease in the last years and its mean technical characteristics are: Length= 9.80 meters, GRT= 6.36 and HP= 47.23.
+
+### Moroccan fleet
+
++ The most important Moroccan fleets targeting blackspot seabream are the longliners mainly based at the port of Tangier and the artisanal fleet of the Strait of Gibraltar area. In the past years, the longliners fleet was more or less stable (78 to 101 vessels). The number of the longliners fleet in 2019 was approximately 77 and 408 artisanal boats. The fishery is carried out at 200-700 m depth and the gear used is the longline known as “voracera”. The number of hooks by boat is between 200 and 2000 and the size of the hooks is between 8 and 11.The Blackspot seabream is the first target species in Moroccan longliners. It represents between 18\% to 42\% in weight and 45\% to 56\% in commercial value of to the total catches provided by this fleet. Not all the artisanal boats are targeting Pagellus bogaraveo in the Strait of Gibraltar, annual catches of **Pagellus bogaraveo** by the artisanal feet reached only 4 tons.
+
+
+### Catch time series
+
+Catch data were provided by Spain (ESP) for the period 1983-2023 and Morocco (MOR) for the period 2001-2023. MOR catches were low in the early 2001 as target fishery only evolved thereafter with catches peaking in 2015 (Figure 4). 
+
+```{r fig4, fig.height=5,fig.width=7, warning=F,message=F,fig.cap = paste0("Time series of annual total catches for blackspot seabream in GSAs 1-3, illustrated as disaggregated Fleets through 1983-2023")}
+mod = ref
+df.catch = mod$catch[mod$catch$Yr>1982,]
+df.catch[df.catch$Yr<2001 & df.catch$Fleet==2,]$Obs =NA
+  
+pc1 = ggplot(df.catch,
+             aes(Yr,Obs,fill=Fleet_Name))+theme_bw()+
+  geom_bar(position="stack", stat="identity")+
+  ylab("Catch")+xlab("Year")+
+  scale_x_continuous(expand = c(0.01, 0))+
+  scale_y_continuous(expand = c(0.01, 0))+
+  scale_fill_manual(
+    values=sscol(length(unique(df.catch$Fleet))))
+  
+pc1
+```
+
+The historical catch time-series for Spain starts in 1983, but for Morocco official data only exists since 2001. Yet, there are some indications that the SBR Metier was fished by Moroccan fisher's prior to 2001. JARA provides the option to conduct a mixed-trend analysis for multiple time-series to then back-cast the missing data years based on the underlying trend.
+
+Here, a JARA model is set up with the ESP and MOR catch time-series using the "mixed.trends" option. The back-casting trend is inferred from the underlying rate of change between 2001 and maximum catch in 2015 by using the JARA `timeblock` option.
+
+Create catch input and set time-block to the year where MOR catches peaked
+
+```{r, echo = T}
+catch = reshape2::dcast(df.catch, 
+                        Yr~Fleet_Name,
+                        value.var = "Obs")
+# Time block
+tb = catch$Yr[which(catch$MOR==max(catch$MOR,na.rm=T))]
+tb
+```
+Build JARA model 
+
+```{r, echo = T}
+jrcinp = build_jara(I=catch,
+                    model.type="mixed.trends",
+                    mixed.scale = "geomean",
+                    assessment="SBR",
+                    scenario = "Catch",
+                    fixed.obsE =0.05,
+                    timeblock=tb,silent=T) 
+
+```
+
+Plot input data with admitted uncertainty (Figure 5)
+
+
+```{r fig5,warning=FALSE, fig.height=4,fig.width=6, fig.cap = paste0("Input catch time-series from ESP and MOR, assuming a CV of 0.05")}
+
+jrplot_indices(jrcinp,ylab="Catch (t)")
+
+```
+
+Now fit JARA
+
+```{r, echo = T,eval=F}
+
+fitc = fit_jara(jrcinp,silent=T)
+
+```
+
+```{r, echo = F,eval=T}
+#save(fitc,file="rdata/jara.catch.rdata")
+load(file="rdata/jara.catch.rdata",verbose = T)
+
+```
+
+Get time-series data and extract the predicted catch for the period 1983-2000 for MOR to use as input for early years (Figure 6).
+
+```{r fig6,warning=FALSE, fig.height=4,fig.width=6, fig.cap = paste0("Input catch time-series from ESP and MOR with backcasted catches from JARA for 1983-2000 for MOR, assuming a CV of 0.05")}
+
+dfc = dfidx(fitc)$i
+predC = dfc[dfc$name=="MOR"& dfc$yr%in%(1983:2000),]$mu
+catch.new = df.catch
+catch.new[catch.new$Yr%in%(1982:2000)&
+            catch.new$Fleet_Name=="MOR","Obs"] = predC 
+
+pc2 = ggplot(catch.new,
+             aes(Yr,Obs,fill=Fleet_Name))+theme_bw()+
+  geom_bar(position="stack", stat="identity")+
+  ylab("Catch")+xlab("Year")+
+  scale_x_continuous(expand = c(0.01, 0))+
+  scale_y_continuous(expand = c(0.01, 0))+
+  scale_fill_manual(
+    values=sscol(length(unique(catch.new$Fleet))))
+  
+pc2
+
+
+```
+
+
+Considering the likely low level of MOR catches prior to 2001, uncertainty about the historical catches levels were deemed relatively insensitive to the stock status estimates.
+
+## Length frequency data (LFDs)
+
++ Sex-aggregated length frequency data are available for the ESP fishery for the period 1997 and for the MOR fishery for the period 2007-2023. 
+
+Extract LFD input
+
+```{r}
+run = "basecase"
+inp = r4ss::SS_readdat(file.path(run,"sbr_dat.ss"),verbose=F)
+ldat = inp$lencomp
+ldat$FltSvy= c("ESP","MOR")[ldat$FltSvy]
+lbin  = inp$lbin_vector
+nb = length(lbin)
+i=6
+# combined F+M
+ldat[,i+(1:nb)] = ldat[,i+(1:nb)]+ldat[,i+(nb+1):(2*nb)] 
+ldat= ldat[,c(1,3,((1+i):(i+nb)))]
+names(ldat) = c("year","area",paste0(lbin))
+lfd = reshape2::melt(ldat,id.vars=c("year","area"),value.name ="data",variable.name="len")
+# Convert to FLQuant
+flqlen =as.FLQuant(lfd[order(lfd$year,lfd$area,lfd$len),],unit="cm")
+
+```
+
+```{r fig7,warning=F, fig.height=10,fig.width=8, fig.cap = paste0("Comparison of relative size  frequency distributions from the ESP and MOR fishery, indicating the minimum size limit for ESP since 2008 (blue dashed)")}
+LFesp = window(flqlen[,,,,"ESP"]) 
+LFmor = window(flqlen[,,,,"MOR"]) 
+# proportions
+flqp = FLQuants(ESP=LFesp%/%apply(LFesp,2,max),
+                MOR=LFmor%/%apply(LFmor,2,max))
+
+ggplot(flqp )+geom_line(aes(len,data,color=qname))+
+  facet_wrap(~year,ncol=4)+theme_bw()+xlab("Length (cm)")+
+  theme(legend.title = element_blank())+
+  scale_color_manual(values=sscol(2))+geom_vline(xintercept = 33,col=sscol(1),linetype=2)
+
+```
+
+\pagebreak
+
++ The reported LFDs from ESP indicated a notable gradual shift in the size of first capture towards 33 cm. This coincides with the introduction of the minimum landing size by the EU Regulation (Figures 7-8). A minimum size for blackspot seabream is set at 33 cm (Total length) which currently applies in the 
+Mediterranean and also in the North-East Atlantic since May 2018 [Commission Implementing Regulation (EU) 2017/787. 
+
++ The LFDs from MOR show substantial variation in mean length, including instances of large proportions of small fish caught in some years. Overall, the LFDs indicate a decrease in the proportion of large fish over time (Figures 7-8).
+
+
+```{r fig8,warning=F, fig.height=10,fig.width=8, fig.cap = paste0("Comparison  size  frequency distributions from the ESP and MOR fishery for the period 2007-2023. Blue horizontal lines denote the mean size and red lines denote 5th and 95th quantiles")}
+
+# quantile function
+lq = function (x,quantile=0.95) {
+    lens <- x %=% as.numeric(dimnames(x)$len)
+    res <- lenquantile(x, quantile)
+    units(res) <- "cm"
+    return(res)}
+# ESP
+lfe= window(flqlen[,,,,"ESP"],start=2007)
+
+p1 = plotLengths(lfe) + 
+geom_vline(data = as.data.frame(FLPar(lq(lfe,0.05))), aes(xintercept = data),
+linewidth = 1, colour = "red")+
+  geom_vline(data = as.data.frame(FLPar(lq(lfe,0.95))), aes(xintercept = data),
+linewidth = 1, colour = "red")+geom_vline(aes(xintercept = mean), linewidth = 1,
+colour = "blue") + xlab("Length (cm)")
+
+lfm = window(flqlen[,,,,"MOR"],start=2007)
+p2 = plotLengths(lfm) + 
+geom_vline(data = as.data.frame(FLPar(lq(lfm,0.05))), aes(xintercept = data),
+linewidth = 1, colour = "red")+
+  geom_vline(data = as.data.frame(FLPar(lq(lfm,0.95))), aes(xintercept = data),
+linewidth = 1, colour = "red")+geom_vline(aes(xintercept = mean), linewidth = 1,
+colour = "blue") + xlab("Length (cm)")
+
+ggarrange(p1,p2,nrow=2)
+```
+
+## Sex ratio
+
++ In addition, sex ratio information is available for several years from biological sampling by Spain and Morocco for some years (1997, 1999, 2003-2009, 2012, 2014-2015, 2018-2019 and 2021-2022)
+
++ Blackspot seabream is a hermaphrodite (from male to females) species and in order to implement hermaphrodite population dynamics in Stock Synthesis the model needs to be informed by sex-structured LFDs (at least one fleet/survey) to estimate the probability for changing from males to females at each age class. To generate sex-structured LFDs, the sex ratio data from the biological sampling were first prepared as annual numbers of male and females per length bin and proportion of females at each length was plotted (Figure 9).
+
+```{r fig9,warning=F, fig.height=10,fig.width=8, fig.cap = paste0("Comparison of relative size  frequency distributions from the ESP and MOR fishery, indicating the minimum size limit for ESP since 2008 (blue dashed)")}
+dat = read.csv("ss3inp/sexratio.csv")
+d = reshape2::dcast(dat[,c("year","sex","len","n")],
+                    year + len ~ sex ,fun.aggregate = sum,value.var = "n")
+d$prop = d$fem/(d$fem+d$mal)
+# check
+ggplot(d,aes(len,prop))+geom_point()+
+  facet_wrap(~year)+theme_bw()+ylab("Prop Females")
+
+
+```
+
++ The raw data showed the clearest relationship in 2004, but several years appeared to have spurious sex assignments of females at very small sizes ($<28 cm$) and of males in very large size ($>40 cm$). To enable more meaningful fits of logistic regressions with a binomial error, the sex assignment was revised on both tails by assuming that all fish smaller 28 cm are males and larger 40 cm are females.
+
+```{r}
+# assume that L < 28 are males and L > 40 females
+d1= NULL
+for(i in 1:nrow(d)){
+  check = d[i,]
+  if(check$len<28){
+    check$mal=check$fem+check$mal
+    check$fem=0
+  }
+  if(check$len>40){
+    check$fem=check$fem+check$mal
+    check$mal=0
+  }
+d1 = rbind(d1,check)
+}
+d1$prop = d1$fem/(d1$fem+d1$mal)
+```
+
++ Next a binomial Generalized Additive Model (GAM) was fitted to model the response variable in form of number of females and males as a function length, while introducing a smoother spline for the year effect to enable interpolating across missing years. Note there is no $year/len$  interaction term considered in the GAM, so that only the length inflection point at 50\% sex ratio can vary annually but not the slope (Figure 10).
+
+```{r,message=F}
+library(mgcv)
+fit = gam(cbind(fem,mal)~s(year)+len,d1,family="binomial")
+```
+
++ A new prediction data constructed for all years, with length classes matching the length bins in the Stock Synthesis model (here 18-63 TL), to then predict the year-specific proportions of females.
+
+```{r fig10,warning=FALSE, fig.height=6,fig.width=8, fig.cap = paste0("Observed and expected proportion of females at length")}
+# length bins in ss3 model
+len  = 18:63
+pd = data.frame(len=len,year=rep(1997:2022,each=length(len)))
+# expected proportions
+pd$prop = predict(fit,pd,type="response") 
+ggplot(pd)+geom_line(aes(len,prop),linewidth=1,col=2)+facet_wrap(~year)+ylim(0,1)+geom_point(data=d1,aes(len,prop))+theme_bw()
+
+```
+
+
+
+
+
+## Catch-per-unit-effort (CPUE) indices
+
++ Standardized fisheries-dependent CPUE indices were available for the ESP and MOR for the period 2009-2023 (Figure 11). 
+
++ The trends in the indices indicated some degree of conflict, with the ESP CPUE showing a steeper decrease, while the MOR remaining relatively stable, in particular for the two years 2022 and 2023.
+
+
+```{r fig11,warning=F,message=F, fig.height=5,fig.width=7, fig.cap = paste0("Normalized CPUE indices for ESP and MOR used as input for the assessment model. The common trend is indicated by way of loess smoother.")}
+
+df.idx =  aggregate(cbind(Obs,SE)~
+                      Fleet_name+Fleet+Seas+ Yr, ref$cpue,mean)
+df.idx$Norm  = NA
+df.idx$Year = NA
+xadj = c(-0.1,0,0.1)
+for(i in 1:2){
+df.idx$Norm[df.idx$Fleet==i] =
+  df.idx$Obs[df.idx$Fleet==i]/
+  mean(df.idx$Obs[df.idx$Yr>2007 & df.idx$Fleet==i],na.rm=T) 
+df.idx$Year[df.idx$Fleet==i] = df.idx$Yr[df.idx$Fleet==i]+xadj[i]
+}
+ggplot(df.idx,aes(Year,Norm))+
+  theme_bw()+
+  geom_point(data=df.idx , aes(col=Fleet_name))+
+  geom_line(data=df.idx,aes(col=Fleet_name),
+            linetype=2,linewidth=0.3)+geom_smooth(span=0.4)+
+                ylab("Normalized Survey Index")+
+  scale_y_continuous(expand = c(0,0), limits = c(0, NA))+
+  theme(legend.title=element_blank(),legend.position="top")+ylab("Year")+
+  geom_errorbar(aes(Year,ymin=exp(log(Norm)-1.96*SE),
+                    ymax=exp(log(Norm)+1.96*SE),col=Fleet_name),
+                      width=0.2,
+                      size=0.5)
+
+```
+
+
+\pagebreak
+
+## Priliminary Reference model specifications
+
++ The reference model for blackspot seabream in GSAs 1-3 is an annual, sex-structured length-based Stock Synthesis model, and specified for a hermaphrodite biology. The underlying age-structured dynamics is set up to comprise ages 0-15, where age 15 was treated as the plus group. The population was modeled as sex-structured with a hermaphrodite parameterisation, where somatic growth and natural mortality are the same for both sexes. 
+
++ For the reference model, growth was estimated described by a von Bertalanffy growth model with $L_{oo}=62$ and $k=0.152$ (Figure 12). $L_at_Amin$ was an estimable parameter for age-1. + The length-weight relationship was specified as $a = 0.0087$ (cm/kg), $b=3.14$.
+
+
+```{r fig12, fig.height=5,fig.width=7, fig.cap = paste0("Growth functions for Female and Males.")}
+sspar(mfrow=c(1,1),plot.cex = 0.7)
+SSplotBiology(ref,subplots=1,main=F)
+
+```
+
+
++ Female maturity was assumed to have the form of a logistic ogive with a length at 50\% maturity ($L_{m_{50}}$) being attained 32 cm and a slope of -0.7 1/cm (Figure 13). $L_{m_{50}}$ corresponds approximately to a female of age-4.
+
++ Stock fecundity was assumed to be proportional to  female spawning stock biomass (Figure 13).
+
++ Sex change from males to females is specified as cumulative male to female transition rate (probability) for a given age (Figure 13). The estimable parameters are inflection point at age, the standard deviation of the curve and the asymptotic maximum sex-change probability. These parameters are informed by the sex-specific LFDs (observed vs expected fraction of females at age).
+
+```{r fig13, fig.height=5,fig.width=7, fig.cap = paste0("Growth functions for Female and Males.")}
+sspar(mfrow=c(2,2),plot.cex = 0.7)
+SSplotBiology(ss3rep,mainTitle=F,subplots = 6)
+SSplotBiology(ss3rep,mainTitle=F,subplots = 8)
+SSplotBiology(ss3rep,mainTitle=F,subplots = 31)
+SSplotBiology(ss3rep,mainTitle=F,subplots = 32)
+
+```
+
+
++ Sex-specific natural mortality at age ($M_a$) was assumed to the follow the Chen and Wanatabe form, scaled to $M=0.31$ for age 4.
+
+
++ Nominal spawning and settling time were set to January. The expected mean recruitment was assumed to follows a Beverton and Holt stock recruitment relationship. For the base-case a steepness of $h = 0.6$ was assumed. Recruitment deviations were estimated for 1997–2021 as main recruitment deviations and for the fourteen preceding years 1983-1996 as early recruitment deviations. Recruitment deviations were assumed to have a penalty of 0.5 on the standard deviation (sigmaR). 
+
++ Commercial LFD input data are available were only split by sex for the longer ESP LFDs time-series to avoid pseudo-replication, while MOR LFDs was retained as sex-combined. 
+
++ A double-normal (dome-shaped) selectivity (option 24) for the ESP fleet and logistic selectivity (option 1) for the MOR fleet.
+
++ A random walk (option 23) of time-varying selectivity was enabled for the steepness of the ascending slope of double-normal for to account for the reduction in minimum landing sizes (2008-2022).  In addition, time-varying selectivity was allowed for length-at-50\%-selectivity for the MOR to accout for the notable variation in the mean lengths across years.
+
++ Fishing mortality was modeled using a fleet-specific hybrid F method (Option 4). Option five was selected for the fishing mortality (F) report basis; this option corresponded to the simple unweighted average of the F of the age classes chosen to represent the Fbar (age 2–8). 
+
+\pagebreak
+
+## Model Diagnostics
+
+Prepare outputs of retrospective runs (see Supplement)
+
+```{r}
+
+retro.idx = r4ss::SSsummarize(retro,verbose = F)
+retro.len = ss3diags::SSretroComps(retro)
+```
+
+
+### CPUE indices
+
+The Fits of the preliminary reference-case model are shown in Figure 14. Although the runs tests indicated no evidence for a non-random residual pattern (Figure 14), there appears to be conflicting trends in most recent years. 
+
+```{r fig14, fig.height=5,fig.width=9, fig.cap = paste0("Fit and residual runs test diagnostics for the fits to the CPUE indices and observed and predicted mean lengths of LFDs")}
+sspar(mfrow=c(2,2),plot.cex = 0.7)
+for(i in 1:2){
+SSplotIndices(ref,subplots = 2,fleets=i)
+r=SSplotRunstest(ref,add=T,verbose = F,indexselect = i)
+}
+
+```
+
+\pagebreak
+
+### Size composition
+
++ The estimated selectivity curves are shown in Figure 15, with time-varying selectivity patterns illustrated in Figure 16. 
+
++ The fits to the size composition data appeared overall adequate (Figure 14-XX) and only showed evidence for non-random residual patterns in few instances (Figure 14). Perhaps least satisfying is the fairly poor estimates of sex ratio at length by the current reference case.
+
+```{r fig15, fig.height=6,fig.width=8, fig.cap = paste0("Estimated logistic selectivity curves by fleet")}
+
+sspar(mfrow=c(1,1),plot.cex = 0.8)
+SSplotSelex(ref,subplots = 1)
+```
+
+
+```{r fig16, fig.height=7,fig.width=9, fig.cap = paste0("Plot illustrating the estimated time-varying changes in the selectivity curves for each fleet")}
+sspar(mfrow=c(2,2),plot.cex = 0.7)
+SSplotSelex(ref,subplots = 3)
+```
+
+
+```{r fig17,warning=F, fig.height=10,fig.width=10, fig.cap = paste0("Summary of observed and expected composition data aggregated across years")}
+
+SSplotComps(ref,subplots=21)
+```
+
+
+
+
+
+```{r fig18, fig.height=7,fig.width=8, fig.cap = paste0("Residuals for mean lengths of size composition data from fishing fleets")}
+SSplotComps(ss3rep,subplots = 24)
+```
+
+
+```{r fig19, fig.height=5,fig.width=9, fig.cap = paste0("Residuals for mean lengths of size composition data from fishing fleets")}
+sspar(mfrow=c(1,2),plot.cex = 0.5)
+for(i in 1:2){
+r= SSplotRunstest(ref,subplots ="len",add=T,indexselect = i,verbose=F)
+}
+```
+
+\pagebreak
+
+```{r fig20, fig.height=7,fig.width=8, fig.cap = paste0("Observed and predicted sex ratio by length")}
+SSplotSexRatio(ss3rep,kind="LEN")
+```
+
+\pagebreak
+
+### Restropective Analysis with Forecasting
+
++ The retrospective analysis showed an slightly increased retrospective pattern on from Mohn's Rho of 0.36 for $SSB$ and -0.33 for $F$. 
+
+```{r fig27, fig.height=7,fig.width=9, fig.cap = paste0("Retrospective analysis and retrospective forecasts")}
+sspar(mfrow=c(2,2),plot.cex = 0.65)
+r=SSplotRetro(retro.idx,add=T,legend=F,forecast=F,verbose = F)
+r=SSplotRetro(retro.idx,add=T,forecastrho = T,legend=F,
+            verbose = F,xlim=c(2005,2022))
+r=SSplotRetro(retro.idx,subplots = "F",add=T,legend=F,forecast=F,
+            verbose = F)
+r=SSplotRetro(retro.idx,subplots = "F",add=T,forecastrho = T,legend=F,
+            verbose = F,xlim=c(2005,2022))
+mtext(c("Retro","Forecast"),3,outer=T,line=-0.5,at=c(0.3,0.8),cex=0.8)
+
+```
+
+
+\pagebreak
+
+### Hindcast Cross-Validations
+
+Hindcast cross-validations indicated that the model has limited prediction skill for the ESP CPUE (MASE = 1.07) (Figure 21), but prediction skill for the  MOR CPUE (MASE = 0.87). Similarly, only the MOR mean lengths showed a MASE smaller than 1.
+
+```{r fig28, fig.height=8,fig.width=7, fig.cap = paste0("Fit and hindcast cross-validations of CPUE indices and mean lengths of LFDs")}
+sspar(mfrow=c(2,2),plot.cex = 0.5)
+for(i in 1:2){
+h=SSplotHCxval(retro.idx,add=T,verbose = FALSE,indexselect = i)
+h=SSplotHCxval(retro.len,indexselect = i,subplots = "len",add=T,verbose = FALSE)
+
+}
+```
+
+
+\pagebreak
+
+#### Profiling of steepness
+
+The reference case  was further evaluated through profiling it over a range of steepness values $h = 0.45-0.85$.
+
+Figure 28 shows that a lower range of $h = 0.6-0.7$ is supported by the total negative log-likelihood.
+
+The stock status estimates appear largely insensitive to alternative assumption about the steepness $h$ values over the tested range (Figure 28)
+
+```{r fig29, fig.height=8,fig.width=7, fig.cap = paste0("Negative log-likelihood profiles over a range of steepness values (h = 0.5-0.8) for new time-varying survey selectivity specification (tvs)")}
+# summarize output
+load("rdata/profile_h.ref.rdata")
+profilesummary <- SSsummarize(profilemodels,verbose=F)
+results <- SSplotProfile(profilesummary, verbose=F,
+                         profile.string = "steep",
+                         profile.label = "Stock-recruit steepness (h)")
+```
+
+
+```{r fig30, fig.height=9,fig.width=8, fig.cap = paste0("Comparison of stock trajectories with alternative stepness values (h = 0.5-0.8) based on new time-varying survey selectivity specification (tvs)")}
+
+h = seq(0.45,0.85,0.05)[2:8]
+mvns = Map(function(x,y){
+    SSdeltaMVLN(x,add=T,run =paste0("h=",y),Fref = "Btgt",
+                catch.type = "Exp",years=1970:2022,
+                verbose = F,plot = F)},
+           x=profilemodels[2:8],y=h)
+
+sspar(mfrow=c(3,2),plot.cex = 0.7)
+SSplotEnsemble(mvns,
+               uncertainty =T,
+               add=T,
+               legendcex = 0.65,
+               legendloc = "topright",verbose = F)
+
+
+
+```
+
+\pagebreak
+
+# Assessment outcome
+
+## Reference Points
+
++ Reference points were estimated within the Stock Synthesis model, where the biomass reference points are considered as $SSB$ for females. Following the precautionary approach, target reference points of $B_{tgt} = SSB_{35}$ (biomass equal to 35 percent of unfished biomass $SBB_0$) and $F_{tgt}$ = $F_{SB35}$ (fishing mortality level at $SSB_{35}$) are proposed to serve a preliminary as proxies for $B_{MSY}$ and $F_{MSY}$. In the light of uncertainty about the underlying stock recruitment relationship, this choice of precautionary MSY proxies is likely to reduce the asymmetric risk of overfishing, while still attaining more than 95% of the theoretical MSY at FMSY and ensuring that about more 35\% more $SBB$ is left in the water to ensure both future recruitment and catch opportunities. Moreover, the group proposed threshold ($B_{pa}$) and limit ($B_{lim}$)  biomass reference points. Accordingly, $B_{pa}$ was set to half of $B_{tgt}$ ($B_{pa} = 0.5B_{tgt}$) and $B_{lim}$ to 25\% of $B_{tgt}$ ($B_{lim} = 0.25B_{tgt}$).
+
+
+
+
+```{r fig31b, fig.height=5,fig.width=8, fig.cap = paste0("Equilibrium yield curves relative to fishing mortality and spawning stock biomass (SSB). The vertical lines indicate the location of the precautionary target reference points FSB35 and SSB35 relative to the theoretical FMSY and BMSY. The horizontal red dashed line denotes 95\\% of the theoretical maximum surplus production relative to MSY.")}
+
+sspar(mfrow=c(1,2),plot.cex = 0.7)
+SSplot_eqcurves(ref,Fref="Btgt",msyline = 0.95)
+
+```
+
+##  Stock Status
+
+```{r}
+mvnbase= FLRef::ssmvln(ref, Fref="Btgt",years=1970:2023,verbose=T)
+stk = ss2FLStockR(mvnbase)
+# Add Bpa + Blim
+stk@refpts = rbind(stk@refpts,
+                FLPar(Bpa=stk@refpts[[2]]*0.5,Blim=stk@refpts[[2]]*0.25)) 
+# with uncertainty
+stki = ss2FLStockR(mvnbase,output="iters") 
+stki@refpts = stk@refpts
+```
+
+
+```{r fig31, warning=F,message=F, fig.height=7,fig.width=9, fig.cap = paste0("Estimated stock status trajectories with associated reference points for the 2024 base-case scenario of of blackspot seabream in GSAs 1-3")}
+years=1983:2023
+plotAdvice(FLStocks(CIs=stki,Fit=stk))+
+   scale_fill_manual(values = c("dodgerblue","black"))+
+  scale_color_manual(values = c(0,"black"))+
+  theme(legend.position = "none")+scale_x_continuous(breaks=seq(min(years),max(years),2))+
+  theme(axis.text.x = element_text(size=8, angle=90))
+
+```
+
+
+\pagebreak
+
+```{r}
+knitr::kable(FLRef::flr2stars(stk)$refpts,"pipe",
+      align ="lc",caption="Summary of estimated reference points for the preliminary reference case model of blackspot seabream in GSAs 1-3")
+
+```
+
+
