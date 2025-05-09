@@ -335,6 +335,73 @@ Para avanzar en la implementación metodológica, y considerando las fuentes de 
 
 
 ```{r}
+# Cargar librería
+library(ggplot2)
+library(dplyr)
+
+# Función logística de selectividad
+logistic_selectivity <- function(length, L50, slope = 2) {
+  1 / (1 + exp(-slope * (length - L50)))
+}
+
+# Vector de longitudes
+lengths <- seq(15, 35, by = 0.1)
+
+# Selectividades
+selectivity_23 <- logistic_selectivity(lengths, L50 = 23)
+selectivity_24 <- logistic_selectivity(lengths, L50 = 24)
+selectivity_25 <- logistic_selectivity(lengths, L50 = 25)
+
+# Simular datos de longitud para dos poblaciones
+set.seed(123)  # Para reproducibilidad
+n <- 100
+longitudes_21 <- rnorm(n, mean = 21, sd = 2)
+longitudes_25 <- rnorm(n, mean = 25, sd = 2)
+
+# Crear data.frame
+datos <- data.frame(
+  longitud = c(longitudes_21, longitudes_25),
+  grupo = rep(c("Media 21 mm", "Media 25 mm"), each = n)
+)
+
+# Normalizar los histogramas manualmente
+datos_hist <- datos %>%
+  group_by(grupo) %>%
+  mutate(freq = 1 / n())  # Cada individuo aporta igual peso
+
+# Data de selectividad
+selectividad <- data.frame(
+  longitud = rep(lengths, 3),
+  selectividad = c(selectivity_23, selectivity_24, selectivity_25),
+  curva = rep(c("L50=23", "L50=24", "L50=25"), each = length(lengths))
+)
+
+# Graficar
+ggplot() +
+  geom_histogram(data = datos_hist, 
+                 aes(x = longitud, y = ..count.. / sum(..count..), 
+                     fill = grupo),
+                 bins = 40, alpha = 0.4,
+                 position = "identity", 
+                 color = "black") +
+  geom_line(data = selectividad, 
+            aes(x = longitud, 
+                y = selectividad, 
+                color = curva),
+            size = 1.2) +
+  scale_fill_manual(values = c("skyblue", "pink")) +
+  scale_color_manual(values = c("blue", "green", "red")) +
+  labs(x = "Longitud (mm)", y = "Frecuencia relativa / Selectividad",
+       title = "Selectividad logística y distribución normalizada de Donax trunculus",
+       fill = "Distribución de longitudes", color = "Curvas de selectividad") +
+  ylim(0, 1) +
+  theme_minimal(base_size = 14)
+
+
+```
+
+
+```{r}
 esc<-c("S01","S1","S2","S3","S4","S5")
 
 descripcion<-c("Solo Desembarque e Índice",
