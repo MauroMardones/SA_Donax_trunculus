@@ -54,9 +54,9 @@ knitr::include_graphics("FIg/Diagrama_Modelo.png")
 library(r4ss)
 library(ss3diags)
 library(mvtnorm)
-library(FLCore)
-library(ggplotFL)
-library(kobe)
+#library(FLCore)
+#library(ggplotFL)
+#library(kobe)
 require(plyr)
 require(dplyr)
 require(reshape2)
@@ -109,16 +109,14 @@ dir5<-here("s5") #
 fig_path<-here("Fig")
 ```
 
-## run Model
+run Model
 
 ```{r eval=FALSE, message=F, include=FALSE}
 # Lista de directorios para correro tordos juntos
-directorios <- c("s01", 
-                 "s1", 
+directorios <- c("s1", 
                  "s2",
                  "s3",
-                 "s4",
-                 "s5")  # Agrega aquí todos los nombres de las carpetas que deseas procesar
+                 "s4")  # Agrega aquí todos los nombres de las carpetas que deseas procesar
 
 # Bucle para ejecutar el código en cada directorio
 for (dir in directorios) {
@@ -132,7 +130,7 @@ for (dir in directorios) {
 # Considerar que al correr el modelo dentro de cada `chunk` se cambia el directorio.
 ```
 
-```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
+```{r eval= F}
 # Corro escenario por separado 
 r4ss::run(
   dir = dir1,
@@ -143,8 +141,6 @@ r4ss::run(
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-#Leo las salidas del modelo seleccionado. 
-
 #dir1<-here("s1")
 base.model1 <- SS_output(dir=dir1,
                          covar=T,
@@ -159,10 +155,6 @@ base.model3 <- SS_output(dir=dir3,
                          forecast=T)
 #dir1<-here("s4")
 base.model4 <- SS_output(dir=dir4,
-                         covar=T,
-                         forecast=T)
-#dir1<-here("s5")
-base.model5 <- SS_output(dir=dir5,
                          covar=T,
                          forecast=T)
 
@@ -335,68 +327,33 @@ Para avanzar en la implementación metodológica, y considerando las fuentes de 
 
 
 ```{r}
-# Cargar librería
-library(ggplot2)
-library(dplyr)
-
-# Función logística de selectividad
-logistic_selectivity <- function(length, L50, slope = 2) {
+# Función logística para selectividad
+logistic_selectivity <- function(length, L50, slope) {
   1 / (1 + exp(-slope * (length - L50)))
 }
 
-# Vector de longitudes
-lengths <- seq(15, 35, by = 0.1)
+# Parámetros
+lengths <- seq(10, 35, by = 0.1)  # Rango de longitudes en mm
+L50_values <- c(22, 23, 24, 25)
+slope <- 2
 
-# Selectividades
-selectivity_23 <- logistic_selectivity(lengths, L50 = 23)
-selectivity_24 <- logistic_selectivity(lengths, L50 = 24)
-selectivity_25 <- logistic_selectivity(lengths, L50 = 25)
+# Crear un data frame con todas las curvas
+selectivity_data <- expand.grid(length = lengths, L50 = L50_values) %>%
+  mutate(selectivity = logistic_selectivity(length, L50, slope),
+         L50 = factor(L50, levels = L50_values))
 
-# Simular datos de longitud para dos poblaciones
-set.seed(123)  # Para reproducibilidad
-n <- 100
-longitudes_21 <- rnorm(n, mean = 21, sd = 2)
-longitudes_25 <- rnorm(n, mean = 25, sd = 2)
-
-# Crear data.frame
-datos <- data.frame(
-  longitud = c(longitudes_21, longitudes_25),
-  grupo = rep(c("Media 21 mm", "Media 25 mm"), each = n)
-)
-
-# Normalizar los histogramas manualmente
-datos_hist <- datos %>%
-  group_by(grupo) %>%
-  mutate(freq = 1 / n())  # Cada individuo aporta igual peso
-
-# Data de selectividad
-selectividad <- data.frame(
-  longitud = rep(lengths, 3),
-  selectividad = c(selectivity_23, selectivity_24, selectivity_25),
-  curva = rep(c("L50=23", "L50=24", "L50=25"), each = length(lengths))
-)
-
-# Graficar
-ggplot() +
-  geom_histogram(data = datos_hist, 
-                 aes(x = longitud, y = ..count.. / sum(..count..), 
-                     fill = grupo),
-                 bins = 40, alpha = 0.4,
-                 position = "identity", 
-                 color = "black") +
-  geom_line(data = selectividad, 
-            aes(x = longitud, 
-                y = selectividad, 
-                color = curva),
-            size = 1.2) +
-  scale_fill_manual(values = c("skyblue", "pink")) +
-  scale_color_manual(values = c("blue", "green", "red")) +
-  labs(x = "Longitud (mm)", y = "Frecuencia relativa / Selectividad",
-       title = "Selectividad logística y distribución normalizada de Donax trunculus",
-       fill = "Distribución de longitudes", color = "Curvas de selectividad") +
-  ylim(0, 1) +
-  theme_minimal(base_size = 14)
-
+# Graficar con ggplot2
+ggplot(selectivity_data, aes(x = length, y = selectivity, color = L50)) +
+  geom_line(size = 1.2) +
+  labs(
+    title = "",
+    x = "Shell length (mm)",
+    y = "Fishery Selectivity",
+    color = expression(L[50])
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_color_brewer(palette = 5)+
+  ylim(0, 1.05)
 
 ```
 
@@ -405,7 +362,7 @@ ggplot() +
 esc<-c("S01","S1","S2","S3","S4","S5")
 
 descripcion<-c("Solo Desembarque e Índice",
-               "Flota comercial y poblacional, Desembarque, Índice, Composiciones de Tallas",
+               "Flota comercial y poblacional, Desembarque, Indice, Composiciones de Tallas",
                "S1 + Vector Desembarques desde 1990 asumido en 250 por año",
                "S1 + Vector desembarques ponderado por 1.5",
                "S1 + Vector desembarques ponderado por 2",
@@ -779,8 +736,7 @@ legend.labels <- c( #"s01",
                   "s1",
                  "s2",
                  "s3",
-                 "s4",
-                 "s5")
+                 "s4")
 
 #read in all model runs
 #note if cover=T you need a hessian; if covar=F you do not need a hessian
@@ -789,8 +745,7 @@ biglist <- SSgetoutput(keyvec = NULL,
                                   dir1,
                                   dir2,
                                   dir3,
-                                  dir4,
-                                  dir5),
+                                  dir4),
                        getcovar = F)
 
 #create summary of model runs from list above
@@ -806,8 +761,7 @@ SSplotComparisons(summaryoutput,
                                    "s1",
                                    "s2",
                  "s3",
-                 "s4",
-                 "s5"),
+                 "s4"),
                  pheight=4.5,
                  png=TRUE,
                  plotdir=fig_path)
@@ -821,8 +775,7 @@ SSplotComparisons(summaryoutput,
                                    "s1",
                                    "s2",
                  "s3",
-                 "s4",
-                 "s5"),
+                 "s4"),
                  pheight=4.5,
                  png=TRUE,
                  plotdir=fig_path)

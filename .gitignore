@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-*/xlsx.
+*xlsx
 images/
 s01/
 s1/
@@ -11,4 +11,9 @@ s3/
 s4/
 s5/
 Fig/
-
+*docx
+*pdf
+*csl
+*bib
+Yiel_Report_2
+*csv
