@@ -2,10 +2,29 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(purrr)
+library(openxlsx)
+library(here)
+library(r4ss)
+library(openxlsx)
 
-# Datos originales
-datacom <- dat1$lencomp %>% 
-  filter(fleet == "1")
+
+dir1<-here("s1")# test 1
+# leo archivos para plotear y hacer tablas
+start1 <- SS_readstarter(file = file.path(dir1,
+                                          "starter.ss"),
+                         verbose = FALSE)
+# note the data and control file names can vary, so are determined from the 
+# starter file.
+dat1 <- SS_readdat(file = file.path(dir1, start1$datfile),
+                   verbose = FALSE)
+# Read in ctl file. Note that the data fileR object is needed so that SS_readctl
+# assumes the correct data structure
+
+# Forzar decimales con punto en toda la sesión
+options(OutDec = ".")
+
+# --- Datos originales ---
+datacom <- dat1$lencomp %>% filter(fleet == "1")
 
 datacom_long <- datacom %>%
   pivot_longer(
@@ -17,10 +36,10 @@ datacom_long <- datacom %>%
 
 estructura <- datacom_long %>% 
   dplyr::select(-proporcion)
-tallas <- unique(datacom_long$talla)
+tallas <- sort(unique(datacom_long$talla))
 anos <- unique(datacom_long$year)
 
-# Función para simular proporciones con ruido
+# --- Función para simular proporciones con ruido ---
 simular_proporcion_ruido <- function(mu, sigma, tallas, ruido_sd = 0.1) {
   densidades <- dnorm(tallas, mean = mu, sd = sigma)
   ruido <- rnorm(length(tallas), mean = 1, sd = ruido_sd)
@@ -29,34 +48,36 @@ simular_proporcion_ruido <- function(mu, sigma, tallas, ruido_sd = 0.1) {
   return(proporciones)
 }
 
+# --- Simulaciones ---
 mus <- c(2.3, 2.4, 2.5, 2.6)
 sigma <- 0.25
 
-# Simulaciones por grupo y año
 simulados <- map_dfr(mus, function(mu) {
   map_dfr(anos, function(ano) {
     proporciones <- simular_proporcion_ruido(mu, sigma, tallas)
     estructura %>%
       filter(year == ano) %>%
-      mutate(proporcion = rep(proporciones, nrow(.) / length(tallas)),
-             grupo = paste0("media_", mu),
-             year = ano)
+      mutate(
+        proporcion = rep(proporciones, nrow(.) / length(tallas)),
+        grupo = paste0("media_", mu),
+        year = ano
+      )
   })
 })
 
-# Añadimos un grupo para los datos originales
+# --- Datos originales ---
 originales <- datacom_long %>%
   mutate(grupo = "original")
 
-# Juntamos todo
+# --- Unir todo ---
 todo <- bind_rows(originales, simulados)
 
-# Calcular medias ponderadas para todos los grupos
+# --- Calcular medias ponderadas ---
 medias <- todo %>%
   group_by(grupo, year) %>%
   summarise(media_talla = sum(talla * proporcion) / sum(proporcion), .groups = "drop")
 
-# Graficar histogramas (barras) originales y simulados por año y grupo
+# --- Graficar ---
 ggplot(todo, aes(x = talla, y = proporcion)) +
   geom_col(position = "identity", alpha = 0.5, color = "black") +
   facet_grid(year ~ grupo, scales = "free_y") +
@@ -69,15 +90,11 @@ ggplot(todo, aes(x = talla, y = proporcion)) +
   theme_minimal() +
   theme(legend.position = "none")
 
-
-
-
-
-# para template ss3
-
-
-# Selecciona solo las columnas que existan dentro de todo
-cols_to_select <- intersect(c("year", "month", "fleet", "sex", "part", "Nsamp", "talla", "proporcion", "grupo"), names(todo))
+# --- Preparar datos para SS3 ---
+cols_to_select <- intersect(
+  c("year", "month", "fleet", "sex", "part", "Nsamp", "talla", "proporcion", "grupo"),
+  names(todo)
+)
 
 datacom_wide <- todo %>%
   dplyr::select(all_of(cols_to_select)) %>%
@@ -90,7 +107,34 @@ datacom_wide <- todo %>%
   ) %>%
   arrange(year, month)
 
-write.csv(datacom_wide, "Escenarios_Lenght_DT.csv")
+# --- Escribir Excel con punto decimal en todas las hojas ---
 
+
+wb <- createWorkbook()
+
+for(gr in unique(datacom_wide$grupo)) {
+  df_grupo <- datacom_wide %>% filter(grupo == gr)
+  
+  addWorksheet(wb, sheetName = as.character(gr))
+  writeData(wb, sheet = as.character(gr), df_grupo, keepNA = TRUE)
+}
+
+# Establecer formato numérico con punto decimal
+number_format <- createStyle(numFmt = "0.00")
+
+# Aplicar formato a todas las hojas y columnas numéricas
+for(sheet in names(wb)) {
+  df <- datacom_wide %>% filter(grupo == sheet)
+  num_cols <- which(sapply(df, is.numeric))
+  if(length(num_cols) > 0) {
+    addStyle(
+      wb, sheet = sheet, style = number_format,
+      rows = 2:(nrow(df)+1), cols = num_cols,
+      gridExpand = TRUE
+    )
+  }
+}
+
+saveWorkbook(wb, file = "data_sim_length.xlsx", overwrite = TRUE)
 
 
