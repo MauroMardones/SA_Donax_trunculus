@@ -1,29 +1,45 @@
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(purrr)
-library(openxlsx)
-library(here)
-library(r4ss)
-library(openxlsx)
+---
+title: "Supplementary Material 2"
+subtitle: "Length Composition Simulation Analysis"
+author: "Mauricio Mardones"
+date: "2025-06-24"
+output:
+  bookdown::pdf_document2:
+    keep_md: true
+    toc: true
+    number_sections: true
+---
+\pagebreak
 
 
-dir1<-here::here("s1")# test 1
-# leo archivos para plotear y hacer tablas
+
+# Introduction
+
+This document presents a simulation approach to assess variability in length composition data within the context of stock assessment using the Stock Synthesis (SS3) framework. Historical commercial length composition data is used to generate alternative distributions by introducing stochastic noise. These simulated datasets are intended to support model fitting under different assumptions.
+
+This analysis forms part of a broader evaluation of the potential impacts of varying selectivity patterns in the wedge clam (*Donax trunculus*) fishery. Specifically, it aims to assess how different assumed or estimated mean sizes of selectivity influence key population variables, such as spawning biomass, recruitment, and exploitation rate. The study is focused on the artisanal wedge clam fishery in the Gulf of Cádiz, Spain.
+
+
+
+# Data Reading and Preparation
+
+We begin by reading the input files for a reference model (scenario S1):
+
+
+``` r
+dir1 <- here::here("s1")
 start1 <- SS_readstarter(file = file.path(dir1,
                                           "starter.ss"),
                          verbose = FALSE)
-# note the data and control file names can vary, so are determined from the 
-# starter file.
 dat1 <- SS_readdat(file = file.path(dir1, start1$datfile),
                    verbose = FALSE)
-# Read in ctl file. Note that the data fileR object is needed so that SS_readctl
-# assumes the correct data structure
-
-# Forzar decimales con punto en toda la sesión
 options(OutDec = ".")
+```
 
-# --- Datos originales ---
+## Extract Original Length Composition Data
+
+
+``` r
 datacom <- dat1$lencomp %>% filter(fleet == "1")
 
 datacom_long <- datacom %>%
@@ -38,8 +54,23 @@ estructura <- datacom_long %>%
   dplyr::select(-proporcion)
 tallas <- sort(unique(datacom_long$talla))
 anos <- unique(datacom_long$year)
+```
 
-# --- Función para simular proporciones con ruido ---
+# Simulation Methodology
+
+We define a function to simulate length composition data using a Gaussian distribution with added stochasticity:
+
+$$
+P_i = \frac{f_i \cdot \varepsilon_i}{\sum_j f_j \cdot \varepsilon_j}, \quad f_i = \text{dnorm}(x_i; \mu, \sigma)
+$$
+
+Where:
+- $P_i$ is the normalized proportion for length bin $i$.
+- $f_i$ is the Gaussian density.
+- $\varepsilon_i$ is multiplicative noise, $\sim \mathcal{N}(1, \sigma^2_\varepsilon)$.
+
+
+``` r
 simular_proporcion_ruido <- function(mu, sigma, tallas, ruido_sd = 0.1) {
   densidades <- dnorm(tallas, mean = mu, sd = sigma)
   ruido <- rnorm(length(tallas), mean = 1, sd = ruido_sd)
@@ -47,8 +78,14 @@ simular_proporcion_ruido <- function(mu, sigma, tallas, ruido_sd = 0.1) {
   proporciones <- densidades_ruido / sum(densidades_ruido)
   return(proporciones)
 }
+```
 
-# --- Simulaciones ---
+# Generate Simulated Datasets
+
+We simulate data using several mean values ($\mu = 2.3, 2.4, 2.5, 2.6$) with a fixed standard deviation ($\sigma = 0.25$).
+
+
+``` r
 mus <- c(2.3, 2.4, 2.5, 2.6)
 sigma <- 0.25
 
@@ -64,20 +101,36 @@ simulados <- map_dfr(mus, function(mu) {
       )
   })
 })
+```
 
-# --- Datos originales ---
+# Combine and Visualize
+
+Combine simulated and original data:
+
+
+``` r
 originales <- datacom_long %>%
   mutate(grupo = "original")
-
-# --- Unir todo ---
 todo <- bind_rows(originales, simulados)
+```
 
-# --- Calcular medias ponderadas ---
+### Compute Weighted Mean Lengths
+
+$$
+\bar{L} = \frac{\sum_i L_i P_i}{\sum_i P_i}
+$$
+
+
+``` r
 medias <- todo %>%
   group_by(grupo, year) %>%
   summarise(media_talla = sum(talla * proporcion) / sum(proporcion), .groups = "drop")
+```
 
-# --- Graficar ---
+### Plot Distributions
+
+
+``` r
 ggplot(todo, aes(x = talla, y = proporcion)) +
   geom_col(position = "identity", alpha = 0.5, color = "black") +
   facet_grid(year ~ grupo, scales = "free_y") +
@@ -89,8 +142,16 @@ ggplot(todo, aes(x = talla, y = proporcion)) +
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+```
 
-# --- Preparar datos para SS3 ---
+![](Suppl_Mat_2_files/figure-latex/unnamed-chunk-7-1.pdf)<!-- --> 
+
+# Format for SS3 Input
+
+Prepare data in wide format for Stock Synthesis:
+
+
+``` r
 cols_to_select <- intersect(
   c("year", "month", "fleet", "sex", "part", "Nsamp", "talla", "proporcion", "grupo"),
   names(todo)
@@ -106,10 +167,14 @@ datacom_wide <- todo %>%
     values_fill = 0
   ) %>%
   arrange(year, month)
+```
 
-# --- Escribir Excel con punto decimal en todas las hojas ---
+# Export to Excel
+
+Export each group into a separate worksheet with numeric formatting:
 
 
+``` r
 wb <- createWorkbook()
 
 for(gr in unique(datacom_wide$grupo)) {
@@ -136,5 +201,12 @@ for(sheet in names(wb)) {
 }
 
 saveWorkbook(wb, file = "data_sim_length.xlsx", overwrite = TRUE)
+```
+
+
+
+# Conclusion
+
+This simulation approach allows the incorporation of uncertainty in length composition data, which can be used to test sensitivity of stock assessment models to assumptions on size structure. It can also help to test model robustness to different assumptions of central tendency and variability in input data.
 
 

@@ -20,9 +20,14 @@ knitr::opts_chunk$set(echo = FALSE,
                       fig.align = 'center')
 ```
 
+
+```{r echo=FALSE}
+library(tidyverse)
+```
+
 # ABSTRACT
 
-This study evaluates the implications of different minimun legal harvest size on the population dynamics and management outcomes of the wedge clam (*Donax trunculus*) fishery in the Gulf of Cádiz. Using an integrated length-to-age stock assessment model implemented in Stock Synthesis, we analyze three selectivity scenarios based on minimum legal sizes: 25 mm (current regulation), 24 mm, and 23 mm. The objective is to assess how variations in legal size thresholds affect estimates of recruitment, total biomass, and spawning stock biomass, and to determine the potential consequences for the sustainability of the fishery.
+This study evaluates the implications of different minimun legal harvest size on the population dynamics and management outcomes of the wedge clam (*Donax trunculus*) fishery in the Gulf of Cádiz. Using an integrated length-to-age stock assessment model implemented in Stock Synthesis, we analyze four selectivity scenarios based on minimum legal sizes: 26, 25 (current regulation), 24 and 23 mm. The objective is to assess how variations in legal size thresholds affect estimates of recruitment, total biomass, and spawning stock biomass, and to determine the potential consequences for the sustainability of the fishery.
 
 Each scenario is modeled under consistent structural assumptions and data inputs, allowing for meaningful comparison across population metrics. Model inputs are derived from a robust, ongoing monitoring program for *D. trunculus*, which includes monthly data on population structure, fishery effort and landings, and environmental variables. This comprehensive dataset strengthens the model’s ability to reflect realistic biological and fishery conditions.
 
@@ -79,6 +84,59 @@ Length Frequency Data (LFD) from monitoring program in wedge clam from 2013 to 2
 
 [asignado **MD**]
 
+## Lengths compositional dependent-fishery data simulation 
+
+The length composition data simulation was designed to evaluate the potential impacts of regulatory changes concerning the minimum legal size (MLS) in the wedge clam (*Donax trunculus*) fishery. The current MLS is set at 25 mm. This simulation framework investigates two dimensions of impact: 1) Biological shift in population structure due to regulatory changes in minimum size, and 2) Assumed fixed selectivity functions in the assessment model centered around alternative mean lengths. To achieve this, a total of eight scenarios were constructed. Four scenarios simulating changes in the population structure with commercial mean lengths centered at 23 mm, 24 mm, 25 mm, and 26 mm
+
+Each simulated population structure was generated using a parametric Gaussian distribution:
+
+$$
+f_i = \text{dnorm}(x_i; \mu, \sigma)
+$$
+
+Stochasticity was introduced by applying multiplicative noise to represent sampling variability:
+
+$$
+P_i = \frac{f_i \cdot \varepsilon_i}{\sum_j f_j \cdot \varepsilon_j}, \quad \varepsilon_i \sim \mathcal{N}(1, \sigma_{\varepsilon}^2)
+$$
+
+Where $P_i$ is the resulting proportion at length $x_i$, $\phi_i$ is the normal density for length $x_i$ given mean $\mu$ and standard deviation $\sigma$ and $\epsilon_i$ is multiplicative noise drawn from $\mathcal{N}(1, \sigma_{\text{noise}})$. This formulation ensures all resulting proportions are non-negative and sum to one, maintaining their composition nature. Each of the simulated scenarios was incorporated into the Stock Synthesis (SS3) model framework. 
+
+Another four scenarios in which selectivity is fixed in the assessment model to match the same means (23 mm to 26 mm), while retaining the original input data (Figure \@ref(fig:selfix)).
+
+```{r selfix, echo = FALSE, out.width='50%', fig.cap="Scenarios of fishery selectivity fixed tested in modelling stock assessment in wedg clam in Gulf of Cádiz"}
+
+logistic_selectivity <- function(length, L50, slope) {
+  1 / (1 + exp(-slope * (length - L50)))
+}
+lengths <- seq(10, 35, by = 0.1)  
+L50_values <- c(23, 24, 25, 26)
+slope <- 5
+selectivity_data <- expand.grid(length = lengths, L50 = L50_values) %>%
+  mutate(selectivity = logistic_selectivity(length, L50, slope),
+         L50 = factor(L50, levels = L50_values))
+
+selfix <- ggplot(selectivity_data, aes(x = length, 
+                             y = selectivity, 
+                             color = L50)) +
+  geom_line(size = 1.2) +
+  labs(
+    title = "",
+    x = "wedge clam length (mm)",
+    y = "",
+    color = expression(L[50])
+  ) +
+  theme_bw(base_size = 10) +
+  scale_color_viridis_d(option = "E",
+                     name ="Minimum Legal Size (MLS)")+
+  theme(legend.position = "bottom")+
+  ylim(0, 1.05)
+selfix 
+```
+
+This dual approach allows for evaluating the effect of hypothetical changes in population structure (e.g., as a result of shifting LMLS), and the influence of assuming specific selectivity patterns in the assessment model, independent of actual data structure.
+
+By combining observed and simulated datasets, this strategy supports a robust evaluation of how assumed biological structure and model assumptions interact, particularly regarding exploitation patterns and size-based selectivity in this artisanal fishery.
 
 
 ## Conceptual model

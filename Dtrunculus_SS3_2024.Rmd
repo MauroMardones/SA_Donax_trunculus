@@ -100,24 +100,27 @@ lapply(paquetes, require, character.only = TRUE)
 
 
 ```{r echo=FALSE}
-dir01<-here("s01")# Modelo test
-dir1<-here("s1")# Reference model
-dir2<-here("s2") # landing 2
-dir3<-here("s3") # landing 3
-dir4<-here("s4") # landing 4
-dir2.3<- here("s1_2.3")
-dir2.4<- here("s1_2.4")
-dir2.5<- here("s1_2.5")
-dir2.6<- here("s1_2.6")
+dir01<-here::here("s01")# Modelo test 
+dir1<-here::here("s1")# Reference model 2.5 TML fixed
+dir2<-here::here("s2") # 2.3 tml fixed
+dir3<-here::here("s3") # 2.4 tml fixed
+dir4<-here::here("s4") # 2.6 TML fixed
+dir2.3<- here::here("s1_2.3") # 2.3 estimated
+dir2.4<- here::here("s1_2.4") # 2.4 estimated
+dir2.5<- here::here("s1_2.5") # 2.5 estimated
+dir2.6<- here::here("s1_2.6") # 2.6 estimated
 
-fig_path<-here("Fig")
+fig_path<-here::here("Fig")
 ```
 
 run Model
 
 ```{r eval=FALSE, message=F, include=FALSE}
 # Lista de directorios para correro tordos juntos
-directorios <- c("s1", 
+directorios <- c("s1",
+                 "s2",
+                 "s3",
+                 "s4",
                  "s1_2.3",
                  "s1_2.4",
                  "s1_2.5",
@@ -138,7 +141,7 @@ for (dir in directorios) {
 ```{r eval= F}
 # Corro escenario por separado 
 r4ss::run(
-  dir = dir1,
+  dir = dir4,
   exe = "../executable/ss3_opt_osx_arm64",
   skipfinished = FALSE,
   show_in_console = TRUE# change to true to watch the output go past
@@ -150,18 +153,18 @@ r4ss::run(
 base.model1 <- SS_output(dir=dir1,
                          covar=T,
                          forecast=T)
-# #dir2<-here("s2")
-# base.model2 <- SS_output(dir=dir2,
-#                          covar=T,
-#                          forecast=T)
-# #dir3<-here("s3")
-# base.model3 <- SS_output(dir=dir3,
-#                          covar=T,
-#                          forecast=T)
-# #dir1<-here("s4")
-# base.model4 <- SS_output(dir=dir4,
-#                          covar=T,
-#                          forecast=T)
+#dir2<-here("s2")
+base.model2 <- SS_output(dir=dir2,
+                         covar=T,
+                         forecast=T)
+#dir3<-here("s3")
+base.model3 <- SS_output(dir=dir3,
+                         covar=T,
+                         forecast=T)
+#dir1<-here("s4")
+base.model4 <- SS_output(dir=dir4,
+                         covar=T,
+                         forecast=T)
 
 
 base.model2.3 <- SS_output(dir = dir2.3, 
@@ -184,7 +187,7 @@ base.model2.6 <- SS_output(dir = dir2.6,
 
 
 ```{r eval= F, message=FALSE, warning=FALSE, include=FALSE}
-SS_plots(base.model2.3,
+SS_plots(base.model1,
          uncertainty=T,
          datplot = T, 
          png=T, 
@@ -356,7 +359,7 @@ logistic_selectivity <- function(length, L50, slope) {
 
 # Parámetros
 lengths <- seq(10, 35, by = 0.1)  # Rango de longitudes en mm
-L50_values <- c(22, 23, 24, 25)
+L50_values <- c(23, 24, 25, 26)
 slope <- 2
 
 # Crear un data frame con todas las curvas
@@ -365,7 +368,9 @@ selectivity_data <- expand.grid(length = lengths, L50 = L50_values) %>%
          L50 = factor(L50, levels = L50_values))
 
 # Graficar con ggplot2
-ggplot(selectivity_data, aes(x = length, y = selectivity, color = L50)) +
+ggplot(selectivity_data, aes(x = length, 
+                             y = selectivity, 
+                             color = L50)) +
   geom_line(size = 1.2) +
   labs(
     title = "",
@@ -374,7 +379,8 @@ ggplot(selectivity_data, aes(x = length, y = selectivity, color = L50)) +
     color = expression(L[50])
   ) +
   theme_minimal(base_size = 14) +
-  scale_color_brewer(palette = 5)+
+  scale_color_brewer(palette = 5,
+                     name ="Legal Minimal Size")+
   ylim(0, 1.05)
 
 ```
@@ -418,7 +424,7 @@ En relación a los análisis de bondad de ajuste más clásicos, los ajustes a l
 
 
 ```{r fitpob, echo=FALSE,  fig.align='center', fig.cap="\\label{fig:fitpob}Fits Length comps whole catch COMERCIAL y POBLACIONAL para coquina"}
-SSplotComps(base.model2.5,
+SSplotComps(base.model2,
             subplots=1, 
             cols = 6,
             fleetnames = c("Comercial", "Poblacional"),
@@ -479,7 +485,7 @@ kbl(booktabs = T,format = "latex",position="ht!",align="c",escape = FALSE,
 Los componentes de verosimilitud, además de los análisis de residuales permiten identificar entre los bloques de modelos cuales de las configuraciones presenta un desempeño adecuado en términos estadísticos de ajuste a la información.  Este modelo es el seleccionado como caso base y sirve para desplegar sus principales salidas para fines informativos de indicadores; como biomasa desovante y pronóstico (Figura \ref{fig:ssb}) y biomasa desovante relativa (Figura \ref{fig:ssb1}).
 
 ```{r ssb, echo=FALSE, fig.align='center', out.width = "80%", fig.cap="\\label{ssb}Total biomass with forecast to coquina"}
-SSplotTimeseries(base.model2.5,
+SSplotTimeseries(base.model3,
                  subplot = 7)
 ```
 
@@ -755,7 +761,10 @@ hcl5 = SSplotHCxval(retroSummary5,
 
 ```{r echo=FALSE, message=FALSE}
 #PLOT labels, name of each model run
-legend.labels <- c("s1", 
+legend.labels <- c("s1",
+                   "s2",
+                   "s3",
+                   "s4",
                  "s1_2.3",
                  "s1_2.4",
                  "s1_2.5",
@@ -766,6 +775,9 @@ legend.labels <- c("s1",
 biglist <- SSgetoutput(keyvec = NULL,
                        dirvec = c(#dir01,
                                   dir1,
+                                  dir2,
+                                  dir3,
+                                  dir4,
                                   dir2.3,
                                   dir2.4,
                                   dir2.5,
@@ -782,6 +794,9 @@ Lo analisis comparados, muestran las estimaciones de cada escenario propuesto pa
 SSplotComparisons(summaryoutput,
                   subplot = 4,
                   legendlabels = c("s1",
+                                   "s2",
+                                   "s3",
+                                   "s4",
                                     "s1_2.3",
                                     "s1_2.4",
                                     "s1_2.5",
@@ -795,8 +810,10 @@ SSplotComparisons(summaryoutput,
 par(mfrow=c(2,2), mar=c(1.5,5,3,2) + 0.1)
 SSplotComparisons(summaryoutput,
                   subplot = c(4, 12, 1, 13),
-                 ,
                   legendlabels = c("s1",
+                                   "s2",
+                                   "s3",
+                                   "s4",
                                     "s1_2.3",
                                     "s1_2.4",
                                     "s1_2.5",
