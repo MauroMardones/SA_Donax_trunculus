@@ -64,6 +64,18 @@ The distribution area, and consequently the study area of the wedge clam is defi
 
 ## Data sources
 
+
+Los datos analizados que formaron parte de los inputs del modelo fueron clasificados de acuerdo a su origen. A saber;
+
+a.  Desembarque  artesanal del período (2004-2024), provenientes de las estadisticas oficiales de [IDAPES](https://www.juntadeandalucia.es/agriculturaypesca/idapes/servlet/FrontController) asociados al sector de marisquería del Parque Doñana y cercanías. Cabe señalar que en esta pesquería aun no se realizan procesos de corrección de desembarques y que serán propuestos como escenarios de modelación.
+
+
+b.  Información de los programas de monitoreo poblacional y comercial que lleva a cabo el IEO desee el año 2013. En este monitoreo se recopila información biológica, pesquera y ambiental. 
+
+c . Información relativa a los parámetros de historia de vida de la coquina a nivel europeo y local. Esta información está contenida en artículos científicos y reportes que fueron compilados con el fin de parametrizar los modelos de evaluación.
+
+Toda esta información, codigos fuente, bases de datos y Analisis Exploratorio de Datos puede ser encontrado en el siguiente enlace: [Data coquina](https://mauromardones.github.io/EDA_Donux_trunculus_2023/).
+
 The main source of information for these analyzes comes from monitoring program called `FEMP-04` that has been carried out since 2013 on a periodic and monthly basis sampling the beach executed by Instituto Español de Oceanografia (IEO), Cádiz. This monitoring includes taking samples from populations and also emulate commercial activity with a manual trawls which allow obtaining different information components such as densities, recruitment index, lengths compositions in a spatial context. Regarding fisheries data on the wedge clam, it were collected from 2004 to 2023 from the fisheries statistics compiled by the Andalusian Government's Fisheries and Aquaculture Marketing and Transformation Service, part of the Regional Ministry of Agriculture, Fisheries, and Rural Development. This service gathers information on daily catches per species and boat at landing sites. In another side, this program take environmental variables as well as primary production (Chlorophyll), salinity, sea temperature among others [MEJOR DESCRIPCION DEL MONITOREO]. All exploratory data analyses from data sources, including data manipulation and templates preparation, can be found in Supplementary Material 1.
 
 [... MAS DESARROLLO DE LOS DATOS Y SU DISEÑO DE MONITOREO]
