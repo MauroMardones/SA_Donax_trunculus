@@ -1,0 +1,577 @@
+---
+title: "![](IEO-logo2.png){width=10cm}"
+output:
+  bookdown::pdf_document2:
+    includes:
+      before_body: titulo.sty
+    keep_tex: true
+    latex_engine: xelatex
+    number_sections: no
+    toc: true
+    toc_depth: 3
+bibliography: Donax.bib
+csl: apa.csl
+link-citations: yes
+linkcolor: blue
+indent: no
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhf{}
+- \lfoot[\thepage]{}
+- \rfoot[]{\thepage}
+- \fontsize{12}{22}
+- \selectfont
+---
+
+\pagebreak
+
+
+```{r setup1, echo=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.align = 'center',
+                      fig.pos = "H",
+                      dev = 'jpeg',
+                      dpi = 300)
+#XQuartz is a mess, put this in your onload to default to cairo instead
+options(bitmapType = "cairo") 
+# (https://github.com/tidyverse/ggplot2/issues/2655)
+```
+
+```{r echo=TRUE}
+# List of required packages grouped by functionality
+required_packages <- c(
+  # Stock assessment + SS3 tools
+  "r4ss",         # Reading SS3 output
+  "ss3diags",     # Diagnostics for SS3 assessments
+  #  Data manipulation and transformation
+  "dplyr",        # Core data manipulation
+  "tidyverse",    # Collection of core tidy packages
+  "purrr",        # Functional programming (map, walk, etc.)
+  "plyr",         # Older data manipulation package (conflicts with dplyr)
+  "reshape2",     # Data reshaping (e.g. melt/cast)
+  #  Visualization and plotting
+  "ggplot2",      # Core plotting
+  "ggthemes",     # Themes like theme_few()
+  "ggpubr",       # ggarrange() and publication-ready visuals
+  "grid",         # Grid graphics system
+  "png",          # Reading PNG images
+  #  Statistical and modeling tools
+  "mvtnorm",      # Multivariate normal distributions
+  "forecast",     # Time series forecasting and diagnostics
+  #  File and path management
+  "here",         # Reproducible file paths
+  #  Reporting and tables
+  "kableExtra"    # Enhanced HTML/LaTeX tables
+)
+missing <- required_packages[!required_packages %in% installed.packages()[, "Package"]]
+if (length(missing)) install.packages(missing)
+purrr::walk(required_packages, library, character.only = TRUE)
+```
+
+
+# Context
+
+Understanding the potential bias in stock assessment models is critical to ensuring reliable and precautionary management advice. In this study, we evaluate the bias of the reference model developed for the wedge clam (*Donax trunculus*) fishery in the Gulf of Cádiz. The reference model, implemented in Stock Synthesis (SS3), integrates fishery-independent and fishery-dependent data to estimate population dynamics, including spawning stock biomass (SSB) and recruitment.
+
+To quantify model bias, we conducted a non-parametric bootstrap analysis by resampling the length composition data used in the model fitting process. This approach simulates variability in the observed data and allows for evaluation of the robustness of model estimates under alternative realizations of the input data. Specifically, we generated 100 bootstrap replicates of the original dataset, refitted the SS3 model to each replicate, and compared the resulting time series of SSB and recruitment to those from the reference model.
+
+The objective of this analysis is to identify whether the reference model provides unbiased estimates of key population parameters across years, or if systematic deviations arise when observational error is propagated through the model. This evaluation contributes to improving the confidence in stock status indicators and supports the implementation of management strategies that are resilient to observation and model uncertainties.
+
+
+# Methodology
+
+To assess the estimation bias of the Stock Synthesis (SS3) model for *Donax trunculus* population dynamics in the Gulf of Cádiz, we performed a bootstrap resampling procedure. This approach enables the evaluation of bias and uncertainty in model parameter estimates by repeatedly fitting the model to resampled datasets generated from the original data.
+
+### Bootstrap Procedure
+
+1. **Resampling**: We generated 100 bootstrap replicates by sampling with replacement from the original observed datasets (e.g., catch-at-length, survey indices), preserving the structure of the data.
+
+2. **Model Fitting**: For each bootstrap replicate, the SS3 model was executed to estimate parameters such as biomass, fishing mortality, and recruitment. The SS3 executable was called programmatically from R using system calls, allowing automated batch processing.
+
+3. **Bias Calculation**: For each parameter $\theta$, the bootstrap estimate of bias was calculated as:
+
+$$
+\hat{Bias}(\hat{\theta}) = \bar{\theta}^* - \hat{\theta}
+$$
+where $\hat{\theta}$ is the parameter estimate from the original data, and $\bar{\theta}^*$ is the mean of bootstrap estimates across replicates.
+
+4. **Confidence Intervals**: Bootstrap percentile confidence intervals were obtained from the empirical distribution of parameter estimates from the bootstrap replicates.
+
+## Parametric Bootstrapping Procedure in Stock Synthesis (`SS3`)
+
+The parametric bootstrapping approach implemented in **Stock Synthesis (SS3)** aims to simulate new datasets by sampling from the **observation model** used in the likelihood, conditional on the expected values predicted by the model. This procedure is useful for evaluating model performance and quantifying uncertainty in stock assessments.
+
+#### Step 1: Calculate Expected Values
+
+The model first calculates the **expected values** for each type of observation (abundance indices, length compositions, age compositions, discards, and tagging data). These values correspond to the model-predicted observations $\hat{y}_i$ that minimize the likelihood:
+
+$$
+\hat{y}_i = f(\theta)
+$$
+
+where $\theta$ represents the vector of estimated parameters.
+
+These expected values are then used as the **mean** or **center** of the distributions from which new pseudo-observations are sampled.
+
+#### Step 2: Simulate Observations Using Likelihood-Based Distributions
+
+Each observation type is resampled using a distribution **corresponding to its likelihood function**. The sampling includes observation error and model-estimated variability (such as overdispersion or extra SD).
+
+##### Abundance Indices
+
+Abundance indices are typically assumed to follow a **log-normal distribution**:
+
+$$
+\log(I_i^{\text{boot}}) \sim \mathcal{N}\left( \log(\hat{I}_i), \sigma_i^2 \right)
+$$
+
+where:
+
+* $I_i^{\text{boot}}$ is the bootstrapped index.
+* $\hat{I}_i$ is the model-predicted index.
+* $\sigma_i^2 = \text{Input CV}^2 + \text{Extra SD}^2 + \text{Variance Adjustment}$
+
+Other error types (e.g., normal, t-distribution) may also be used depending on the `Errtype` setting in the control file.
+
+> **Figure 1**: Sampling lognormal indices of abundance.
+
+```{r fig1, fig.cap="Lognormal sampling of abundance index", echo=FALSE}
+set.seed(42)
+x <- rlnorm(1000, meanlog = log(1), sdlog = 0.3)
+hist(x, breaks = 50, main = "Bootstrapped abundance index",
+     xlab = "Index value", 
+     col = "lightblue")
+abline(v = mean(x), col = "red", lwd = 2)
+```
+
+##### Length and Age Compositions
+
+Length and age composition data are sampled from a **multinomial distribution**:
+
+$$
+\mathbf{x}^{\text{boot}} \sim \text{Multinomial}(N_{\text{eff}}, \hat{\mathbf{p}})
+$$
+
+where:
+
+* $\mathbf{x}^{\text{boot}}$ is the vector of bootstrapped counts.
+* $N_{\text{eff}}$ is the effective sample size (possibly scaled via variance adjustments).
+* $\hat{\mathbf{p}}$ are the expected proportions in each bin.
+
+
+
+# Reults
+
+## Testing Bias in Reference Model `s1` 
+
+This code implements a parametric bootstrap specifically designed for stock assessment models, creating uncertainty estimates around wedge clam population dynamics. The process creates 100 bootstrap iterations where each iteration takes your base dataset and introduces controlled randomness into the length composition data, then runs the Stock Synthesis model on each perturbed dataset. This generates a distribution of possible outcomes that reflects the inherent uncertainty in your field data collection.
+The bootstrap focuses on manipulating the length composition data from your clam stock assessment, which includes the size structure of your catches and population, the sample sizes representing the number of individuals measured in each sample, and the length frequency distributions showing proportions of different size classes. 
+
+This is particularly important for clam assessments because size structure directly influences estimates of growth, mortality, and reproductive capacity. The randomization technique works by taking each length frequency observation and applying random multipliers between 0.9 and 1.1, which introduces plus or minus 10% variability around each observed proportion. It then resamples using a multinomial distribution to maintain realistic count structure, simulating the natural sampling variability you would see if you repeated your field sampling multiple times. This approach captures how uncertainty in size structure data propagates through to key management quantities like spawning stock biomass and recruitment estimates, giving you a realistic range of possible outcomes for your clam population assessment.
+
+
+#### PASO 1: GENERAR ARCHIVOS BOOTSTRAP CON SS3
+
+```{r}
+dir1     <- here::here("s1")        # Reference model (2.5 MLS fixed)
+# 1.1 Modificar el archivo starter.ss para generar bootstrap
+starter_file <- SS_readstarter(file = file.path(dir_test,
+                                               "starter.ss"),
+                              verbose = FALSE)
+# Cambiar el número de archivos de datos a producir (3 o más para bootstrap)
+# 3 = archivo original + expected values + 1 bootstrap
+# Para 100 bootstrap, usar 102
+starter_file$N_bootstraps <- 102  # 100 bootstrap + original + expected values
+
+# Escribir el starter modificado
+SS_writestarter(starter_file, dir = dir_test, overwrite = TRUE)
+
+# 1.2 Ejecutar SS3 para generar los archivos bootstrap
+r4ss::run(
+  dir = dir_test,
+  exe = "../executable/ss3_opt_osx_arm64",
+  extras = "-nox -nohess",
+  skipfinished = FALSE,
+  show_in_console = TRUE# change to true to watch the output go past
+)
+```
+
+
+```{r}
+# Esto generará archivos: data_boot_001.ss, data_boot_002.ss, ..., data_boot_100.ss
+
+# ====================================================================
+# PASO 2: EJECUTAR MODELOS CON CADA ARCHIVO BOOTSTRAP
+# ====================================================================
+
+# 2.1 Crear directorio para resultados bootstrap
+dir.create("s01/bootstrap_runs", showWarnings = FALSE)
+
+# 2.2 Función para ejecutar un bootstrap individual
+run_bootstrap <- function(boot_num, base_dir = "s01", output_dir = "bootstrap_runs") {
+  
+  # Crear directorio para este bootstrap
+  boot_dir <- file.path(output_dir, paste0("boot_", sprintf("%03d", boot_num)))
+  dir.create(boot_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  # Copiar todos los archivos excepto data.ss
+  files_to_copy <- list.files(base_dir, full.names = TRUE)
+  files_to_copy <- files_to_copy[!grepl("data.ss$|data_boot_", basename(files_to_copy))]
+  
+  file.copy(from = files_to_copy, to = boot_dir, overwrite = TRUE)
+  
+  # Copiar el archivo bootstrap específico como data.ss
+  boot_file <- file.path(base_dir, paste0("data_boot_", sprintf("%03d", boot_num), ".ss"))
+  if (file.exists(boot_file)) {
+    file.copy(from = boot_file, 
+              to = file.path(boot_dir, "data.ss"), 
+              overwrite = TRUE)
+    
+    # Ejecutar SS3
+    system(paste0("cd ", boot_dir, " && ~/IEO/SA_Donax_trunculus/executable/ss3_opt_osx_arm64 -nox -nohess"))
+    
+    return(TRUE)
+  } else {
+    warning(paste("Bootstrap file", boot_file, "not found"))
+    return(FALSE)
+  }
+}
+```
+
+
+```{r}
+# 2.3 Ejecutar todos los bootstrap (puede tomar tiempo)
+set.seed(123)
+n_bootstrap <- 100
+
+# Ejecutar en paralelo si tienes muchos cores
+library(parallel)
+cl <- makeCluster(detectCores() - 1)
+clusterEvalQ(cl, library(r4ss))
+
+results <- parLapply(cl, 1:n_bootstrap, run_bootstrap)
+stopCluster(cl)
+
+# O ejecutar secuencialmente
+# for (i in 1:n_bootstrap) {
+#   cat("Running bootstrap", i, "of", n_bootstrap, "\n")
+#   run_bootstrap(i)
+# }
+```
+
+
+```{r}
+# ====================================================================
+# PASO 3: LEER Y COMPILAR RESULTADOS
+# ====================================================================
+# 3.1 Leer modelo base
+base_model <- SS_output(dir = dir_test, verbose = FALSE, printstats = FALSE)
+
+read_bootstrap_results <- function(boot_num, output_dir = "bootstrap_runs") {
+  boot_dir <- file.path(output_dir, paste0("boot_", sprintf("%03d", boot_num)))
+  
+  tryCatch({
+    model <- SS_output(dir = boot_dir, verbose = FALSE, printstats = FALSE)
+    
+    get_param <- function(label) {
+      val <- model$parameters$Value[model$parameters$Label == label]
+      if(length(val) == 0) return(NA_real_) else return(val)
+    }
+    # en esta lista agregar otras varibles o parametros
+    list(
+      bootstrap = boot_num,
+      SSB = model$timeseries[model$timeseries$Yr >= 2003 & model$timeseries$Yr <= 2023, c("Yr", "SpawnBio")],
+      recruitment = model$timeseries[model$timeseries$Yr >= 2003 & model$timeseries$Yr <= 2023, c("Yr", "Recruit_0")],
+      depletion = model$derived_quants[model$derived_quants$Label == "Bratio_2028", "Value"],
+      R0 = get_param("SR_LN(R0)"),
+      M = get_param("NatM_p_1_Fem_GP_1"),
+      h = get_param("SR_BH_steep")
+    )
+  }, error = function(e) {
+    warning(paste("Error reading bootstrap", boot_num, ":", e$message))
+    return(NULL)
+  })
+}
+
+# Read data of boostrap
+bootstrap_results <- lapply(1:n_bootstrap, read_bootstrap_results)
+bootstrap_results <- bootstrap_results[!sapply(bootstrap_results, is.null)]
+```
+
+
+```{r}
+save(bootstrap_results, ssb_boot_df, recruit_boot_df, 
+     ssb_base_df, recruit_base_df,
+     file = "s01/bootstrap_summary.RData")
+```
+
+
+```{r}
+load("s01/bootstrap_summary.RData")
+```
+
+
+```{r}
+# compile SSB data
+ssb_boot_df <- do.call(rbind, lapply(bootstrap_results, function(x) {
+  if (!is.null(x$SSB)) {
+    data.frame(x$SSB, bootstrap = x$bootstrap)
+  }
+}))
+names(ssb_boot_df)[2] <- "SSB"
+
+# compile Recruitment data
+recruit_boot_df <- do.call(rbind, lapply(bootstrap_results, function(x) {
+  if (!is.null(x$recruitment)) {
+    data.frame(x$recruitment, bootstrap = x$bootstrap)
+  }
+}))
+names(recruit_boot_df)[2] <- "Recruitment"
+
+# Reference model
+ssb_base_df <- base_model$timeseries[base_model$timeseries$Yr >= 2003 & 
+                                       base_model$timeseries$Yr <= 2023, 
+                                     c("Yr", "SpawnBio")]
+names(ssb_base_df)[2] <- "SSB"
+
+recruit_base_df <- base_model$timeseries[base_model$timeseries$Yr >= 2003 & 
+                                           base_model$timeseries$Yr <= 2023, 
+                                        c("Yr", "Recruit_0")]
+names(recruit_base_df)[2] <- "Recruitment"
+```
+
+
+```{r}
+# ====================================================================
+# PASO 4: ANÁLISIS ESTADÍSTICO
+# ====================================================================
+
+# 4.1 Estadísticas resumidas por año
+ssb_stats <- ssb_boot_df %>%
+  group_by(Yr) %>%
+  summarise(
+    mean = mean(SSB, na.rm = TRUE),
+    median = median(SSB, na.rm = TRUE),
+    sd = sd(SSB, na.rm = TRUE),
+    q025 = quantile(SSB, 0.025, na.rm = TRUE),
+    q975 = quantile(SSB, 0.975, na.rm = TRUE),
+    cv = sd/mean,
+    .groups = 'drop'
+  )
+
+recruit_stats <- recruit_boot_df %>%
+  group_by(Yr) %>%
+  summarise(
+    mean = mean(Recruitment, na.rm = TRUE),
+    median = median(Recruitment, na.rm = TRUE),
+    sd = sd(Recruitment, na.rm = TRUE),
+    q025 = quantile(Recruitment, 0.025, na.rm = TRUE),
+    q975 = quantile(Recruitment, 0.975, na.rm = TRUE),
+    cv = sd/mean,
+    .groups = 'drop'
+  )
+
+# 4.2 Parámetros derivados
+derived_params <- data.frame(
+  bootstrap = sapply(bootstrap_results, function(x) x$bootstrap),
+  depletion = sapply(bootstrap_results, function(x) x$depletion),
+  R0 = sapply(bootstrap_results, function(x) x$R0)
+)
+
+# Estadísticas de parámetros derivados
+param_stats <- derived_params %>%
+  summarise(
+    depletion_mean = mean(depletion, na.rm = TRUE),
+    depletion_sd = sd(depletion, na.rm = TRUE),
+    depletion_q025 = quantile(depletion, 0.025, na.rm = TRUE),
+    depletion_q975 = quantile(depletion, 0.975, na.rm = TRUE),
+    R0_mean = mean(R0, na.rm = TRUE),
+    R0_sd = sd(R0, na.rm = TRUE),
+    R0_q025 = quantile(R0, 0.025, na.rm = TRUE),
+    R0_q975 = quantile(R0, 0.975, na.rm = TRUE)
+  )
+
+print("Bootstrap parameter statistics:")
+print(param_stats)
+```
+
+
+```{r}
+# ====================================================================
+# PASO 5: VISUALIZACIÓN
+# ====================================================================
+
+# 5.1 Gráfico de SSB con formato uniforme
+p_ssb <- ggplot() +
+  # Líneas bootstrap individuales
+  geom_line(data = ssb_boot_df, 
+            aes(x = Yr, y = SSB, group = bootstrap), 
+            color = "gray", alpha = 0.1) +
+  # Intervalo de confianza (ribbon) gris claro
+  geom_ribbon(data = ssb_stats, 
+              aes(x = Yr, ymin = q025, ymax = q975), 
+              alpha = 0.2, fill = "gray80") +
+  # Media bootstrap línea gris dashed
+  geom_line(data = ssb_stats, 
+            aes(x = Yr, y = mean), 
+            color = "gray40", size = 1) +
+  # Modelo base línea azul sólida
+  geom_line(data = ssb_base_df, 
+            aes(x = Yr, y = SSB), 
+            color = "blue") +
+  labs(x = "", y = "SSB") +
+  scale_x_continuous(breaks = seq(2003,2023,2)) +
+  theme_few() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+# 5.2 Gráfico de Reclutamiento con mismo estilo
+p_recruit <- ggplot() +
+  geom_line(data = recruit_boot_df, 
+            aes(x = Yr, y = Recruitment, group = bootstrap), 
+            color = "gray", alpha = 0.1) +
+  geom_ribbon(data = recruit_stats, 
+              aes(x = Yr, ymin = q025, ymax = q975), 
+              alpha = 0.2, fill = "gray80") +
+  geom_line(data = recruit_stats, 
+            aes(x = Yr, y = mean), 
+            color = "gray40", size = 1) +
+  geom_line(data = recruit_base_df, 
+            aes(x = Yr, y = Recruitment), 
+            color = "blue") +
+  labs(x = "", y = "Recruit") +
+  scale_x_continuous(breaks = seq(2003,2023,2)) +
+  theme_few() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+
+# 5.3 Histogramas de parámetros derivados
+p_depletion <- ggplot(derived_params, aes(x = depletion)) +
+  geom_histogram(bins = 30, alpha = 0.7, color= "lightgrey", 
+                 fill = "lightblue") +
+  geom_vline(xintercept = base_model$derived_quants[base_model$derived_quants$Label == "Bratio_2023", "Value"], 
+             color = "red", size = 0.9) +
+  labs(
+       x = "Bratio", y = "Frecuency") +
+  theme_few()
+
+# 5.4 Mostrar gráficos
+ggarrange(p_ssb,
+          p_recruit,
+          p_depletion,
+          ncol = 3,
+          labels = c("A", "B", "C"))
+```
+
+Calcular desviación relativa entre bootstrap y modelo base por año
+
+```{r}
+# 1. 
+ssb_devs <- ssb_boot_df %>%
+  left_join(ssb_base_df, by = "Yr") %>%
+  rename(ssb_boot = SSB.x, ssb_base = SSB.y) %>%
+  mutate(rel_dev = (ssb_boot - ssb_base) / ssb_base)
+
+# 2. Histograma por año
+histboo <- ggplot(ssb_devs, aes(x = rel_dev)) +
+  geom_histogram(bins = 30, fill = "grey", color = "darkgrey") +
+  facet_wrap(~Yr, scales = "free_y",
+             ncol=3) +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    x = "Desviación relativa del SSB (bootstrap - base) / base",
+    y = "Frecuencia",
+    title = "Desviación relativa del SSB por año (bootstrap vs base)"
+  ) +
+  theme_minimal()
+histboo
+```
+There is a right (positive) skewness: many years exhibit long right tails, indicating that several bootstrap replicates overestimated the spawning stock biomass (SSB) compared to the base model. In other words, the bias tends to be positive. Some years show more bias than others; for example, 2013, 2016, and 2020 display distributions clearly shifted to the right, suggesting the model may be more sensitive in those years, possibly due to smaller sample sizes, changes in selectivity, high recruitment, or other factors worth exploring.
+
+```{r}
+# Extraer valores como escalares individuales
+ssb_2023_val <- ssb_base_df$SSB[ssb_base_df$Yr == 2023]
+recruit_2023_val <- recruit_base_df$Recruitment[recruit_base_df$Yr == 2023]
+depletion_2023_val <- base_model$derived_quants$Value[base_model$derived_quants$Label == "Bratio_2023"]
+
+ssb_boot_mean <- ssb_stats$mean[ssb_stats$Yr == 2023]
+recruit_boot_mean <- recruit_stats$mean[recruit_stats$Yr == 2023]
+depletion_boot_mean <- param_stats$depletion_mean
+
+ssb_boot_sd <- ssb_stats$sd[ssb_stats$Yr == 2023]
+recruit_boot_sd <- recruit_stats$sd[recruit_stats$Yr == 2023]
+depletion_boot_sd <- param_stats$depletion_sd
+
+ssb_boot_q025 <- ssb_stats$q025[ssb_stats$Yr == 2023]
+recruit_boot_q025 <- recruit_stats$q025[recruit_stats$Yr == 2023]
+depletion_boot_q025 <- param_stats$depletion_q025
+
+ssb_boot_q975 <- ssb_stats$q975[ssb_stats$Yr == 2023]
+recruit_boot_q975 <- recruit_stats$q975[recruit_stats$Yr == 2023]
+depletion_boot_q975 <- param_stats$depletion_q975
+
+comparison_table <- data.frame(
+  Parameter = c("SSB_2023", "Recruit_2023", "Depletion_2023"),
+  Base_Model = c(ssb_2023_val, recruit_2023_val, depletion_2023_val),
+  Bootstrap_Mean = c(ssb_boot_mean, recruit_boot_mean, depletion_boot_mean),
+  Bootstrap_SD = c(ssb_boot_sd, recruit_boot_sd, depletion_boot_sd),
+  CI_Lower = c(ssb_boot_q025, recruit_boot_q025, depletion_boot_q025),
+  CI_Upper = c(ssb_boot_q975, recruit_boot_q975, depletion_boot_q975)
+)
+
+print(comparison_table)
+
+```
+
+
+```{r eval=FALSE}
+# Guardar resultados
+write.csv(ssb_stats, "ssb_bootstrap_stats.csv", row.names = FALSE)
+write.csv(recruit_stats, "recruitment_bootstrap_stats.csv", row.names = FALSE)
+write.csv(comparison_table, "bootstrap_comparison.csv", row.names = FALSE)
+```
+
+
+## Distribucion de parametros
+
+```{r}
+# Parámetros base:
+h_base <- base_model$parameters$Value[base_model$parameters$Label == "SR_BH_steep"]
+R0_base <- base_model$parameters$Value[base_model$parameters$Label == "SR_LN(R0)"]
+
+```
+
+
+```{r}
+# Extraer de la lista bootstrap_results
+h_boot <- sapply(bootstrap_results, function(x) x$h)
+R0_boot <- sapply(bootstrap_results, function(x) x$R0)
+
+```
+
+
+```{r}
+library(ggplot2)
+
+plot_histogram <- function(boot_values, base_value, param_name) {
+  df <- data.frame(value = boot_values)
+  ggplot(df, aes(x = value)) +
+    geom_histogram(binwidth = diff(range(boot_values))/30, fill = "lightgrey", color = "grey") +
+    geom_vline(xintercept = base_value, color = "red") +
+    labs(x = param_name,
+         y = "Frequency") +
+    theme_few()
+}
+
+p_h <- plot_histogram(h_boot, h_base, "Steepness (h)")
+p_R0 <- plot_histogram(R0_boot, R0_base, "R0")
+
+ggarrange(p_h, p_R0,
+          ncol = 2, nrow = 1,
+          labels = c("A", "B"))
+
+```
+
