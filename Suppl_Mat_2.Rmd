@@ -40,7 +40,7 @@ library(here)
 library(r4ss)
 ```
 
-# Introduction
+# Context
 
 This document presents a simulation approach to assess variability in length composition data within the context of stock assessment using the Stock Synthesis (SS3) framework. Historical commercial length composition data is used to generate alternative distributions by introducing stochastic noise. These simulated datasets are intended to support model fitting under different assumptions.
 
