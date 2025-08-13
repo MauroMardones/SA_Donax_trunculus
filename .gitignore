@@ -25,3 +25,6 @@ Yiel_Report_2
 boot_manual/
 bootstrap_runs/
 Suppl_Mat_3_files/
+*tex
+*log
+*sty

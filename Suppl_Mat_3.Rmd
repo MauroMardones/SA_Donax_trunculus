@@ -86,7 +86,7 @@ The primary objective of this analysis is to identify whether the reference mode
 
 # Methodology
 
-To assess the estimation bias of the Stock Synthesis (SS3) model for *Donax trunculus* population dynamics in the Gulf of Cádiz, we performed a bootstrap resampling procedure. This approach enables the evaluation of bias and uncertainty in model parameter estimates by repeatedly fitting the model to resampled datasets generated from the original data.
+To assess the estimation bias of the Stock Synthesis (SS3) model for *Donax trunculus* population dynamics in the Gulf of Cádiz, we performed a bootstrap resampling procedure. This approach enables the evaluation of bias and uncertainty in model parameter estimates by repeatedly fitting the model to resampled datasets generated from the original data. This methodology was follow advice in SS3 user Manual from @Methot2023.
 
 ### Bootstrap Procedure
 
@@ -123,8 +123,6 @@ These expected values are then used as the **mean** or **center** of the distrib
 
 Each observation type is resampled using a distribution **corresponding to its likelihood function**. The sampling includes observation error and model-estimated variability (such as overdispersion or extra SD).
 
-##### Abundance Indices
-
 Abundance indices are typically assumed to follow a **log-normal distribution**:
 
 $$
@@ -133,9 +131,9 @@ $$
 
 where:
 
-* $I_i^{\text{boot}}$ is the bootstrapped index.
-* $\hat{I}_i$ is the model-predicted index.
-* $\sigma_i^2 = \text{Input CV}^2 + \text{Extra SD}^2 + \text{Variance Adjustment}$
+$I_i^{\text{boot}}$ is the bootstrapped index.
+$\hat{I}_i$ is the model-predicted index.
+$\sigma_i^2 = \text{Input CV}^2 + \text{Extra SD}^2 + \text{Variance Adjustment}$
 
 Other error types (e.g., normal, t-distribution) may also be used depending on the `Errtype` setting in the control file.
 
@@ -150,25 +148,9 @@ hist(x, breaks = 50, main = "Bootstrapped abundance index",
 abline(v = mean(x), col = "red", lwd = 2)
 ```
 
-##### Length and Age Compositions
+# Results
 
-Length and age composition data are sampled from a **multinomial distribution**:
-
-$$
-\mathbf{x}^{\text{boot}} \sim \text{Multinomial}(N_{\text{eff}}, \hat{\mathbf{p}})
-$$
-
-where:
-
-* $\mathbf{x}^{\text{boot}}$ is the vector of bootstrapped counts.
-* $N_{\text{eff}}$ is the effective sample size (possibly scaled via variance adjustments).
-* $\hat{\mathbf{p}}$ are the expected proportions in each bin.
-
-
-
-# Reults
-
-## Testing Bias in Reference Model `s1` 
+## Code implementation
 
 This code implements a parametric bootstrap specifically designed for stock assessment models, creating uncertainty estimates around wedge clam population dynamics. The process creates 100 bootstrap iterations where each iteration takes your base dataset and introduces controlled randomness into the length composition data, then runs the Stock Synthesis model on each perturbed dataset. This generates a distribution of possible outcomes that reflects the inherent uncertainty in your field data collection.
 The bootstrap focuses on manipulating the length composition data from your clam stock assessment, which includes the size structure of your catches and population, the sample sizes representing the number of individuals measured in each sample, and the length frequency distributions showing proportions of different size classes. 
@@ -176,9 +158,9 @@ The bootstrap focuses on manipulating the length composition data from your clam
 This is particularly important for clam assessments because size structure directly influences estimates of growth, mortality, and reproductive capacity. The randomization technique works by taking each length frequency observation and applying random multipliers between 0.9 and 1.1, which introduces plus or minus 10% variability around each observed proportion. It then resamples using a multinomial distribution to maintain realistic count structure, simulating the natural sampling variability you would see if you repeated your field sampling multiple times. This approach captures how uncertainty in size structure data propagates through to key management quantities like spawning stock biomass and recruitment estimates, giving you a realistic range of possible outcomes for your clam population assessment.
 
 
+1. Chunk to generate bootstrap files from `starter.ss` file.
 
 ```{r eval=FALSE}
-#### PASO 1: GENERAR ARCHIVOS BOOTSTRAP CON SS3
 dir_test    <- here::here("s01")        # Reference model (2.5 MLS fixed)
 # 1.1 Modificar el archivo starter.ss para generar bootstrap
 starter_file <- SS_readstarter(file = file.path(dir_test,
@@ -188,6 +170,7 @@ starter_file <- SS_readstarter(file = file.path(dir_test,
 # 3 = archivo original + expected values + 1 bootstrap
 # Para 100 bootstrap, usar 102
 starter_file$N_bootstraps <- 102  # 100 bootstrap + original + expected values
+# esto cambiará el archivo original starter.ss. tener copia
 
 # Escribir el starter modificado
 SS_writestarter(starter_file, dir = dir_test, overwrite = TRUE)
@@ -202,27 +185,23 @@ r4ss::run(
 )
 ```
 
+This generates `data_boot_001.ss`, `data_boot_002.ss`, ..., `data_boot_100.ss`
 
-Esto generará archivos: `data_boot_001.ss`, `data_boot_002.ss`, ..., `data_boot_100.ss`
 
-```{r eval=FALSE}
-#### PASO 2: EJECUTAR MODELOS CON CADA ARCHIVO BOOTSTRAP
+2. Run each bootstrap model
+
+```{r eval=FALSE, echo=TRUE}
 # 2.1 Crear directorio para resultados bootstrap
 dir.create("s01/bootstrap_runs", showWarnings = FALSE)
-
 # 2.2 Función para ejecutar un bootstrap individual
 run_bootstrap <- function(boot_num, base_dir = "s01", output_dir = "bootstrap_runs") {
-  
   # Crear directorio para este bootstrap
   boot_dir <- file.path(output_dir, paste0("boot_", sprintf("%03d", boot_num)))
   dir.create(boot_dir, showWarnings = FALSE, recursive = TRUE)
-  
   # Copiar todos los archivos excepto data.ss
   files_to_copy <- list.files(base_dir, full.names = TRUE)
   files_to_copy <- files_to_copy[!grepl("data.ss$|data_boot_", basename(files_to_copy))]
-  
   file.copy(from = files_to_copy, to = boot_dir, overwrite = TRUE)
-  
   # Copiar el archivo bootstrap específico como data.ss
   boot_file <- file.path(base_dir, paste0("data_boot_", sprintf("%03d", boot_num), ".ss"))
   if (file.exists(boot_file)) {
@@ -293,7 +272,6 @@ read_bootstrap_results <- function(boot_num, output_dir = "bootstrap_runs") {
     return(NULL)
   })
 }
-
 # Read data of boostrap
 bootstrap_results <- lapply(1:n_bootstrap, read_bootstrap_results)
 bootstrap_results <- bootstrap_results[!sapply(bootstrap_results, is.null)]
@@ -309,9 +287,9 @@ save(bootstrap_results, ssb_boot_df, recruit_boot_df,
 
 ```{r}
 # Carga el archivo
-load("s01/bootstrap_summary.RData", verbose = TRUE)
+load("s01/bootstrap_summary.RData") #verbose = TRUE si quiero ver los obj cargados
 ```
-
+## Testing Bias in Reference Model `s1` 
 
 ```{r}
 dir_test    <- here::here("s01")  
@@ -345,16 +323,14 @@ recruit_base_df <- base_model$timeseries[base_model$timeseries$Yr >= 2003 &
                                         c("Yr", "Recruit_0")]
 names(recruit_base_df)[2] <- "Recruitment"
 ```
-
-
 ```{r}
 # ====================================================================
-# PASO 4: ANÁLISIS ESTADÍSTICO
+# Genera estadisticas simples
 # ====================================================================
 # 4.1 Estadísticas resumidas por año
 ssb_stats <- ssb_boot_df %>%
   group_by(Yr) %>%
-  summarise(
+  dplyr::summarise(
     mean = mean(SSB, na.rm = TRUE),
     median = median(SSB, na.rm = TRUE),
     sd = sd(SSB, na.rm = TRUE),
@@ -366,7 +342,7 @@ ssb_stats <- ssb_boot_df %>%
 
 recruit_stats <- recruit_boot_df %>%
   group_by(Yr) %>%
-  summarise(
+  dplyr::summarise(
     mean = mean(Recruitment, na.rm = TRUE),
     median = median(Recruitment, na.rm = TRUE),
     sd = sd(Recruitment, na.rm = TRUE),
@@ -385,7 +361,7 @@ derived_params <- data.frame(
 
 # Estadísticas de parámetros derivados
 param_stats <- derived_params %>%
-  summarise(
+  dplyr::summarise(
     depletion_mean = mean(depletion, na.rm = TRUE),
     depletion_sd = sd(depletion, na.rm = TRUE),
     depletion_q025 = quantile(depletion, 0.025, na.rm = TRUE),
@@ -400,7 +376,7 @@ kbl(param_stats)
 ```
 
 
-```{r, fig.height=3, fig.width=10}
+```{r,fig.height=3, fig.width=10}
 # ====================================================================
 # PASO 5: VISUALIZACIÓN
 # ====================================================================
@@ -456,29 +432,35 @@ p_depletion <- ggplot(derived_params, aes(x = depletion)) +
 ```
 
 
-```{r, fig.height=3, fig.width=10}
+```{r}
 # 5.4 Mostrar gráficos
-ggpubr::ggarrange(p_ssb,
-          p_recruit,
-          p_depletion,
-          ncol = 3,
-          labels = c("A", "B", "C"))
+ggarrange(
+  ggarrange(p_ssb, p_recruit, ncol = 2, labels = c("A", "B")),
+  p_depletion,
+  ncol = 1, nrow = 2,
+  heights = c(1, 1), # puedes ajustar proporción de altura
+  labels = c("", "C")
+)
+
 ```
+The bias analysis based on SSB, recruitment, and depletion reveals distinct patterns that point to potential structural issues in the model prior to 2013. In the **SSB** trajectory (panel A), bootstrap replicates show considerable dispersion and a tendency to deviate from the base model in the early period (2003–2012), suggesting instability in biomass estimates. This instability is also reflected in the **recruitment** estimates (panel B), where the spread among bootstrap realizations is wider before 2013, indicating higher sensitivity to input data and model assumptions. In both cases, the magnitude and variability of the bias diminish noticeably after 2013. The **depletion** distribution (panel C) further supports this pattern: the variability in the terminal Bratio estimates is relatively low, but the central tendency shifts closer to the base model’s value after 2013.
+
+This temporal shift coincides with the introduction of length–frequency data and the commencement of the abundance index series in 2013. The alignment between improved bias performance and these data additions suggests that the earlier bias patterns may have been driven by structural limitations in the model related to insufficient data support—particularly the absence of size composition and abundance index information—rather than purely stochastic variation. In this context, the post-2013 period benefits from richer and more informative datasets, allowing for better constraint of population parameters and a reduction of structural bias.
 
 Calcular desviación relativa entre bootstrap y modelo base por año
 
-```{r }
+```{r fig.width=6, fig.height=8, out.width="100%"}
 # 1. 
 ssb_devs <- ssb_boot_df %>%
   left_join(ssb_base_df, by = "Yr") %>%
-  rename(ssb_boot = SSB.x, ssb_base = SSB.y) %>%
+  dplyr::rename(ssb_boot = SSB.x, ssb_base = SSB.y) %>%
   mutate(rel_dev = (ssb_boot - ssb_base) / ssb_base)
 
 # 2. Histograma por año
 histboo <- ggplot(ssb_devs, aes(x = rel_dev)) +
   geom_histogram(bins = 30, fill = "grey", color = "darkgrey") +
   facet_wrap(~Yr, scales = "free_y",
-             ncol=3) +
+             ncol=4) +
   geom_vline(xintercept = 0, color = "red") +
   labs(
     x = "SSB Relative Deviation (bootstrap - base) / base",
@@ -534,7 +516,7 @@ write.csv(comparison_table, "bootstrap_comparison.csv", row.names = FALSE)
 ```
 
 
-## Distribucion de parametros
+## Parameters distribution in resampling (100)
 
 ```{r }
 # Parámetros base:
@@ -566,6 +548,44 @@ ggarrange(p_h, p_R0,
           ncol = 2, nrow = 1,
           labels = c("A", "B"))
 ```
+## Assessment of Forecast Accuracy: RMSE and MASE
+
+**RMSE (Root Mean Squared Error) calculation:**
+
+Methodologically, RMSE quantifies the **average magnitude of the error** between model predictions (here, bootstrap estimates of SSB) and observed or reference values (base SSB from the fitted model), giving higher weight to larger errors due to the squaring of differences. It is defined as:
+
+$$
+\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (SSB_{\text{boot},i} - SSB_{\text{base},i})^2}
+$$
+
+RMSE is widely used to assess model fit and forecast accuracy. Lower RMSE values indicate closer agreement between model predictions and reference data. There are no strict universal thresholds, but as a rule of thumb:
+
+* **RMSE ≈ 0** → excellent fit
+* **RMSE small relative to the mean or range of the data** → acceptable model performance
+* High RMSE → large deviations, suggesting poor predictive accuracy
+
+In this context, RMSE provides a global measure of **how well bootstrap replicates reproduce the base SSB trajectory**, which is essential for evaluating model stability and uncertainty.
+
+---
+
+**MASE (Mean Absolute Scaled Error) calculation:**
+MASE is a **scale-independent measure of forecast accuracy**. It compares the mean absolute error of a model (here, between bootstrap SSB and base SSB) to the mean absolute error of a naive baseline forecast, typically the one-step lag model:
+
+$$
+\text{MASE} = \frac{\text{MAE}_{\text{model}}}{\text{MAE}_{\text{naive}}}
+$$
+
+Where the naive model assumes that the best forecast for year $t+1$ is the observed SSB in year $t$. MASE allows comparison of forecast performance across datasets with different scales. Interpretation:
+
+* **MASE < 1** → the model outperforms the naive forecast
+* **MASE ≈ 1** → the model performs similarly to naive forecast
+* **MASE > 1** → the model performs worse than naive forecast
+
+Thus, MASE indicates whether the bootstrap SSB predictions are **statistically better than a simple persistence model**, providing a standardized metric for model evaluation.
+
+For wedge clam analysis, the performance metrics are:
+
+
 ```{r }
 # Unir por año
 ssb_compare <- left_join(ssb_boot_df, ssb_base_df, by = "Yr", suffix = c("_boot", "_base"))
@@ -615,6 +635,6 @@ Panel **C** displays the distribution of depletion (Bratio) in 2028 across boots
 
 # Conclusion
 
-This bootstrap analysis reveals that model estimates prior to 2018 are more susceptible to bias due to the lack of informative input data. The presence of high inter-replicate variability in early years underscores the importance of data availability in constraining model estimates. Moreover, the tendency for the reference model to estimate a lower Bratio than the bootstrap median suggests potential structural bias that should be further investigated, possibly through sensitivity analysis or alternative model configurations.
+This bootstrap analysis reveals that model estimates are more susceptible to bias due to the lack of informative input data (starting 2013 with length comositions and index). The presence of high inter-replicate variability in early years underscores the importance of data availability in constraining model estimates. Moreover, the tendency for the reference model to estimate a lower Bratio than the bootstrap median suggests potential structural bias that should be further investigated, possibly through sensitivity analysis or alternative model configurations.
 
 # References

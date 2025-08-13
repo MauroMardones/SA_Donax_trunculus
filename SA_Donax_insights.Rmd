@@ -10,7 +10,6 @@ bibliography: Donax2.bib
 csl: apa.csl
 link-citations: yes
 fig_caption: yes
-
 ---
 
 ```{r setup, include=FALSE}
@@ -351,7 +350,6 @@ We would like to thank ...
 
 # FIGURES AND TABLES 
 
-&nbsp;
 
 ```{r diagram, out.width="100%", fig.cap= "Squematic framework and data sources to stock assessment modeling in wedge clam in Cádiz Gulf"}
 knitr::include_graphics("Fig/diagram.png") 
