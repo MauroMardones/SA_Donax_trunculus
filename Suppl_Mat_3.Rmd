@@ -240,7 +240,6 @@ stopCluster(cl)
 ```
 
 
-
 ```{r eval=FALSE}
 dir_test    <- here::here("s01")  
 #### PASO 3: LEER Y COMPILAR RESULTADOS

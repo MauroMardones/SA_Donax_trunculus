@@ -377,12 +377,11 @@ base.model2.6 <- SS_output(dir = dir2.6,
 
 # Results
 
-
 ### Comparision between scenarios of modeling 
 
 #### Population Variables
 
-The model allows for the estimation of various population-level variables, which are listed in Table \@ref{Tab4}. These variables provide key insights into the status, structure, and dynamics of the population under study. They include metrics related to population abundance, biomass, age or size structure, recruitment, mortality, and other demographic or ecological characteristics that are essential for stock assessment and management decisions.
+The model allows for the estimation of various population-level variables, which are listed in Table \@ref{tab:Tab4}. These variables provide key insights into the status, structure, and dynamics of the population under study. They include metrics related to population abundance, biomass, age or size structure, recruitment, mortality, and other demographic or ecological characteristics that are essential for stock assessment and management decisions.
 
 
 ```{r message=FALSE, include=FALSE}
@@ -697,7 +696,7 @@ kbl(comtable, booktabs = T,format = "latex",
 
 Mean and quantile of Main Population Variables per Scenario for Wedge Clam in Figure \@ref(fig:summaryplot)
 
-```{r sumamaryplot, fig.height=3, fig.width=8, out.width="100%", warning=FALSE, message=FALSE, fig.cap="R0 probability predicted by scenario"}
+```{r summaryplot, fig.height=3, fig.width=8, out.width="100%", warning=FALSE, message=FALSE, fig.cap="R0 probability predicted by scenario"}
 # 1. Crear el data.frame con nombres actualizados
 errt <- data.frame(
   Bio_all_1 = base.model1$timeseries$Bio_all,
