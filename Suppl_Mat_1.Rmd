@@ -127,6 +127,40 @@ dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MLS
 fig_path <- here::here("Fig")           # Directory for saving figures
 ```
 
+## Stock assessment model
+
+The following equations provides a general mathematical expression of both biological and fishing processes that partly explain the population dynamics applicable to wedge clams. For more details, please refer to Supplement 1.
+
+$$
+N_{t,a} = 
+begin{cases} 
+R_t & text{if } a=1, forall t 
+N_{t-1,a-1} e^{-(F_{t-1,a-1} + M)} & text{if } 1 < a < A - 1, forall t 
+N_{t-1,a-1} e^{-(F_{t-1,a-1} + M)} (1 - e^{-(F_{t,a} + M)}) & text{if } a = A, forall t = 1 
+N_{t-1,a} e^{-(F_{t,a} + M)} & text{if } a = A, t > 1 
+end{cases}
+$$
+
+This equation defines the number of individuals ($N_{t,a}$) in the population at time $t$ and age $a$. For age $a=1$ at all times $t$, recruitment ($R_t$) is used: $N_{t,a} = R_t$. For ages $1 < a < A-1$, the number of individuals from the previous time step $t-1$ and age $a-1$ is adjusted by the exponential decay due to fishing mortality and natural mortality ($M$ =0.99). For the last age class $a=A$ at $t > 1$, the number of individuals is adjusted similarly but includes an additional factor for survival probability. For age $a=A$ at $t > 1$, the number of individuals from the previous time step $t-1$ and same age $a$ is adjusted by the exponential decay in the mathematical form: $N_{t-1,a} e^{-(F_{t,a} + M)}$.
+
+
+$$
+B_t = sum_{a} (P_{a,t} N_{a,t} w_l)
+$$
+This equation calculates the total biomass ($B_t$) at time $t$ where $B_t$ is the sum of the product of the proportion of mature individuals ($P_{a,t}$), the number of individuals ($N_{a,t}$), and the weight at age ($w_a$) across all age classes $a$.
+
+$$
+BD_t = sum_{a} left( P_{a,t} N_{a,t} e^{-0.91Z_a} right) w_a O_i
+$$
+
+Spawning biomass equation show $BD_t$ as the sum of the product of the proportion of mature individuals ($P_{a,t}$), the number of individuals ($N_{a,t}$) adjusted by the exponential decay factor weighted by total mortality, the weight at age ($w_a$), and a vector of maturity ogive ($O_i$) across all age classes.
+
+$$
+N_{a,t+1} = frac{alpha BD_{t-1}}{beta + BD_{t-1}} e^{epsilon_t + 0.5sigma_epsilon^2}, 
+alpha = frac{4hR_0}{(5h-1)}, quad beta = frac{(1-h)BD_0}{(5h-1)}
+$$
+
+The dynamics are modeled by a Beverton-Holt type recruitment relationship. The recruitment submodel describe abundance ($N_{a,t+1}$) to the next year $t+1$ based on the spawning biomass ($BD_{t-1}$) from the previous year, where $\alpha$ and $\beta$ are parameters defined below, $\epsilon_t$ is a random error term, and $\sigma_\epsilon^2$ is the variance of the error. Parameter $\alpha$ is a parameter related to the maximum recruitment ($R_0$) and the steepness ($h$) of the stock-recruitment relationship. $\beta$ is a parameter related to the virgin spawning biomass ($BD_0$) and the steepness ($h$) is the parameter that regulates rate of change of relationship between stock and recruitment.
 
 ## Initial model conditioning (Reference model)
 
