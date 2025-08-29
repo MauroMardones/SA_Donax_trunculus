@@ -112,15 +112,15 @@ purrr::walk(required_packages, library, character.only = TRUE)
 ```{r echo=FALSE}
 # Set model and figure paths using `here::here()` for reproducibility
 dir_test     <- here::here("s01")       # Test model
-dir1     <- here::here("s1")        # Reference model (2.5 MLS fixed)
+dir1     <- here::here("s1")        # Reference model (2.3 MLS fixed)
 # Alternative management scenarios
-dir2 <- here::here("s2")       # Scenario 2.3 (MLS fixed)
-dir3 <- here::here("s3")       # Scenario 2.4 (MLS fixed)
+dir2 <- here::here("s2")       # Scenario 2.4 (MLS fixed)
+dir3 <- here::here("s3")       # Scenario 2.5 (MLS fixed) (current MLS)
 dir4 <- here::here("s4")       # Scenario 2.6 (MLS fixed)
 # Simulated mean-based models
 dir2.3 <- here::here("s1_2.3")      # Simulated model: 2.3 mean MLS
 dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MLS
-dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MLS
+dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MLS (current MLS)
 dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MLS
 
 # Output figure path
@@ -171,17 +171,17 @@ Fishing mortality was estimated as the simple average of the `F` values for age 
 
 ```{r}
 
-start1 <- SS_readstarter(file = file.path(dir1,
+start3 <- SS_readstarter(file = file.path(dir3,
                                                "starter.ss"),
                               verbose = FALSE)
-dat1 <- SS_readdat(file = file.path(dir1, start1$datfile),
+dat3 <- SS_readdat(file = file.path(dir3, start3$datfile),
                         verbose = FALSE)
-ctl1 <-  r4ss::SS_readctl(file = file.path(dir1,
-                                    start1$ctlfil),
+ctl3 <-  r4ss::SS_readctl(file = file.path(dir3,
+                                    start3$ctlfil),
                         verbose = FALSE,
                         use_datlist = TRUE, 
-                   datlist = dat1)
-fore1 <- r4ss::SS_readforecast(file = file.path(dir1, 
+                   datlist = dat3)
+fore3 <- r4ss::SS_readforecast(file = file.path(dir3, 
                                                 "forecast.ss"),
                               verbose = FALSE)
 # can also read in wtatage.ss for an empirical wt at age model using
@@ -190,7 +190,7 @@ fore1 <- r4ss::SS_readforecast(file = file.path(dir1,
 
 
 ```{r}
-parbio <- ctl1$MG_parms[1:10, c(1:3,7)]
+parbio <- ctl3$MG_parms[1:10, c(1:3,7)]
 row.names(parbio) <- c("Nat M", 
                        "Lmin", 
                        "Lmax",
@@ -202,16 +202,16 @@ row.names(parbio) <- c("Nat M",
                        "L50%", 
                        "Mat slope")
 
-SRpar <- ctl1$SR_parms[1:5, c(1:3,7)]
-Qpar <- ctl1$Q_parms[1:2, c(1:3,7)]
-Selpar <- ctl1$size_selex_parms[1:4, c(1:3,7)]
+SRpar <- ctl3$SR_parms[1:5, c(1:3,7)]
+Qpar <- ctl3$Q_parms[1:2, c(1:3,7)]
+Selpar <- ctl3$size_selex_parms[1:4, c(1:3,7)]
 parInit <- rbind(parbio, SRpar, Qpar, Selpar)
 
 parInit %>%
   kbl(booktabs = T,
       format = "latex",
       position = "ht!",
-      caption = "\\label{Tab1}Initial parameter values for the SS3 wedge clam model (S1). Each parameter row shows a lower bound (LO), upper bound (HI), and initial value (INIT). A negative phase (PHASE) means the parameter is fixed.") %>%
+      caption = "\\label{Tab1}Initial parameter values for the SS3 wedge clam model (S3). Each parameter row shows a lower bound (LO), upper bound (HI), and initial value (INIT). A negative phase (PHASE) means the parameter is fixed.") %>%
   kable_paper("hover",
               full_width = F) %>%
   kable_styling(latex_options = c("striped", 
@@ -312,9 +312,9 @@ esc <- c("s1", "s2", "s3", "s4",
          "s1_2.3", "s1_2.4", "s1_2.5", "s1_2.6")
 
 description <- c(
-  "Reference Model (MLS 2.5 fixed)",
-  "Alternative model (MLS 2.3 fixed)",
+  "Alternative mode (MLS 2.3 fixed)",
   "Alternative model (MLS 2.4 fixed)",
+  "Reference model (MLS 2.5 fixed)",
   "Alternative model (MLS 2.6 fixed)",
   "S1 with simulated length structure mean MLS = 2.3",
   "S1 with simulated length structure mean MLS = 2.4",
@@ -419,8 +419,8 @@ The model allows for the estimation of various population-level variables, which
 
 
 ```{r message=FALSE, include=FALSE}
-replist <- SS_output(dir=dir1,verbose=TRUE,printstats=TRUE)
-summary <- read.table(here(dir1,
+replist <- SS_output(dir=dir3,verbose=TRUE,printstats=TRUE)
+summary <- read.table(here(dir3,
                            "ss_summary.sso"),
                       header=F,sep="",
                       na="NA",fill=T) 
@@ -530,7 +530,8 @@ outpsall <- rbind(outps1,
 
 
 outpsall_long <- outpsall %>%
-  pivot_longer(cols = c(Bio_all, Bio_smry, SpawnBio, Recruit_0), 
+  pivot_longer(cols = c(Bio_all, 
+                        SpawnBio, Recruit_0), 
                names_to = "Variable", values_to = "Value") %>% 
   filter(Yr >= 2002, Yr <= 2025)
 
@@ -545,12 +546,12 @@ alloutput <- ggplot(outpsall_long,
              ncol = 4, 
              scales = "free_y") + 
   scale_color_manual(name = "Scenario",
-                     values = c("s1" = "#ca0020", 
-                                "s2" = "#f4a582", 
-                                "s3" = "#92c5de", 
-                                "s4" = "#0571b0")) +
+                     values = c( "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")) +
   labs(title = "", x = "", y = "") +
-  theme_minimal() +
+  theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "bottom")
 
@@ -607,9 +608,9 @@ biglist1_4 <- SSgetoutput(keyvec = NULL,
 summaryoutput1_4 <- SSsummarize(biglist1_4)
 
 SSplotComparisons(summaryoutput1_4,
-                  legendlabels = c("s1 (Ref Model)",
+                  legendlabels = c("s1",
                  "s2",
-                 "s3",
+                 "s3  (Ref Model)",
                  "s4"),
                  filenameprefix = "COM1",
                  labels = c("Year", 
@@ -738,10 +739,10 @@ errt <- data.frame(
   Bio_all_3 = base.model3$timeseries$Bio_all,
   Bio_all_4 = base.model4$timeseries$Bio_all,
   
-  Bio_smry_1 = base.model1$timeseries$Bio_smry,
-  Bio_smry_2 = base.model2$timeseries$Bio_smry,
-  Bio_smry_3 = base.model3$timeseries$Bio_smry,
-  Bio_smry_4 = base.model4$timeseries$Bio_smry,
+  # Bio_smry_1 = base.model1$timeseries$Bio_smry,
+  # Bio_smry_2 = base.model2$timeseries$Bio_smry,
+  # Bio_smry_3 = base.model3$timeseries$Bio_smry,
+  # Bio_smry_4 = base.model4$timeseries$Bio_smry,
   
   SpawnBio_1 = base.model1$timeseries$SpawnBio,
   SpawnBio_2 = base.model2$timeseries$SpawnBio,
@@ -780,8 +781,10 @@ comsum <- ggplot(err_long, aes(x = Model, y = Value, fill = Model)) +
   geom_boxplot(width = 0.5, outlier.shape = NA) +
   facet_wrap(~Variable, ncol = 4, scales = "free_y") +
   scale_fill_manual(name = "Scenario",
-                    values = c("s1" = "#ca0020", "s2" = "white", 
-                               "s3" = "white", "s4" = "white")) +
+                    values = c("s1" = "#cccccc", 
+                      "s2" = "#cccccc", 
+                      "s3" = "#ca0020", 
+                      "s4" = "#cccccc")) +
   labs(title = "",
        x = "",
        y = "") +
@@ -795,13 +798,13 @@ comsum
 
 ```{r warning=FALSE, fig.height=3, fig.width=8, out.width="100%"}
 dev1 <- base.model1$recruit[1:21,c(1,7)]%>% 
-  mutate(Serie = "s1")
+  mutate(Scenario = "s1")
 dev2 <- base.model2$recruit[1:21,c(1,7)] %>% 
-  mutate(Serie = "s2")
+  mutate(Scenario = "s2")
 dev3 <- base.model3$recruit[1:21,c(1,7)] %>% 
-  mutate(Serie = "s3")
+  mutate(Scenario = "s3")
 dev4 <- base.model4$recruit[1:21,c(1,7)] %>% 
-  mutate(Serie = "s4")
+  mutate(Scenario = "s4")
 
 
 # Lista de data.frames dev con nombres de escenarios
@@ -814,37 +817,41 @@ data_list <- list(
 
 # Títulos para cada escenario
 titles <- c(
-  "s1: 25 cm MLS (Ref Model)",
-  "s2: 23 cm MLS",
-  "s3: 24 cm MLS",
+  "s1: 23 cm MLS",
+  "s2: 24 cm MLS",
+  "s3: 25 cm MLS (Ref Model)",
   "s3: 26 cm MLS"
 )
 
-# Generar los gráficos
-plots <- map2(data_list, titles, function(df, title) {
-  ggplot(df, aes(x = Yr, y = dev)) +
-    geom_point(color = "black", size = 1.5) +
-    stat_smooth(color = "black",
-                method = "loess", 
-                span = 0.25, 
-                se = TRUE,
-                fill = "grey70",
-                alpha=0.2) +
-    geom_hline(yintercept = 0, color = "red", linetype = "dotdash") +
-    ggtitle(title) +
-    labs(x="")+
-    ylim(-2, 2) +
-    theme_few() +
-    theme(
-      axis.text.x = element_text(angle = 90, hjust = 1),
-      plot.title = element_text(size = 11)
-    )
-})
+# Unir todos los data.frames
+dev_all <- bind_rows(dev1, dev2, dev3, dev4)
 
-combined_plot <- ggarrange(plotlist = plots, 
-                           ncol = 4, 
-                           nrow = 1)
-combined_plot
+ggplot(dev_all, aes(x = Yr, y = dev, color = Scenario)) +
+  geom_point(size = 1.5) +
+  stat_smooth(method = "loess", 
+              span = 0.1, 
+              se = TRUE,
+              aes(fill = Scenario),
+              alpha = 0.2) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dotdash") +
+  scale_color_manual(values = c(
+    "s1" = "#cccccc", 
+    "s2" = "#cccccc", 
+    "s3" = "#ca0020", 
+    "s4" = "#cccccc"
+  )) +
+  scale_fill_manual(values = c(
+    "s1" = "#cccccc", 
+    "s2" = "#cccccc", 
+    "s3" = "#ca0020", 
+    "s4" = "#cccccc"
+  )) +
+  labs(x = "", y = "Residuals", title = "Recruitment residuals across scenarios") +
+  ylim(-2, 2) +
+  theme_few() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "bottom")
+
 ```
 #### Autocorrelation in Recruit 
 
@@ -976,10 +983,10 @@ ggplot(df_all, aes(x = year, y = exploitation_rate, color = model)) +
     title = "",
     x = "",
     y = "Exploitation Rate",
-    color = "Scenario of MLS"
+    color = "Scenario"
   ) +
   xlim(1997,2023)+
-  theme_minimal()+
+  theme_bw()+
   theme(
     axis.text.x = element_text(angle = 90, 
                                vjust = 0.5, 
@@ -1063,38 +1070,39 @@ create_heatmap_df <- function(df, model_name) {
 
 
 df_all <- bind_rows(
-  create_heatmap_df(base.model1$lendbase, "s1: 25 cm MLS (Ref Model)"),
-  create_heatmap_df(base.model2$lendbase, "s2: 23 cm MLS"),
-  create_heatmap_df(base.model3$lendbase, "s3: 24 cm MLS"),
+  create_heatmap_df(base.model1$lendbase, "s1: 23 cm MLS"),
+  create_heatmap_df(base.model2$lendbase, "s2: 24 cm MLS"),
+  create_heatmap_df(base.model3$lendbase, "s3: 25 cm MLS (Ref Model)"),
   create_heatmap_df(base.model4$lendbase, "s3: 26 cm MLS")
 )
 
 years <- c(2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023)
 
-circleplot_res <- ggplot(df_all, aes(x = Yr, y = Bin)) +
-  geom_point(
-    aes(fill = Pearson, size = abs(Pearson)),
-    shape = 21, color = "grey30", stroke = 0.2, alpha = 0.9
-  ) +
-  scale_fill_gradient2(low = "#fecc5c", 
-                       mid = "white", 
-                       high = "#bd0026", midpoint = 0) +
-  scale_alpha("none") +
-  scale_size_continuous(range = c(0.5, 5)) +
-  scale_x_continuous(breaks = years) +  # Force full year display
-  facet_grid(Model ~ Fleet) +
-  theme_few() +
+
+df_summary <- df_all |>
+  dplyr::group_by(Model, Yr) |>
+  dplyr::summarise(mean_resid = mean(Pearson, na.rm = TRUE),
+                   sd_resid = sd(Pearson, na.rm = TRUE))
+
+
+resid_plot <- ggplot(df_summary, 
+       aes(x = Yr, y = mean_resid)) +
+  geom_line(size = 1.2, color = "steelblue") +
+  geom_point(size = 2, color = "steelblue") +
+  geom_ribbon(aes(ymin = mean_resid - sd_resid, 
+                  ymax = mean_resid + sd_resid),
+              alpha = 0.2, fill = "steelblue", color = NA) +
+  facet_wrap(~Model, ncol = 4) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(breaks = seq(min(df_summary$Yr), 
+                                  max(df_summary$Yr), 
+                                  by = 3)) +
+  labs(x = "", y = "Residuals Pearson") +
+  theme_minimal(base_size = 14) +
   theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
-    axis.text.y = element_text(size = 8),
-    strip.text = element_text(size = 8),
-    legend.position = "bottom"
-  ) +
-  labs(x = "", y = "Length (cm)", fill = "Pearson") +
-  guides(size = "none", alpha = "none")
-
-circleplot_res
-
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  )
+resid_plot
 ```
 
 ```{r}
@@ -1286,10 +1294,10 @@ pearson_plot <- ggplot(dfpearson_long, aes(x = Scenario,
   #geom_jitter(width = 0.01, alpha = 0.3) +
   theme_minimal() +
   scale_fill_manual(name = "Scenario",
-                    values = c("s1" = "#ca0020",  
-                                "s2" = "#999999",  
-                                "s3" = "#cccccc",  
-                                "s4" = "#666666")) +
+                    values = c("s1" = "#cccccc", 
+                      "s2" = "#cccccc", 
+                      "s3" = "#ca0020", 
+                      "s4" = "#cccccc")) +
   labs(title = "", x = "", y = "Residual") +
   theme(legend.position = "none")
 ```
@@ -1323,10 +1331,10 @@ rmse <-ggplot(dfrmse_long, aes(x = variable,
   geom_jitter(width = 0.01, alpha = 0.3) +
   theme_minimal() +
   scale_fill_manual(name= "Scenario",
-                    values = c("s1" = "#ca0020",  
-                                "s2" = "#999999",  
-                                "s3" = "#cccccc",  
-                                "s4" = "#666666")) +
+                    values = c("s1" = "#cccccc", 
+                      "s2" = "#cccccc", 
+                      "s3" = "#ca0020", 
+                      "s4" = "#cccccc")) +
   labs(title = "", x = "", y = "RMSE")+
   theme(legend.position = "none")
 ```
@@ -1519,23 +1527,27 @@ Figure \@ref(fig:bias) presents the retrospective bias (*Rho*) in Spawning Stock
 tablebias_combined <- tablebias_combined %>%
   mutate(Rho.peel = factor(Rho.peel, levels = unique(Rho.peel)))
 
-ggplot(tablebias_combined, aes(x = Rho.peel, y = Rho.Rho, group = Model, fill = Model)) +
-  geom_point(size = 3, shape = 21, color = "black") +  
+phoplot <- ggplot(tablebias_combined, aes(x = Rho.peel, 
+                                          y = Rho.Rho, group = Model,
+                                          fill = Model)) +
+  geom_point(size = 3, shape = 21, 
+             color = "black",
+             alpha=0.75) +  
   geom_hline(yintercept = 0, color = "grey") +
   facet_wrap(~Quant, scales = "free_y") + 
   scale_fill_manual(name = "Scenario",
                     values =  c(
-                      "s1" = "#ca0020", 
-                      "s2" = "#999999", 
-                      "s3" = "#cccccc", 
-                      "s4" = "#666666")) +
+                       "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")) +
   scale_color_manual(name = "Scenario",
                      values = c(
-                      "s1" = "#ca0020", 
-                      "s2" = "#999999", 
-                      "s3" = "#cccccc", 
-                      "s4" = "#666666")) +
-  theme_minimal() +
+                       "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")) +
+  theme_few() +
   labs(title = "",
        x = "",
        y = "Rho Value") +
@@ -1807,11 +1819,11 @@ diag1 <- data.frame(
   Length_comp_like = base.model1$likelihoods_used$values[rownames(base.model1$likelihoods_used) == "Length_comp"],
   RMSE_index = rmse1c$RMSE.perc[rmse1c$indices == "Combined"],
   RMSE_length = rmse1l$RMSE.perc[rmse1l$indices == "Combined"],
-  MASE = mean(hci1$MAE.base, na.rm = TRUE),
+  MASE = mean(hci1$MASE, na.rm = TRUE),
   Retro_Rho_ssb = tablebias01[5, 3],
-  Forecast_Rho_ssb = tablebias01[5, 4],
-  Forecast_Rho_f = tablebias01a[5, 3],
-  Rho_f = tablebias01a[5, 4]
+  # Forecast_Rho_ssb = tablebias01[5, 4],
+  # Forecast_Rho_f = tablebias01a[5, 3],
+  Retro_Rho_f = tablebias01a[5, 4]
 )
 
 # Modelo s2
@@ -1825,11 +1837,11 @@ diag2 <- data.frame(
   Length_comp_like = base.model2$likelihoods_used$values[rownames(base.model2$likelihoods_used) == "Length_comp"],
   RMSE_index = rmse2c$RMSE.perc[rmse2c$indices == "Combined"],
   RMSE_length = rmse2l$RMSE.perc[rmse2l$indices == "Combined"],
-  MASE = mean(hci2$MAE.base, na.rm = TRUE),
+  MASE = mean(hci2$MASE, na.rm = TRUE),
   Retro_Rho_ssb = tablebias2[5, 3],
-  Forecast_Rho_ssb = tablebias2[5, 4],
-  Forecast_Rho_f = tablebias2a[5, 3],
-  Rho_f = tablebias2a[5, 4]
+  # Forecast_Rho_ssb = tablebias2[5, 4],
+  # Forecast_Rho_f = tablebias2a[5, 3],
+  Retro_Rho_f = tablebias2a[5, 4]
 )
 
 # Modelo s3
@@ -1843,11 +1855,11 @@ diag3 <- data.frame(
   Length_comp_like = base.model3$likelihoods_used$values[rownames(base.model3$likelihoods_used) == "Length_comp"],
   RMSE_index = rmse3c$RMSE.perc[rmse3c$indices == "Combined"],
   RMSE_length = rmse3l$RMSE.perc[rmse3l$indices == "Combined"],
-  MASE = mean(hci3$MAE.base, na.rm = TRUE),
+  MASE = mean(hci3$MASE, na.rm = TRUE),
   Retro_Rho_ssb = tablebias3[5, 3],
-  Forecast_Rho_ssb = tablebias3[5, 4],
-  Forecast_Rho_f = tablebias3a[5, 3],
-  Rho_f = tablebias3a[5, 4]
+  #Forecast_Rho_ssb = tablebias3[5, 4],
+  #Forecast_Rho_f = tablebias3a[5, 3],
+  Retro_Rho_f = tablebias3a[5, 4]
 )
 
 # Modelo s4
@@ -1862,11 +1874,11 @@ diag4 <- data.frame(
   Length_comp_like = base.model4$likelihoods_used$values[rownames(base.model4$likelihoods_used) == "Length_comp"],
   RMSE_index = rmse4c$RMSE.perc[rmse4c$indices == "Combined"],
   RMSE_length = rmse4l$RMSE.perc[rmse4l$indices == "Combined"],
-  MASE = mean(hci4$MAE.base, na.rm = TRUE),
+  MASE = mean(hci4$MASE, na.rm = TRUE),
   Retro_Rho_ssb = tablebias4[5, 3],
-  Forecast_Rho_ssb = tablebias4[5, 4],
-  Forecast_Rho_f = tablebias4a[5, 3],
-  Rho_f = tablebias4a[5, 4]
+  #Forecast_Rho_ssb = tablebias4[5, 4],
+  #Forecast_Rho_f = tablebias4a[5, 3],
+  Retro_Rho_f = tablebias4a[5, 4]
 )
 
 
@@ -1881,6 +1893,7 @@ diag_tidy <- diag_all |>
   pivot_wider(names_from = Scenario, values_from = Value)
 
 diag_tidy[, 2:5] <- lapply(diag_tidy[, 2:5], function(x) as.numeric(format(round(x, 3), nsmall = 3)))
+#write.csv(diag_tidy, "Model_Diagnosis_Results.csv", row.names = FALSE)
 ```
 
 See Table \@ref(tab:likecom) for details. 
