@@ -87,6 +87,7 @@ required_packages <- c(
   #  Visualization and plotting
   "ggplot2",      # Core plotting
   "ggthemes",     # Themes like theme_few()
+  "ggridges",     # Ridgeline plots
   "ggpubr",       # ggarrange() and publication-ready visuals
   "grid",         # Grid graphics system
   "png",          # Reading PNG images
@@ -95,6 +96,7 @@ required_packages <- c(
   "forecast",     # Time series forecasting and diagnostics
   #  File and path management
   "here",         # Reproducible file paths
+  "openxlsx",    # Reading/writing Excel files
   #  Reporting and tables
   "kableExtra"    # Enhanced HTML/LaTeX tables
 )
@@ -417,49 +419,6 @@ base.model2.6 <- SS_output(dir = dir2.6,
 
 The model allows for the estimation of various population-level variables, which are listed in Table \@ref{tab:Tab4}. These variables provide key insights into the status, structure, and dynamics of the population under study. They include metrics related to population abundance, biomass, age or size structure, recruitment, mortality, and other demographic or ecological characteristics that are essential for stock assessment and management decisions.
 
-
-```{r message=FALSE, include=FALSE}
-replist <- SS_output(dir=dir3,verbose=TRUE,printstats=TRUE)
-summary <- read.table(here(dir3,
-                           "ss_summary.sso"),
-                      header=F,sep="",
-                      na="NA",fill=T) 
-
-#Saco los vectores requeridos. Pueden ser otros pero esto son los principales
-years<-seq(2004,2023,1)
-ssb<-replist$derived_quants[3:22,1:3]
-recr<-replist$derived_quants[30:49,1:3]
-ft<-replist$derived_quants[79:98,1:3]
-catch<-summary[281:300,2]
-data<-data.frame(yrs=years,
-                 Rt=round(as.numeric(recr$Value),2),
-                 BD=round(as.numeric(ssb$Value),2),
-                 Catch=round(as.numeric(catch),2),
-                 Ft=round(as.numeric(ft$Value),2))
-```
-
-
-```{r}
-data%>% 
-kbl(booktabs = T,format = "latex",position="ht!",align="c",escape = FALSE,
-        col.names = linebreak(c('Año',
-                                "Reclutamientos",
-                                "Biomasa\ndesovante",
-                                "Captura",
-                                "Mortalidad\npor pesca"),
-                              align="c"),
-    caption = "\\label{Tab4}Series de tiempo estimados\\
-    por el modelo inicial (S1). Reclutamiento (millones de ind.),\\
-    biomasa desovante (en toneladas), Captura (t) y mortalidad por pesca (año-1).") %>%
-  kable_paper("hover", 
-              full_width = F)%>%
-  kable_styling(latex_options = c("striped",
-                                  "condensed"),
-                full_width = FALSE,
-                font_size=9)
-```
-
-
 Main variables population by scenario (Figure \@ref(fig:popvar2))
 
 ```{r}
@@ -533,14 +492,14 @@ outpsall_long <- outpsall %>%
   pivot_longer(cols = c(Bio_all, 
                         SpawnBio, Recruit_0), 
                names_to = "Variable", values_to = "Value") %>% 
-  filter(Yr >= 2002, Yr <= 2025)
+  filter(Yr >= 2002, Yr <= 2023)
 
 alloutput <- ggplot(outpsall_long, 
                     aes(x = Yr, 
                         y = Value, 
                         color = Model,
                         group = Model)) +
-  geom_point() +
+  #geom_point() +
   geom_line()+
   facet_wrap(~Variable, 
              ncol = 4, 
@@ -551,45 +510,11 @@ alloutput <- ggplot(outpsall_long,
                                  "s3" = "#ca0020",  
                                  "s4" = "#666666")) +
   labs(title = "", x = "", y = "") +
-  theme_bw() +
+  theme_few() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "bottom")
 
 alloutput
-```
-
-
-```{r varcompar}
-out_2023 <- outpsall %>% 
-  filter(Yr == 2023)
-
-out_2023_long <- out_2023 %>%
-  dplyr::select(Model, Bio_all, Bio_smry, SpawnBio, Recruit_0) %>%
-  pivot_longer(cols = -Model, names_to = "Variable", values_to = "Valor")
-
-# Extraer valores del modelo s3 como base de comparación
-ref_vals <- out_2023_long %>%
-  filter(Model == "s3") %>%
-  dplyr::select(Variable, Valor) %>%
-  dplyr::rename(Valor_base = Valor)
-
-# Unir y calcular diferencias respecto a s1
-out_2023_diff_s1 <- out_2023_long %>%
-  left_join(ref_vals, by = "Variable") %>%
-  mutate(Dif_pct = 100 * (Valor - Valor_base) / Valor_base)
-
-# Tabla en ancho
-tabla_diff_s1 <- out_2023_diff_s1 %>%
-  dplyr::select(Model, Variable, Dif_pct) %>%
-  pivot_wider(names_from = Variable, values_from = Dif_pct)
-
-tabla_diff_s1 %>%
-  mutate(across(where(is.numeric), ~round(., 2))) %>%
-  rename_all(~str_replace_all(., "_", "\\\\_")) %>%  # Escapa manualmente los _
-  kable(format = "latex", 
-        caption = "Percentage difference relative to model s1 (year 2023)",
-        escape = FALSE) %>%
-  kable_styling(full_width = FALSE, position = "center")
 ```
 
 
@@ -629,105 +554,6 @@ SSplotComparisons(summaryoutput1_4,
                  plotdir=fig_path)
 ```
 
-```{r echo=FALSE, message=FALSE}
-#PLOT labels, name of each model run
-legend.labels <- c("s1",
-                   "s2",
-                   "s3",
-                   "s4",
-                 "s1_2.3",
-                 "s1_2.4",
-                 "s1_2.5",
-                 "s1_2.6") 
-
-#read in all model runs
-#note if cover=T you need a hessian; if covar=F you do not need a hessian
-biglist <- SSgetoutput(keyvec = NULL,
-                       dirvec = c(#dir01,
-                                  dir1,
-                                  dir2,
-                                  dir3,
-                                  dir4,
-                                  dir2.3,
-                                  dir2.4,
-                                  dir2.5,
-                                  dir2.6),
-                       getcovar = F)
-
-#create summary of model runs from list above
-summaryoutput <- SSsummarize(biglist)
-```
-Lo analisis comparados, muestran las estimaciones de cada escenario propuesto para los casos de fraccion de biomasa virginal (Figura \@ref{fig:biov}), desvio de los reclutamientos (Figura \@ref{fig:devrec}) y mortalidad por pesca (Figura \@ref{fig:ftotal}) y densidad de estimacion de SSB (Figura \@ref{fig:denssb}).
-
-```{r biov, echo=FALSE, out.width = "80%",fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{fig:biov}Comparación escenario de razon de Biomasa"}
-
-SSplotComparisons(summaryoutput,
-                  subplot = 2,
-                  legendlabels = c("s1",
-                                   "s2",
-                                   "s3",
-                                   "s4",
-                                    "s1_2.3",
-                                    "s1_2.4",
-                                    "s1_2.5",
-                                    "s1_2.6"),
-                 pheight=4.5,
-                 png=TRUE,
-                 plotdir=fig_path)
-```
-
-```{r biov2, echo=FALSE, out.width = "80%",fig.keep='all', fig.show="hold", fig.align='center', fig.cap="\\label{fig:biov}Comparación escenario de F"}
-SSplotComparisons(summaryoutput,
-                  subplot = 8,
-                  legendlabels = c("s1",
-                                   "s2",
-                                   "s3",
-                                   "s4",
-                                    "s1_2.3",
-                                    "s1_2.4",
-                                    "s1_2.5",
-                                    "s1_2.6"),
-                 pheight=4.5,
-                 png=TRUE,
-                 plotdir=fig_path)
-```
-
-```{r eval=FALSE}
-comtable <- SStableComparisons(summaryoutput,
-                   likenames = c("TOTAL", 
-                                 "Survey", 
-                                 "Length_comp",
-                                 "Age_comp", 
-                                 "priors",
-                                 "Size_at_age"), 
-                   names = c("Recr_Virgin",
-                             "R0", 
-                             "steep",
-                             "NatM",
-                             "L_at_Amax", 
-                             "VonBert_K", 
-                             "SSB_Virg", 
-                             "Bratio_2023",
-                             "SPRratio_2023"),
-                   digits = NULL,
-                   modelnames = c("s1",
-                                   "s2",
-                                   "s3",
-                                   "s4",
-                                    "s1_2.3",
-                                    "s1_2.4",
-                                    "s1_2.5",
-                                    "s1_2.6"),
-                   csv = FALSE,
-                   csvdir =~"/IEO/SA_Donax_trunculus",
-                   csvfile = "parameter_comparison_table.csv",
-                 verbose = TRUE,
-                   mcmc = FALSE)
-kbl(comtable, booktabs = T,format = "latex",
-    caption = "Comparacion likelihood y parámetros s01, s1, s2, s3, s4, s5, s6 y s7")  %>% 
-    kable_styling(latex_options = "scale_down")
-
-```
 
 Mean and quantile of Main Population Variables per Scenario for Wedge Clam in Figure \@ref(fig:summaryplot)
 
@@ -793,6 +619,39 @@ comsum <- ggplot(err_long, aes(x = Model, y = Value, fill = Model)) +
         legend.position = "none")
 
 comsum
+
+
+# Alternative version with more customization
+comsum_violin_alt <- ggplot(err_long, aes(x = Model, y = Value, fill = Model)) +
+  geom_violin(alpha = 0.6, trim = FALSE, 
+              width = 0.4,
+              scale = "width") +
+  geom_boxplot(width = 0.15, outlier.shape = NA, 
+               alpha = 0.9, color = "black") +
+  stat_summary(fun = median, geom = "point",
+               size = 2, color = "black") +
+  facet_wrap(~Variable, ncol = 4, scales = "free_y",
+             labeller = labeller(Variable = c("Residuals" = "Residual Diagnostics",
+                                             "Length" = "Length Estimates (mm)"))) +
+  scale_fill_manual(name = "Scenario",
+                    values = c("s1" = "#cccccc", 
+                              "s2" = "#cccccc", 
+                              "s3" = "#ca0020", 
+                              "s4" = "#cccccc")) +
+ labs(title = "",
+       x = "",
+       y = "t") +
+  theme_few() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, 
+                                   size = 9),
+        axis.text.y = element_text(size = 9),
+        legend.position = "none",
+        panel.spacing = unit(0.8, "lines"),
+        strip.text = element_text(size = 11, face = "bold"),
+        plot.margin = margin(10, 10, 10, 10))
+
+comsum_violin_alt
+
 ```
 #### Recruit deviation
 
@@ -948,7 +807,6 @@ prod <- ggplot(resultados, aes(x = `SSB/SSB_virgin`, y = Productividad, color = 
   theme(legend.position = "bottom")
 
 prod
-
 ```
 
 
@@ -993,41 +851,45 @@ ggplot(df_all, aes(x = year, y = exploitation_rate, color = model)) +
                                hjust = 1)  # texto vertical
   )
 ```
+#### Depletion
+
+```{r}
+s1 <- base.model1$sprseries$Deplete[1:20]
+s2 <- base.model2$sprseries$Deplete[1:20]
+s3 <- base.model3$sprseries$Deplete[1:20]
+s4 <- base.model4$sprseries$Deplete[1:20]
+
+years <- 2004:2023
+
+deplete_df <- data.frame(
+  Year = years,
+  s1 = s1,
+  s2 = s2,
+  s3 = s3,
+  s4 = s4
+) %>%
+  pivot_longer(cols = starts_with("s"), names_to = "Scenario", values_to = "Depletion")
 
 
-<!-- ### Platoons analisis -->
+deple <- ggplot(deplete_df, aes(x = Year, y = Depletion, color = Scenario)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0.2, linetype = "dashed", color = "black") +
+  #geom_hline(yintercept = 0.4, linetype = "dashed", color = "black") +
+  scale_color_manual(name = "Scenario",
+                     values = c("s1" = "#cccccc",  
+                                "s2" = "#999999",     
+                                "s3" = "#ca0020",  
+                                "s4" = "#666666")) +
+  labs(title = "",
+       x = "",
+       y = "Depletion") +
+  scale_x_continuous(breaks = years) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, hjust = 1))
+deple
 
-<!-- ```{r} -->
-<!-- # Definir los valores del eje x -->
-<!-- x_values <- seq(0, 7, by=0.1) -->
-
-<!-- # Definir las medias y desviaciones estándar para los valores específicos -->
-<!-- means <- c( 2.9,  3.5, 4.1) -->
-<!-- std_devs <- c(0.65, 0.8, 0.65) -->
-
-
-<!-- # Crear un dataframe que contenga los valores de x, la media y las desviaciones estándar -->
-<!-- data <- data.frame( -->
-<!--   x = rep(x_values, each = length(means)), -->
-<!--   mean = rep(means, times = length(x_values)), -->
-<!--   std_dev = rep(std_devs, times = length(x_values)) -->
-<!-- ) -->
-
-<!-- # Calcular las curvas de las desviaciones estándar -->
-<!-- data <- data %>% -->
-<!--   mutate(y = exp(-((x - mean)^2) / (2 * std_dev^2))) -->
-
-<!-- # Graficar con ggplot -->
-<!-- ggplot(data, aes(x = x, y = y, linetype = as.factor(mean))) + -->
-<!--   geom_line(size = 1) + -->
-<!--   scale_linetype_manual(values = means, -->
-<!--                         name ="Platoon") + -->
-<!--   labs(x = "", y = "growth increment") + -->
-<!--   theme_minimal()+ -->
-<!--   xlim(0,7) -->
-
-<!-- ``` -->
-
+```
 
 
 ## Diagnosis and robustness
@@ -1052,10 +914,55 @@ The convergence criterion used for model calibration is set to a final threshold
 
 This Figure \@ref(fig:pearson) provides a diagnostic assessment of the statistical performance of alternative model scenarios in fitting length composition data across years, fleets, and model assumptions. Across the four model scenarios, representing a baseline (2.5 cm as reference) and three values of Minimum Legal Size (MLS: 2.3 cm, 2.4 cm, and 2.6 cm), the reference model generally shows balanced and relatively small residuals across both commercial and populational fleets, suggesting a good fit to the observed data. However, as MLS increases, particularly in the 2.4 cm and 2.6 cm scenarios, a pattern of larger and more systematic residuals emerges, especially within the populational fleet. These patterns are most evident from 2016 onwards and are concentrated in mid-size length bins, indicating a potential mismatch between the model's structural assumptions and the actual population dynamics under stricter MLS regimes. Specifically, the models may be underestimating the proportion of intermediate-size individuals, suggesting limitations in capturing shifts in selectivity, growth, or recruitment processes. The commercial fleet, in contrast, shows more consistent residual behavior across all scenarios, which may imply a better alignment between model assumptions and observed exploitation dynamics. Temporally, early years (2013–2015) show relatively small and scattered residuals, but residual magnitude and clustering increase in later years, reinforcing the need to consider temporal variability in key processes. Overall, this residual analysis indicates a decline in model fit quality with increasing MLS, highlighting the need for more flexible model structures—such as time-varying selectivity or refined growth and recruitment models—to improve biological realism and ensure robust predictions in management strategy evaluations.
 
+#### Length Expected
+
+```{r}
+# Filtrar solo Fleet 1 y añadir etiqueta de escenario
+lend1 <- base.model1$lendbase %>%
+  filter(Fleet == 1) %>%
+  mutate(escenario = "Scenario 1")
+lend2 <- base.model2$lendbase %>%
+  filter(Fleet == 1) %>%
+  mutate(escenario = "Scenario 2")
+lend3 <- base.model3$lendbase %>%
+  filter(Fleet == 1) %>%
+  mutate(escenario = "Scenario 3")
+lend4 <- base.model4$lendbase %>%
+  filter(Fleet == 1) %>%
+  mutate(escenario = "Scenario 4")
+
+# Combinar en un único data.frame
+lend_all <- bind_rows(lend1, lend2, lend3, lend4)
+
+# Calcular la talla media ponderada específica para cada año y escenario
+mean_lengths <- lend_all %>%
+  dplyr::group_by(Yr, escenario) %>%
+  dplyr::summarise(mean_bin = weighted.mean(Bin, Exp), .groups = "drop")
+
+# Crear el gráfico
+lengthexp <- ggplot(lend_all,
+       aes(x = Bin, y = factor(Yr), height = Exp, group = Yr)) +
+  geom_ridgeline(fill = "lightgrey", color = "black", alpha = 0.6, scale = 10) +
+  geom_point(data = mean_lengths, 
+            aes(x = mean_bin, y = factor(Yr)),
+            color = "red", size = 1.5,
+            inherit.aes = FALSE) +
+  facet_wrap(~ escenario, ncol=1) +
+  labs(title = "",
+       x = "Length (mm)", y = "") +
+  theme_minimal() +
+  theme(panel.spacing = unit(1, "lines"),
+        legend.position = "none",
+        axis.text.x = element_text(angle = 90, 
+                                   vjust = 0.5,
+                                   hjust = 1)) +
+  xlim(1.5,5) +
+  scale_y_discrete(breaks = function(x) x[seq(1, length(x), by = 3)])
+```
 
 
 
-```{r pearson, fig.cap="Pearson residual by scenario and fleet"}
+```{r pearson, fig.height=6, fig.width=4, out.width="100%",  fig.cap="Pearson residual by scenario and fleet"}
 create_heatmap_df <- function(df, model_name) {
   df %>%
     dplyr::filter(Pearson < 5) %>%
@@ -1070,10 +977,10 @@ create_heatmap_df <- function(df, model_name) {
 
 
 df_all <- bind_rows(
-  create_heatmap_df(base.model1$lendbase, "s1: 23 cm MLS"),
-  create_heatmap_df(base.model2$lendbase, "s2: 24 cm MLS"),
-  create_heatmap_df(base.model3$lendbase, "s3: 25 cm MLS (Ref Model)"),
-  create_heatmap_df(base.model4$lendbase, "s3: 26 cm MLS")
+  create_heatmap_df(base.model1$lendbase, "s1: 23 mm MLS"),
+  create_heatmap_df(base.model2$lendbase, "s2: 24 mm MLS"),
+  create_heatmap_df(base.model3$lendbase, "s3: 25 mm MLS (Ref Model)"),
+  create_heatmap_df(base.model4$lendbase, "s3: 26 mm MLS")
 )
 
 years <- c(2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023)
@@ -1092,18 +999,26 @@ resid_plot <- ggplot(df_summary,
   geom_ribbon(aes(ymin = mean_resid - sd_resid, 
                   ymax = mean_resid + sd_resid),
               alpha = 0.2, fill = "steelblue", color = NA) +
-  facet_wrap(~Model, ncol = 4) +
+  facet_wrap(~Model, ncol = 1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   scale_x_continuous(breaks = seq(min(df_summary$Yr), 
                                   max(df_summary$Yr), 
-                                  by = 3)) +
+                                  by = 1)) +
   labs(x = "", y = "Residuals Pearson") +
-  theme_minimal(base_size = 14) +
+  theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
   )
-resid_plot
+
 ```
+
+```{r}
+ggarrange(resid_plot,
+          lengthexp,
+          ncol = 2, nrow = 1,
+          widths = c(1, 0.6))
+```
+
 
 ```{r}
 cpue_resid <- bind_rows(
@@ -1523,6 +1438,8 @@ tablebias_combined <- bind_rows(
 
 Figure \@ref(fig:bias) presents the retrospective bias (*Rho*) in Spawning Stock Biomass (SSB) and Fishing Mortality (F) across different peel years (2019–2016) and for the combined period under four model scenarios (s1.1 to s1.4). In the SSB panel, all models exhibit negative *Rho* values across the years, indicating a downward bias. The magnitude of the bias varies among models, with s1.3 and s1.4 showing the most pronounced deviations. In the F panel, *Rho* values are consistently positive, suggesting an upward bias. The combined *Rho* values for each metric confirm these trends, showing persistent differences among model scenarios.
 
+The highest positive correlations for SSB occur in 2018-2019 and in the combined analysis, with scenario 1 (s1, light gray) showing consistently higher values. Scenario 3 (s3, red) generally shows lower or more negative correlations across both metrics compared to other scenarios. Scenario 2 (s2, dark gray) and scenario 4 (s4, medium gray) exhibit intermediate values, with s4 often aligning closely with s1. These patterns suggest that model structure and assumptions significantly influence retrospective bias, with implications for stock assessment reliability and management decisions. 
+
 ```{r bias, fig.cap= "Summary of retrospective analisis by scenario in F and SSB"}
 tablebias_combined <- tablebias_combined %>%
   mutate(Rho.peel = factor(Rho.peel, levels = unique(Rho.peel)))
@@ -1553,6 +1470,7 @@ phoplot <- ggplot(tablebias_combined, aes(x = Rho.peel,
        y = "Rho Value") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "bottom")
+phoplot 
 
 ```
 See Table \@ref(tab:rhoparameters) for details.
@@ -2017,8 +1935,299 @@ tabla_resumen %>%
   row_spec(0, bold = TRUE) %>%  # Encabezados en negrita
   column_spec(1, bold = TRUE)   # Primera columna en negrita (opcional)
 ```
+With population variables
+
+```{r}
+# ANOVA para Bio_all entre Model
+anova_bio <- aov(Bio_all ~ Model, data = outpsall)
+summary(anova_bio)
+
+# ANOVA para Recruit_0 entre Model
+anova_rec <- aov(Recruit_0 ~ Model, data = outpsall)
+summary(anova_rec)
+```
+
+Biomass trend between scenarios.
+
+```{r}
+# Crear variable numérica
+outpsall$Model_num <- as.numeric(factor(outpsall$Model, levels = c("s1","s2","s3","s4")))
+
+fit_rec <- lm(Bio_all ~ Model_num, data = outpsall)
+summary(fit_rec)
+
+intercept <- coef(fit_rec)[1]
+slope <- coef(fit_rec)[2]
+pval <- summary(fit_rec)$coefficients[2,4]
+
+ggplot(outpsall, aes(x = Model_num, y = Bio_all)) +
+  geom_point(size = 2) +  
+  geom_smooth(method = "lm", se = TRUE, color = "red") +  
+  scale_x_continuous(breaks = 1:4, labels = c("s1","s2","s3","s4")) +
+  labs(x = "", y = "Recruit", title = "") +
+  annotate("text", x = 2.5, y = max(outpsall$Bio_all)*0.9,
+           label = paste0("Intercept = ", round(intercept,1),
+                          "\nSlope = ", round(slope,1),
+                          "\nP-value = ", round(pval,3)),
+           color = "black", hjust = 0.5)+
+  theme_bw()
+```
+
+## Economics trade offs
+
+#### Economics Vulnerability index
+
+La lógica es:
+
+1. **Ingresos** = precio × captura.
+2. **Disponibilidad del recurso** = biomasa (proxy de sostenibilidad).
+3. **Eficiencia/viabilidad** = ingresos ajustados por el estado del stock.
+
+Un esquema sencillo podría ser:
+
+$$
+IVI_t = \frac{P_t \times C_t}{B_t}
+$$
+
+donde:
+
+* $P_t$ = precio (€/kg),
+* $C_t$ = captura (kg),
+* $B_t$ = biomasa (kg),
+* $IVI_t$ se interpreta como **ingresos por unidad de biomasa disponible**, es decir, cuán “rentable” es el recurso considerando el stock.
+
+También puedes normalizar el índice (ej: dividir por el valor máximo o por el promedio de los años) para que quede entre 0 y 1.
 
 
+
+```{r}
+# Función para calcular IVI para un modelo
+calc_ivi <- function(model, nombre){
+  datos <- data.frame(
+    year    = 2004:2023,
+    precio  = runif(20, 2, 5),   # €/kg (simulado, si tienes reales cámbialo)
+    biomasa = model$timeseries$Bio_all[1:20],
+    captura = model$timeseries$`obs_cat:_1`[1:20]
+  )
+
+  datos$ingresos <- datos$precio * datos$captura
+  datos$IVI      <- datos$ingresos / datos$biomasa
+  datos$IVI_norm <- datos$IVI / max(datos$IVI, na.rm = TRUE)
+  datos$Scenario <- nombre
+  return(datos)
+}
+
+# Calcular para los 4 escenarios
+datos_all <- bind_rows(
+  calc_ivi(base.model1, "s1"),
+  calc_ivi(base.model2, "s2"),
+  calc_ivi(base.model3, "s3"),
+  calc_ivi(base.model4, "s4")
+)
+
+# Ver resultados
+head(datos_all)
+
+# Graficar comparación
+ggplot(datos_all, aes(x = year,
+                      y = IVI_norm, 
+                      color = Scenario)) +
+  geom_line(size = 1) +
+  #geom_point(size = 2) +
+  labs(
+    title = "",
+    y = "EVI (normalizado)",
+    x = "Year",
+    color = "Scenario"
+  ) +
+  scale_color_manual(name = "Scenario",
+                     values = c( "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")) +
+  theme_minimal()
+```
+
+
+```{r}
+# Calcular promedio de IVI normalizado por escenario
+ivi_promedio <- datos_all %>%
+  dplyr::group_by(Scenario) %>%
+  dplyr::summarize(IVI_norm_prom = mean(IVI_norm, na.rm = TRUE))
+
+ivi_promedio
+
+```
+
+#### Risk of population decline (%)
+
+1. Calcula la tasa de explotación:
+
+   $$
+   U_t = \frac{C_t}{B_t}
+   $$
+
+   (captura dividida por biomasa).
+
+2. Define un **umbral crítico** (ejemplo: $U_{crit} = 0.3$).
+
+3. El riesgo se estima como:
+
+   $$
+   Risk_t = \frac{U_t}{U_{crit}} \times 100
+   $$
+
+* Si $Risk_t < 100\%$ → bajo riesgo.
+* Si $Risk_t = 100\%$ → justo en el umbral.
+* Si $Risk_t > 100\%$ → alto riesgo de declive poblacional.
+
+```{r}
+
+# Función para calcular riesgo de declive
+calc_risk <- function(model, nombre, Ucrit = 0.4){
+  datos <- data.frame(
+    year    = 2004:2023,
+    biomasa = model$timeseries$Bio_all[1:20],
+    captura = model$timeseries$`obs_cat:_1`[1:20]
+  )
+  
+  # Tasa de explotación
+  datos$U <- datos$captura / datos$biomasa
+  
+  # Riesgo de declive (%)
+  datos$risk_decline <- (datos$U / Ucrit) * 100
+  datos$Scenario <- nombre
+  return(datos)
+}
+
+# Aplicar a los 4 escenarios
+risk_all <- bind_rows(
+  calc_risk(base.model1, "s1"),
+  calc_risk(base.model2, "s2"),
+  calc_risk(base.model3, "s3"),
+  calc_risk(base.model4, "s4")
+)
+
+# Ver los primeros registros
+tail(risk_all)
+
+# Graficar comparación
+ggplot(risk_all, aes(x = year, 
+                     y = risk_decline, 
+                     color = Scenario)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 100, linetype = "dashed") +
+  labs(title = "",
+       y = "Risk (%)",
+       x = "",
+       color = "Scenario") +
+  scale_color_manual(name = "Scenario",
+                     values = c( "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")) +
+  theme_minimal()
+
+```
+
+```{r}
+risk_promedio <- risk_all %>%
+  dplyr::group_by(Scenario) %>%
+  dplyr::summarize(risk_decline_prom = mean(risk_decline, 
+                                            na.rm = TRUE))
+
+risk_promedio
+```
+TRade Off plot
+
+```{r}
+tradeoff_data <- data.frame(
+  Scenario = c("s1 (23mm)", "s2 (24mm)", "s3 (25mm)", "s4 (26mm)"),
+  SSB2024 = c(47.59, 64.36, 70.93, 78.36),
+  EVI_norm_prom = c(0.38, 0.42, 0.41, 0.39),   
+  Risk_decline = c(235.9, 168.7, 163.1, 156.5)             
+)
+
+library(ggrepel)
+
+ggplot(tradeoff_data, aes(x = SSB2024, 
+                          y = EVI_norm_prom, 
+                          label = Scenario, 
+                          size = Risk_decline, color = Scenario)) +
+  geom_point(alpha = 0.7) +
+  geom_text_repel(size = 4, box.padding = 0.5, 
+                  color="black",
+                  point.padding = 0.5) +
+  scale_size_continuous(range = c(3,8), name = "Risk of decline (%)") +
+  labs(
+    x = "SSB 2024 (tonnes)",
+    y = "EVI (normalized)",
+    title = ""
+  ) +
+  theme_few() +
+  theme(legend.position = "none") +
+  scale_color_manual(values = c("s1 (23mm)" = "#cccccc", 
+                                "s2 (24mm)" = "#999999",
+                                "s3 (25mm)" = "#ca0020",
+                                "s4 (26mm)" = "#666666"))
+```
+
+
+## Final table
+
+
+```{r}
+# Función para extraer métricas de un modelo
+extract_metrics <- function(model, name){
+  ssb2024   <- model$sprseries$SSB[20]
+  deple2024 <- model$sprseries$Deplete[20]
+  BBMSY     <- model$Kobe$B.Bmsy[20]
+  FFMSY     <- model$Kobe$F.Fmsy[20]
+
+  # Decline últimos 5 años
+  ssb <- model$sprseries$SSB[1:20]
+  last5 <- tail(ssb, 5)
+  decline_pct <- (last5[1] - last5[5]) / last5[1] * 100
+
+  # Fallos de reclutamiento
+  reclut <- model$timeseries$Recruit_0
+  threshold <- 0.5 * mean(reclut, na.rm = TRUE)
+  failures <- mean(reclut < threshold, na.rm = TRUE) * 100
+
+  # Otros indicadores
+  bio2024  <- model$timeseries$Bio_all[20]
+  ratiossb <- model$sprseries$SSBfished_eq[20] / model$SBzero
+  currentF <- model$timeseries$`F:_1`[20]
+  catchpre <- model$exploitation[20,7]
+
+  # Devolver como data.frame
+  data.frame(
+    Model = name,
+    SSB2024 = ssb2024,
+    Depletion2024 = deple2024,
+    B_Bmsy = BBMSY,
+    F_Fmsy = FFMSY,
+    Decline5yr_pct = decline_pct,
+    Recruitment_failures_pct = failures,
+    Bio2024 = bio2024,
+    Ratio_SSB = ratiossb,
+    CurrentF = currentF,
+    Catch_pre = catchpre
+  )
+}
+
+# Aplicar a los cuatro modelos
+res <- rbind(
+  extract_metrics(base.model1, "base.model1"),
+  extract_metrics(base.model2, "base.model2"),
+  extract_metrics(base.model3, "base.model3"),
+  extract_metrics(base.model4, "base.model4")
+)
+
+# Exportar a Excel
+write.xlsx(res, file = "model_summary.xlsx", rowNames = FALSE)
+
+```
 
 \pagebreak
 

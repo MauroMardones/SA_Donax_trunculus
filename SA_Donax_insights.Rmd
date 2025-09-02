@@ -1,6 +1,6 @@
 ---
-title: "Evaluating the effects of varying minimum legal sizes on population variables in the wedge clam (*Donax trunculus*) fishery using an integrated model"
-author: "Mardones, M., Silva, L., Alejandro, Arturo Jorge... Delgado, M.)."
+title: "Evaluating the effects of varying minimum legal sizes on population variables in the wedge clam (*Donax trunculus*) fishery using an length-to-age model"
+author: "Mardones, M., Delgado, M., ..."
 output:
   bookdown::word_document2:
     reference_docx: SA_Dtrunculus_insights-01.docx
@@ -15,8 +15,7 @@ fig_caption: yes
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE,
-                      warning = FALSE,
-                      fig.align = 'center')
+                      warning = FALSE)
 ```
 
 
@@ -24,6 +23,8 @@ knitr::opts_chunk$set(echo = FALSE,
 library(tidyverse)
 library(flextable)
 library(kableExtra)
+library(readxl)
+library(openxlsx)
 ```
 
 # ABSTRACT
@@ -46,7 +47,7 @@ Findings suggest that although relaxing size limits may increase short-term yiel
 
 # INTRODUCTION
 
-The wedge clam (*Donax trunculus*) is a key species in sandy beach ecosystems of southern Europe and the Mediterranean, where it plays both ecological and socio-economic roles [REF, REF]. Along the Andalusian coast of southern Spain, this bivalve represents one of the most valuable resources for artisanal fisheries, sustaining local livelihoods and contributing significantly to coastal economies [@Schlacher2014; @Defeo2009; @Delgado2017]. The species' ecological importance extends beyond its commercial value, as it serves as a critical component of sandy beach food webs and contributes to nutrient cycling and sediment dynamics in these dynamic environments.
+The wedge clam (*Donax trunculus*) is a key species in sandy beach ecosystems of southern Europe and the Mediterranean, where it plays both ecological and socio-economic roles [@McLachlanetal1995; @Bargione2021; @Delgado2017; @Gray2016]. Along the Andalusian coast of southern Spain, this bivalve represents one of the most valuable resources for artisanal fisheries, sustaining local livelihoods and contributing significantly to coastal economies [@Schlacher2014; @Defeo2009; @Delgado2017]. The species' ecological importance extends beyond its commercial value, as it serves as a critical component of sandy beach food webs and contributes to nutrient cycling and sediment dynamics in these dynamic environments.
 
 The wedge clam fishery in the Gulf of Cádiz exemplifies the challenges facing small-scale artisanal fisheries worldwide. Over the past three decades, this fishery has experienced growing pressure from increased coastal exploitation, urban development, and intensified fishing effort [REF]. The fishery's open-access nature (characterized by low entry barriers, strong economic incentives for participation, and widespread illegal harvesting under limited surveillance further) exacerbates its vulnerability to overexploitation [REF]. This fishery presents a critical management paradox: while the fishery operates within the administrative limits of the Doñana Natural Park, a UNESCO World Heritage Site and Biosphere Reserve [REF] renowned for its biodiversity and ecological significance, signs of resource depletion are becoming increasingly evident [REF]. The coexistence of an economically important artisanal fishery with conservation objectives in one of Europe's most emblematic protected areas highlights the urgent need for science-based management approaches that can balance socio-economic needs with ecosystem sustainability.
 
@@ -74,11 +75,8 @@ The study area encompasses the main wedge clam harvesting grounds along the sout
 
 ## Conceptual model
 
-A statistical modelling implemented as a stock assessment approach require special considerations regarding their biology and spatial structure arranged as a conceptual model. The conceptual model for wedge clam in Gulf of Cadiz includes an assumption about pool dynamics and closed populations, necessary assumption for this species [@Jamieson1995a]. While the wedge clam is distributed and managed across designated management zones (*Zonas de Marisqueo*), these zones should not be assumed to represent distinct population units. On the contrary, they are local populations interconnected through the larval phase with nearby local banks or populations. All these local populations have a physical limit, which in turn constitutes the boundaries of the functional population on which we base the stock assessment. The schematic diagram (Bottom panel in Figure \@ref(fig:areaconcept)) illustrates the conceptual framework of population structure: a dynamic pool composed of functional unit populations, which in turn are subdivided into local unit populations (beds or patches). Connectivity among these units is maintained through gametic exchange and larval dispersal, influenced by bathymetric and benthic morphology features of the beaches assuming a single, cohesive population structure. Given the current knowledge of wedge clam distribution in the Gulf of Cádiz, no significant populations occur outside this area, supporting the assumption of a closed population. This framework aligns with the assumptions outlined by @Jamieson1995a, which emphasize the importance of considering both local population dynamics and broader connectivity patterns in stock assessments. Then, the main assumptions of the catch-at-length model are: a) wedge clam stock consists of several local populations that are interconnected through the drift of gametes and planktonic larvae [@DiBacco2006; @Gaynes2005; @Pineda2007], and where the impacts from fishing activities will affect the entire population as a whole, b) natural mortality is known and constant across years and ages, c) natural and fishing mortality occur simultaneously (Baranov equation), d) the vulnerability pattern of individuals is age-dependent and follows a logistic model, e) the model assumes that population are composed of no more than 4-5 age groups, f) recruitment (second year of age) results from the spawning of close patch or beds (local populations) and its survival is mainly influenced by environmental factors [@Okamoto2020] and g) the integrated model considers interannual fluctuations of growth dynamics, maturity and reproduction, with a spawning pulse per year.   This framework provides the basis for evaluating stock dynamics while incorporating local population connectivity, recruitment, and habitat constraints.
+A statistical modelling implemented as a stock assessment approach require special considerations regarding their biology and spatial structure arranged as a conceptual model. The conceptual model for wedge clam in Gulf of Cadiz includes an assumption about pool dynamics and closed populations, necessary assumption for this species [@Jamieson1995a]. While the wedge clam is distributed and managed across designated management zones (*Zonas de Marisqueo*), these zones should not be assumed to represent distinct population units. On the contrary, they are local populations interconnected through the larval phase with nearby local banks or populations. All these local populations have a physical limit, which in turn constitutes the boundaries of the functional population on which we base the stock assessment. The schematic diagram (Bottom panel in Figure \@ref(fig:areaconcept)) illustrates the conceptual framework of population structure: a dynamic pool composed of functional unit populations, which in turn are subdivided into local unit populations (beds or patches). Connectivity among these units is maintained through gametic exchange and larval dispersal, influenced by bathymetric and benthic morphology features of the beaches assuming a single, cohesive population structure. Given the current knowledge of wedge clam distribution in the Gulf of Cádiz, no significant populations occur outside this area, supporting the assumption of a closed population. This framework aligns with the assumptions outlined by @Jamieson1995a, which emphasize the importance of considering both local population dynamics and broader connectivity patterns in stock assessments. Then, the main assumptions of the catch-at-length model are: a) wedge clam stock consists of several local populations that are interconnected through the drift of gametes and planktonic larvae [@DiBacco2006; @Gaynes2005; @Pineda2007], and where the impacts from fishing activities will affect the entire population as a whole, b) natural mortality is known and constant across years and ages, c) natural and fishing mortality occur simultaneously (Baranov equation), d) the vulnerability pattern of individuals is age-dependent and follows a logistic model, e) the model assumes that population are composed of no more than 4-5 age groups, f) recruitment (second year of age) results from the spawning of close patch or beds (local populations) and its survival is mainly influenced by environmental factors [@Okamoto2020] and g) the integrated model considers interannual fluctuations of growth dynamics, maturity and reproduction, with a spawning pulse per year. This framework provides the basis for evaluating stock dynamics while incorporating local population connectivity, recruitment, and habitat constraints.
 
-```{r areaconcept, out.width='100%', fig.cap="Top panel: Map of the study area in the Gulf of Cádiz, showing sampling point where is distributed of wedge clam populations. Red poligons are designated shellfishing areas (Zonas de Marisqueo). Bottom panel: Conceptual model to stock assessment population structure in wedge clam in Cádiz Gulf, Spain"}
-knitr::include_graphics("Fig/area_conceptual.png")
-```
 
 ## Data sources
 
@@ -94,13 +92,11 @@ All exploratory data analyses from data sources, including data manipulation and
 
 ## Model conditioning and assumptions
 
-In the conditioning of the model, the estimation of spawning biomass was conducted at the beginning of the year, while recruitment was considered a dual event occurring around middle and the end of the year. In the recruitment estimation process, a diffuse stock-recruit relationship (steepness = 0.75) was incorporated, and variations in recruitment were modeled as deviations from the virgin recruitment `R0`, assuming 2004 as the initial year. Fishing mortality was estimated as the simple average of the `F` for age classes 1 to 5. Density of wedge clam from monitoring program was assumed to be a proxy for the estimated biomass, as such used for this kind of species [@Caddy2004], obtained from population surveys and proportional to the vulnerable biomass of the population, with catchability (`q`) estimated in the model. The `q` parameters were estimated from initial parameters for both population monitoring data and commercial data. All selectivity patterns, which relate the observed size compositions from the commercial and population samples to the dynamics, were estimated using a logistic function. The parameters `p1` (size at the inflection point of the curve) and `p2` (95% selection) are estimated by the model from the initial values specified in (Table \@ref(tab:parainit)).The model assumes that the selectivity pattern remains constant over time, reflecting consistent fishing practices and gear use throughout the study period. The model also incorporates a length-to-age transition matrix to account for growth dynamics, allowing for the conversion of length-frequency data into age-structured information. This approach is particularly important for species like wedge clam, where direct aging methods are challenging [@Punt2013]. The transition matrix is based on the von Bertalanffy growth parameters and includes variability in growth rates among individuals. Life history parameters, like growth, weight-length relation, natural mortality and maturity was used as priors to model initial condition was taken from @Delgado2017, @Colakoglu2014 and  @Lamine2020 and can be found in Table @ref(tab:parainit).
+In the conditioning of the model, the estimation of spawning biomass was conducted at the beginning of the year, while recruitment was considered a dual event occurring around middle and the end of the year. In the recruitment estimation process, a diffuse stock-recruit relationship (steepness = 0.75) was incorporated, and variations in recruitment were modeled as deviations from the virgin recruitment `R0`, assuming 2004 as the initial year. Fishing mortality was estimated as the simple average of the `F` for age classes 1 to 5. Density of wedge clam from monitoring program was assumed to be a proxy for the estimated biomass, as such used for this kind of species [@Caddy2004], obtained from population surveys and proportional to the vulnerable biomass of the population, with catchability (`q`) estimated in the model. The `q` parameters were estimated from initial parameters for both population monitoring data and commercial data. All selectivity patterns, which relate the observed size compositions from the commercial and population samples to the dynamics, were estimated using a logistic function. The parameters `p1` (size at the inflection point of the curve) and `p2` (95% selection) are estimated by the model from the initial values specified in (Table \@ref(tab:parainit)).The model assumes that the selectivity pattern remains constant over time, reflecting consistent fishing practices and gear use throughout the study period. The model also incorporates a length-to-age transition matrix to account for growth dynamics, allowing for the conversion of length-frequency data into age-structured information. This approach is particularly important for species like wedge clam, where direct aging methods are challenging [@Punt2013]. The transition matrix is based on the von Bertalanffy growth parameters and includes variability in growth rates among individuals. Life history parameters, like growth, weight-length relation, natural mortality and maturity was used as priors to model initial condition was taken from @Delgado2017, @Colakoglu2014 and @Lamine2020 and can be found in Table @ref(tab:parainit).
 
 ## Stock assessment model
 
-The stock assessment model to wedge clam was configured using Stock Synthesis v3.30.21 (SS3 hereafter) [@Methot2013; @Methot2020]. SS3 is a widely used software tool for assessing fish and invertebrate populations widely used in the main regional fishing organizations to have approximations of the population dynamics of the exploited resource as well as to support management decisions. SS3 is a structured stock evaluation model, in the class of models called *"Integrated stock evaluation analysis model"* and has a set of sub-model that simulates growth, maturity, fecundity, recruitment,  and mortality processes, and observation, with expected values for different types of data. The model is coded in Automatic Differentiation Model Builder (ADMB) [@Fournier2012; @Methot2013: @Methot2020] with estimation parameters by likelihood. The methodology employed by SS3 involves a comprehensive and integrated approach, utilizing majority sources data from *FEMP-04* monitoring program and official statistics. All analysis were executed in R-CRAN [@R-base] and the graphical interface of the SS3 through `r4ss` [@Taylor2019]  and `ss3diags` packages [@Winker2023]. Source data and temporal scale used in this stock assessment for the wedge clam in Cádiz Gulf begin in 2004, and the monitoring program data start in 2013 (Figure @ref(fig:data)). For technical descriptions in SS3 modeling, including sub-models like maturity, growth, observation, process, estimators, and associated likelihood components, see @Methot2020. 
-
-Model performance and diagnosis was established following the comprehensive framework proposed by @Carvalho2021b and @Winker2021 to ensure robust statistical performance across all MLS scenarios. Model acceptance criteria included: (1) successful convergence with maximum gradient components <0.001 and positive definite Hessian matrix, (2) absence of systematic patterns in residual plots for all data components (catches, indices, and composition data), (3) reasonable parameter estimates within biologically plausible bounds with coefficients of variation <1.0 for key parameters, (4) adequate model fits to observed data with minimal retrospective bias (Mohn's rho <0.30 for biomass and fishing mortality regarding @Hurtado2015 recommendations), and (5) consistent recruitment deviations without strong temporal trends or extreme outliers (>3 standard deviations). Diagnostic tests included examination of joint residual plots, likelihood profiles for key parameters, and hindcasting cross-validation using mean absolute scaled error (MASE) to assess predictive performance. Only models meeting all acceptance criteria were retained for scenario comparison to ensure that differences between MLS scenarios reflect biological and fishery responses rather than model estimation issues. All diagnostic tests for wedge clam models with SS3 were performed using the `ss3diags` package [@Winker2023].
+The stock assessment model to wedge clam was configured using Stock Synthesis v3.30.23 (SS3 hereafter) [@Methot2013; @Methot2020]. SS3 is a widely used software tool for assessing fish and invertebrate populations widely used in the main regional fishing organizations to have approximations of the population dynamics of the exploited resource as well as to support management decisions. SS3 is a structured stock evaluation model, in the class of models called *"Integrated stock evaluation analysis model"* and has a set of sub-model that simulates growth, maturity, fecundity, recruitment,  and mortality processes, and observation, with expected values for different types of data. The model is coded in Automatic Differentiation Model Builder (ADMB) [@Fournier2012; @Methot2013: @Methot2020] with estimation parameters by likelihood. The methodology employed by SS3 involves a comprehensive and integrated approach, utilizing majority sources data from *FEMP-04* monitoring program and official statistics. All analysis were executed in R-CRAN [@RCRAN2025] and the graphical interface of the SS3 through `r4ss` [@Taylor2019]. Source data and temporal scale used in this stock assessment for the wedge clam in Cádiz Gulf begin in 2004, and the monitoring program data start in 2013 (Figure @ref(fig:data)). For technical descriptions in SS3 modeling, including sub-models like maturity, growth, observation, process, estimators, and associated likelihood components, see @Methot2020. 
 
 
 ## Selectivity scenarios
@@ -108,206 +104,70 @@ Model performance and diagnosis was established following the comprehensive fram
 To explore the potential impact of different management strategies on wedge clam populations, four selectivity scenarios were defined as part of a comprehensive stock assessment evaluation using SS3 models, based on varying minimum legal size (MLS) regulations. The scenarios correspond to MLS values of 23, 24, 25, and 26 mm, with 25 mm representing the current legal threshold established in the fishery management [@BOJA2023] (Table \@ref(table:tabselfix)). These scenarios constitute stock assessment models implemented in SS3, utilizing the length-to-age relationship previously described. Selectivity curves for each MLS scenario were modeled using logistic functions within the SS3 framework, where the normalized length-frequency distributions from fishery-dependent data were used to parameterize the probability of capture at each length class (Fig 1. S1 ). The SS3 selectivity parameters (selectivity at 50% retention and selectivity slope) were fixed for each scenario to reflect realistic gear selectivity patterns under different MLS regulations. These stock assessment scenarios allow for the quantitative evaluation of how variations in minimum legal size affect population size structure, fishing mortality patterns, spawning stock biomass, and sustainable yield estimates under different fishery management options. The SS3 model framework enables the integration of biological parameters, fishery selectivity, and recruitment dynamics to provide robust projections of stock status and management performance under each MLS scenario.
 
 
-```{r tabselfix, out.width='70%', fig.cap="Scenarios of fishery selectivity fixed tested in modelling stock assessment in wedg clam in Gulf of Cádiz"}
-scenarios <- data.frame(
-  Scenario = c("S1", "S2", "S3", "S4"),
-  MLS = c(23, 24, 25, 26),
-  Description = c("Lower-than-current MLS",
-                  "Slightly below current MLS",
-                  "Current MLS (baseline)",
-                  "Above current MLS")
-)
+Model performance and diagnosis was established following the comprehensive framework proposed by @Carvalho2021b and @Winker2021 to ensure robust statistical performance across all MLS scenarios. Model acceptance criteria included: (1) successful convergence with maximum gradient components <0.001 and positive definite Hessian matrix, (2) absence of systematic patterns in residual plots for all data components (catches, indices, and composition data), (3) adequate retrospective bias (Mohn's rho <0.30 for biomass and fishing mortality regarding @Hurtado2015 recommendations), and (4) consistent recruitment deviations without strong temporal trends or extreme outliers (>3 standard deviations). Only models meeting all acceptance criteria were retained for scenario comparison to ensure that differences between MLS scenarios reflect biological and fishery responses rather than model estimation issues. All diagnostic tests for wedge clam models with SS3 were performed using the `ss3diags` package [@Winker2023]. Statistical comparisons between MLS scenarios were conducted using Analysis of Variance (ANOVA) [@Kim2017] models to formally test for significant differences in key population metrics (spawning biomass) across scenarios.
 
-ft <- flextable(scenarios)
-ft <- autofit(ft)
-ft
-```
+With the purpose of comparing different scenarios of resource use and their associated economic implications, we developed two ad-hoc complementary indicators: the *Economic Index (EI)* and the *Risk of Population Decline (RPD)*. EI was designed to quantify the economic return relative to the biological availability of the resource, and was calculated as $EI_t = \frac{P_t \times C_t}{B_t}$, where $P_t$ is the average beach price per kilogram aproximated, $C_t$ the annual catch (kg), and $B_t$ the estimated biomass (kg) in year $t$. This formulation reflects the economic return per unit of biomass available, and the index was subsequently normalized to its maximum value as $EI^{*}_t = \frac{EI_t}{\max(EI)}$ to facilitate interannual comparisons. In parallel, the RPD was developed to measure the probability of stock depletion associated with fishing pressure, based on the exploitation rate defined as $U_t = \frac{C_t}{B_t}$. This rate was evaluated against a precautionary biological threshold, $U_{crit}=0.30$, following typical reference points for bivalve fisheries, and the risk was expressed as $RPD_t = \frac{U_t}{U_{crit}} \times 100$, where values below 100% indicate low risk of decline and values above 100% signal overexploitation. Both indices were implemented in R (v.4.3.2) using annual time series of biomass, catch, and market price from 2013 to 2024, thus providing a unified methodological framework to compare scenarios in which economic benefits are weighed against biological risks in the wedge clam fishery of the Gulf of Cádiz.
 
 # RESULTS
 
 ## Model diagnostics and validation
 
-All four MLS scenarios (23, 24, 25, and 26 mm) successfully converged and met the established validation criteria following the framework of @Carvalho2021b. Maximum gradient components were <0.001 for all models, and positive definite Hessian matrices were achieved in all cases (Table \@ref(tab:validation)). Parameter estimation quality was adequate across scenarios, with coefficients of variation below 1.0 for all key population parameters including natural mortality, recruitment variability, and selectivity parameters.
+All four MLS scenarios (23, 24, 25, and 26 mm) successfully converged and met the established validation criteria following the framework of @Carvalho2021b. Maximum gradient components were <0.001 for all models, and positive definite Hessian matrices were achieved in all cases. Retrospective analysis showed bias with Mohn's rho values ranging from -0.4 to 0.256 for spawning stock biomass and fishing mortality, within acceptable limits (<0.30) (Table \@ref(tab:validation)). For the F metric (left panel in Fig. 4, S1), most correlations cluster around zero, with values ranging approximately from -0.15 to 0.05. Notable negative correlations appear in 2019 and the combined analysis, particularly for scenario 3 (s3, shown in red). The SSB metric displays more variable correlations, ranging from approximately -0.1 to 0.3. 
 
-```{r validation}
-# Table 3.1: Model validation summary for all MLS scenarios
-diagnosis_results <- read_csv("Model_Diagnosis_Results.csv")
-diagnosis_results %>%
-  flextable() %>%
-  set_caption("Model validation summary for all MLS scenarios. All models met acceptance criteria with maximum gradient <0.001, positive definite Hessian matrices, and Mohn's rho values <0.30") %>%
-  # Formatear números a 3 decimales
-  colformat_double(digits = 3) %>%
-  # Centrar todas las columnas
-  align(align = "center", part = "all") %>%
-  bold(part = "header") %>%
-  autofit() #%>%
-  # Alternar colores de filas (equivalente a "striped")
-  # bg(bg = "#f8f9fa", part = "body") %>%
-  # bg(i = seq(2, nrow(diag_tidy), 2), bg = "white", part = "body")
-
-```
-
-Retrospective analysis showed bias with Mohn's rho values ranging from -0.4 to 0.256 for spawning stock biomass and fishing mortality, within acceptable limits (<0.30). For the F metric (left panel), most correlations cluster around zero, with values ranging approximately from -0.15 to 0.05. Notable negative correlations appear in 2019 and the combined analysis, particularly for scenario 3 (s3, shown in red). The SSB metric (right panel) displays more variable correlations, ranging from approximately -0.1 to 0.3. The highest positive correlations for SSB occur in 2018-2019 and in the combined analysis, with scenario 1 (s1, light gray) showing consistently higher values. Scenario 3 (s3, red) generally shows lower or more negative correlations across both metrics compared to other scenarios (Figure \@ref(fig:rho)).
+The residual patterns across all scenarios demonstrate consistent behavior, with values oscillating around zero and remaining well-contained within the shaded confidence intervals throughout the temporal range. No systematic bias or temporal trends are evident in any of the four scenarios, indicating adequate model performance across the different minimum length thresholds ranging from 23 cm to 26 cm MLS, with the third scenario at 25 cm serving as the reference model. The estimated length distributions show remarkable consistency across all scenarios and throughout the study period, with modal patterns consistently concentrated around 2-3 mm. The distributional characteristics remain stable temporally within each scenario and show similar patterns between scenarios, suggesting that the different minimum length thresholds produce comparable outcomes in terms of the estimated length structure (Figure \@ref(fig:residuals)). 
 
 
-```{r rho, fig.cap="Rho values for fishing mortality (F, left) and spawning stock biomass (SSB, right) by year (2018–2022) and combined period across four scenarios (s1–s4). Points indicate scenario-specific rho values, illustrating inter-annual and scenario variability."}
-# Figure 3.1: Residual plots for all scenarios
-# [This would show diagnostic plots with residuals over time and fitted values]
-knitr::include_graphics("Fig/rhoplot.jpeg")
-```
-
-The residuals for length compsitions data across all four MLS scenarios  demonstrated acceptable model performance with residuals fluctuating around zero within bounds of approximately 0.5 to 1.0 Pearson residuals throughout the 2013-2022 time series. All scenarios exhibited relatively unbiased patterns without systematic temporal trends, indicating that the models adequately captured the length-at-age structure in the wedge clam population and that growth parameters remained stable over the assessment period (Figure \@ref(fig:residuals)). 
-
-```{r residuals, fig.cap="Residual plots for model diagnostics across MLS scenarios. Top panels show standardized residuals for catch data, middle panels for abundance indices, and bottom panels for length composition data. No systematic patterns indicate adequate model fits."}
-# Figure 3.1: Residual plots for all scenarios
-# [This would show diagnostic plots with residuals over time and fitted values]
-knitr::include_graphics("Fig/residual_plot.jpeg")
-```
 
 ## Population dynamics estimates
 
-### Temporal Trends in Population Variables
+### Temporal trends and distribution in population variables
 
-The time series analysis of population parameters across all four MLS scenarios revealed patterns in total biomass (Bio_all), recruitment (Recruit_0), and spawning biomass (SpawnBio) from 2005 to 2025. Total biomass showed a declining trend from approximately 400 t in 2005 to around 50 t by 2015, followed by a gradual recovery reaching approximately 100-150 t by 2025. All scenarios (S1: 23 cm, S2: 24 cm, S3: 25 cm reference model in red, S4: 26 cm MLS) displayed nearly identical trajectories with minimal variation between management alternatives, though S1 (23 cm MLS) consistently showed slightly higher total biomass estimates throughout most of the time series. Recruitment patterns exhibited greater variability throughout the time series, with values fluctuating between approximately 10,000 and 75,000 recruits, showing notable peaks around 2007 and 2020, with S1 and S2 generally producing higher recruitment estimates compared to S3 and S4. Spawning biomass trends closely mirrored total biomass patterns, declining from initial values of approximately 400 t to lows of around 50 t in the mid-2010s, then recovering to 100-150 t by the end of the projection period, with S1 maintaining consistently higher spawning biomass estimates and S4 showing the lowest values (Figure \@ref(fig:ssb-trends)).
-
-
-```{r ssb-trends, fig.cap="Time series of total biomass (Bio_all), recruitment (Recruit_0), and spawning biomass (SpawnBio) for coquina stock assessment across four minimum landing size scenarios from 2005 to 2025. The reference model (S3, 25 cm MLS) is highlighted in red, with alternative scenarios shown in different colors and line styles."}
-# Figure 3.3: SSB time series
-knitr::include_graphics("Fig/summary_variables_4.jpeg")
-```
-
-### Distribution of Population Variables 
-
-Distribution characteristics of each population parameter across the four MLS scenarios over the entire time series. Total biomass (Bio_all) showed similar median values across all scenarios, ranging from approximately 100-150 t, with S2 (24 cm MLS) exhibiting the highest median values and S4 (26 cm MLS) showing the lowest, while S2 and S3 displayed greater variability in their interquartile ranges. Recruitment (Recruit_0) exhibited median values around 30,000-35,000 recruits across scenarios, with S1 (23 cm MLS) showing the highest median recruitment values and S3 (reference model, 25 cm MLS) displaying the lowest median and most reduced variability compared to other scenarios. Spawning biomass distributions paralleled total biomass patterns, with S2 showing the highest median values (approximately 125 t) and S4 displaying the lowest median values (approximately 75 t), while S3 demonstrated marginally lower median spawning biomass compared to S1 and S2. All scenarios showed the presence of outliers in recruitment data, indicating occasional years of exceptionally high or low recruitment events throughout the assessment period. (Figure \@ref(fig:ssb-trends2)).
+The time series analysis of population parameters across all four MLS scenarios revealed patterns in total biomass, recruitment and spawning biomass from 2005 to 2025. Total biomass showed a declining trend from approximately 400 t in 2005 to around 50 t by 2015, followed by a gradual recovery reaching approximately 100-150 t by 2023. All scenarios (S1: 23 cm, S2: 24 cm, S3: 25 cm reference model in red, S4: 26 cm MLS) displayed nearly identical trajectories with minimal variation between management alternatives, though S1 (23 cm MLS) consistently showed slightly higher total biomass estimates throughout most of the time series. Recruitment patterns exhibited greater variability throughout the time series, with values fluctuating between approximately 10,000 and 75,000 recruits, showing notable peaks around 2007 and 2020, with S1 and S2 generally producing higher recruitment estimates compared to S3 and S4. Spawning biomass trends closely mirrored total biomass patterns, declining from initial values of approximately 400 t to lows of around 50 t in the mid-2010s, then recovering to 100-150 t by the end of the projection period, with S1 maintaining consistently higher spawning biomass estimates and S4 showing the lowest values (Figure \@ref(fig:ssb-trends)).
 
 
-```{r ssb-trends2, fig.cap="Boxplot distributions of total biomass (Bio_all), recruitment (Recruit_0), and spawning biomass (SpawnBio) across four minimum landing size scenarios for the coquina stock assessment. The reference model (S3, 25 cm MLS) is highlighted in red, showing median values, interquartile ranges, and outliers for each population parameter over the entire assessment period."}
-# Figure 3.3: SSB time series
-knitr::include_graphics("Fig/summary_variables_3.jpeg")
-```
+
+Distribution characteristics of each population parameter across the four MLS scenarios over the entire time series. Total biomass showed similar median values across all scenarios, ranging from approximately 100-150 t, with S2 (24 cm MLS) exhibiting the highest median values and S4 (26 cm MLS) showing the lowest, while S2 and S3 displayed greater variability in their interquartile ranges. Recruitment exhibited median values around 30,000-35,000 recruits across scenarios, with S1 (23 cm MLS) showing the highest median recruitment values and S3 (reference model, 25 cm MLS) displaying the lowest median and most reduced variability compared to other scenarios. Spawning biomass distributions paralleled total biomass patterns, with S2 showing the highest median values (approximately 125 t) and S4 displaying the lowest median values (approximately 75 t), while S3 demonstrated marginally lower median spawning biomass compared to S1 and S2. All scenarios showed the presence of outliers in recruitment data, indicating occasional years of exceptionally high or low recruitment events throughout the assessment period (Figure \@ref(fig:ssbtrends2)).
 
 
-## Population status and reference points
+
+The ANOVA results revealed no statistically significant differences in biomass between the four wedge clam management scenarios (F = 0.874, p = 0.352). The linear model explained only 0.8% of the variance in biomass across scenarios (R2 = 0.008), with an adjusted R-squared of -0.001, indicating that the model performs no better than a simple mean. The intercept estimate of 138.8 ± 25.5 represents the baseline biomass level, while the non-significant slope coefficient (8.68 ± 9.28, t = 0.935, p = 0.352) suggests that biomass values do not systematically increase or decrease across the four scenarios. These results suggest that the tested management scenarios produce statistically equivalent biomass outcomes for the wedge clam stock, indicating that factors other than the specific management measures tested may be driving biomass dynamics in this fishery.
+
+### Population status and reference points
+
+All scenarios exhibit a similar pattern of decline from initial depletion levels of approximately 0.75-0.78 in 2004-2005, reaching minimum values around 0.05-0.10 during 2013-2016. This represents a substantial depletion of the stock to less than 10% of virgin biomass levels during this period. 
+Following 2016, all scenarios show recovery trajectories, with depletion levels increasing toward the end of the time series. By 2025, scenarios converge to depletion levels of approximately 0.20-0.30. The horizontal dashed line at 0.20 represents the 20% depletion threshold relative to virgin biomass, which serves as a widely accepted reference point for sustainable management and is commonly associated with the limit biomass reference point (Biomass limit). Scenarios 3 and 4 (s3 and s4) show slightly higher recovery rates in the final years, reaching depletion levels closer to or above the 20% threshold by the end of the projection period. This suggests that these management approaches may be more effective in rebuilding the stock toward sustainable levels, though all scenarios remain near or below this critical biomass reference point throughout most of the time series (Figure \@ref(fig:deple-plot)).
 
 
-Relative to unfished conditions, current spawning stock biomass levels varied significantly among scenarios (Table \@ref(tab:ssb-status)). The 23 mm scenario resulted in SSB/SSB₀ = 0.28, indicating potentially overfished conditions, while the 26 mm scenario maintained SSB/SSB₀ = 0.41, suggesting a healthier stock status. The current 25 mm regulation resulted in SSB/SSB₀ = 0.32, placing the stock in a precautionary zone.
-
-Current stock status assessment revealed concerning trends across all scenarios when evaluated against biological reference points (Figure \@ref(fig:kobe-plot)). All scenarios indicated overfishing conditions (F > F_MSY), with the 23 mm and 24 mm scenarios also showing overfished stock conditions (SSB < SSB_MSY). Only the 26 mm scenario maintained spawning stock biomass above MSY-based reference points, though fishing mortality remained elevated.
-
-```{r kobe-plot, fig.cap="Stock status relative to biological reference points. Kobe plot showing the trajectory of wedge clam stock status from 2004-2024 across MLS scenarios. Red zone indicates overfished and overfishing conditions, yellow zones show either overfished or overfishing, green zone represents sustainable conditions."}
-# Figure 3.6: Kobe plot for stock status
-knitr::include_graphics("Fig/COM1compare4_Bratio_uncertainty.png")
-```
+The results show that while increasing the minimum landing size to 26 mm raises the projected 2024 spawning biomass (+6% relative to 25 mm) and reducing it to 23 mm leads to a strong decline (−30%), in all scenarios the spawning stock biomass remains below the biological reference points, keeping the stock in an overfished condition (Table \@ref(tab:tabstatus))
 
 
-```{r ssb-status}
-# Table 3.2: Current spawning stock biomass status
-ssb_status <- data.frame(
-  Scenario = c("S1 (23mm)", "S2 (24mm)", "S3 (25mm)", "S4 (26mm)"),
-  SSB_2024_tonnes = c("298 (265-331)", "318 (284-352)", "342 (306-378)", "387 (345-429)"),
-  SSB_SSB0 = c("0.28 (0.25-0.31)", "0.31 (0.28-0.34)", "0.32 (0.29-0.35)", "0.41 (0.37-0.45)"),
-  Percent_Change_vs_25mm = c("-12.9%", "-7.0%", "Baseline", "+13.2%"),
-  Stock_Status = c("Overfished", "Precautionary", "Precautionary", "Healthy")
-)
-
-kable(ssb_status, caption = "Current spawning stock biomass status (2024) by MLS scenario. Values in parentheses represent 95% confidence intervals.")
-```
-
-
-Risk assessment analysis quantified the probability of stock decline under each scenario (Table \@ref(tab:risk-assessment)). The 23 mm scenario showed a 78% probability of further SSB decline over the next 5 years, while the 26 mm scenario reduced this risk to 34%. These results highlight the substantial management implications of MLS regulations for population sustainability.
-
-```{r risk-assessment}
-# Table 3.3: Risk assessment summary
-risk_data <- data.frame(
-  Scenario = c("S1 (23mm)", "S2 (24mm)", "S3 (25mm)", "S4 (26mm)"),
-  Current_F_FMSY = c("1.97", "1.78", "1.65", "1.35"),
-  Current_SSB_SSBMSY = c("0.64", "0.72", "0.76", "0.94"),
-  P_SSB_decline_5yr = c("78%", "65%", "58%", "34%"),
-  P_recruitment_failure = c("23%", "18%", "16%", "11%"),
-  Overall_Risk = c("Very High", "High", "Moderate", "Low")
-)
-
-kable(risk_data, caption = "Risk assessment summary for MLS scenarios. P_SSB_decline_5yr represents probability of spawning stock biomass declining >20% over next 5 years. P_recruitment_failure shows probability of recruitment below 25th percentile.")
-```
-
-## Yield and fishery performance
-
-Historical yield analysis demonstrated the complex relationship between MLS regulations and fishery performance (Figure \@ref(fig:yield-analysis)). While lower MLS scenarios initially showed higher catches due to increased availability of harvestable biomass, this advantage diminished over time as spawning stock biomass declined. By 2024, predicted sustainable yields were highest under the 26 mm scenario (167 tonnes) compared to the 23 mm scenario (142 tonnes).
-
-```{r yield-analysis, fig.cap="Yield and fishery performance analysis. (A) Historical catches vs predicted sustainable yields, (B) Yield-per-recruit curves showing optimal exploitation levels, (C) Short-term yield projections (2025-2027) under constant fishing mortality, (D) Trade-off between current yield and long-term sustainability."}
-# Figure 3.7: Yield analysis across scenarios
-knitr::include_graphics("Fig/COM1compare3_Bratio.png")
-```
-
-Yield-per-recruit analysis revealed that all current MLS scenarios operate beyond optimal exploitation levels, with F_max values substantially lower than current fishing mortality rates. The biological reference point F₀.₁ provided more conservative guidance, suggesting optimal fishing mortality rates of 0.42-0.48 across scenarios, well below current levels.
 
 ## Scenario comparison and trade-offs
 
-Comprehensive comparison of MLS scenarios revealed clear trade-offs between short-term economic benefits and long-term sustainability (Table \@ref(tab:scenario-comparison)). While the 23 mm scenario maximized short-term catch rates, it resulted in the poorest long-term population outcomes. Conversely, the 26 mm scenario provided the best conservation outcomes while maintaining economically viable catch levels.
-
-```{r scenario-comparison}
-# Table 3.4: Comprehensive scenario comparison
-comparison_data <- data.frame(
-  Metric = c(
-    "Current SSB (tonnes)",
-    "SSB relative to unfished (%)",
-    "Current F (yr -1)",
-    "F relative to F_MSY",
-    "Predicted 2025 catch (tonnes)",
-    "5-year average catch potential",
-    "Recruitment variability (CV)",
-    "Risk of population decline (%)",
-    "Economic viability index",
-    "Conservation score"
-  ),
-  S1_23mm = c("298", "28", "0.89", "1.97", "142", "136", "0.63", "78", "6.2", "2.1"),
-  S2_24mm = c("318", "31", "0.81", "1.78", "151", "148", "0.58", "65", "7.1", "4.2"),
-  S3_25mm = c("342", "32", "0.74", "1.65", "158", "155", "0.54", "58", "7.8", "5.8"),
-  S4_26mm = c("387", "41", "0.61", "1.35", "167", "162", "0.47", "34", "8.4", "8.7")
-)
-
-kable(comparison_data, caption = "Comprehensive comparison of MLS scenarios across biological, economic, and conservation metrics. Economic viability index (1-10 scale) combines yield stability and CPUE. Conservation score (1-10 scale) weights spawning biomass, recruitment stability, and population risk.")
-```
-
-The analysis identified the current 25 mm MLS as a reasonable compromise between economic and conservation objectives, though results suggest that increasing to 26 mm would provide substantial conservation benefits with minimal economic costs. The trade-off analysis (Figure \@ref(fig:tradeoff)) clearly illustrated the diminishing returns of lower MLS values and the benefits of more conservative size limits.
-
-```{r tradeoff, fig.cap="Trade-off analysis between economic yield and conservation outcomes across MLS scenarios. Points represent different scenarios, with optimal management zone highlighted. Size of points proportional to population risk level."}
-# Figure 3.8: Trade-off analysis
-knitr::include_graphics("Fig/tallasmedias.png")
-```
+This comprehensive comparison between key population and risk metrics across four wedge clam management scenarios, revealing significant biological and management implications despite statistical non-significance. Spawning Stock Biomass (SSB) in 2024 demonstrates a clear improvement trajectory from 47.6 tons in Scenario 1 to 78.4 tons in Scenario 4, representing a 65% increase in reproductive capacity. The B/B_MSY ratios confirm overfished conditions across all scenarios, with values ranging from 0.52 to 0.82, indicating that even the most conservative management scenario (Scenario 4) maintains spawning biomass at only 82% of MSY levels. The five-year decline percentages reveal stark contrasts in recent population performance, with Scenario 1 experiencing a severe 67.6% decline compared to more moderate declines of 20-25% in Scenarios 2-4. Recruitment failure rates remain problematically high (7.4%) across most scenarios, with only Scenario 2 showing improved recruitment success (3.7%). The SSB ratio (proportion of spawning biomass to total biomass) improves from 19.6% to 27.8% across scenarios, indicating better age structure and reproductive potential under more restrictive minimum size regulations. The Economic Vulnerability Index shows peak values in Scenario 2 (0.425), suggesting this scenario may represent optimal balance between exploitation and conservation.  The risk of decline metric quantified the probability of stock decline under each scenario, and, decreasing substantially from 236 in Scenario 1 to 157 in Scenario 4, indicating that progressive increases in minimum legal size significantly reduce population collapse risk. This 33% reduction in decline risk represents the most compelling evidence for implementing more restrictive size regulations, particularly given the current overfished status of the stock across all management alternatives (Table \@ref(tab:scenario-comparison)). 
 
 
+Regarding trade off analysis between population variables and economic measures, the analysis identified the current 25 mm MLS as a reasonable compromise between economic and conservation objectives, though results suggest that increasing to 26 mm would provide substantial conservation benefits with minimal economic costs. The Figure \@ref(fig:tradeoff) illustrates how increasing the minimum landing size from 23 mm to 26 mm enhances spawning stock biomass while slightly reducing economic viability, highlighting the balance between resource sustainability and fishery profitability. 
 
 \pagebreak
 
 # DISCUSSION
 
 
-Most of the benthic resource fisheries belong to the “S” type, i.e. small-scale, spatially structured and sedentary stocks (Orensanz et al., 2005). Due to the metapopulation structure of benthic resources, in which subpopulations of adults are connected with each other by means of larval or juvenile dispersal, the recruitment into local populations could depend not only on local stocks, but also on neighboring populations (Hilborn et al., 2005). This produces variability in recruitment at different spatial and temporal scales (Lima et al., 2000). The strength of the intercon- nections within the metapopulation dynamics, which strongly affects the variability of local populations of the resources, is something rarely addressed in management approaches
+This study addressed two key aspects to improve the assessment and management of the wedge clam (*Donax trunculus*) fishery in the Gulf of Cádiz, Spain. First, it represents the initial attempt to apply an integrated stock assessment model to this resource, combining multiple sources of information from the literature, official statistics, and a long-term monitoring program spanning more than a decade, which provided both fishery-dependent and fishery-independent data. Second, we used this model to evaluate alternative management strategies, with particular emphasis on potential changes to the minimum legal size. We assessed how such measures could influence the estimates of population variables derived from the stock assessment model, as well as the status and overall performance of the fishery. More broadly, stock assessment for this type of fishery involves significant conceptual and modeling challenges, which were explicitly considered in this study.
 
-The proper management of a fishery requires a exhaustive knowledge of the biological and population components that influence into dynamics, like biomass and fishing mortality, as well as complete scientific knowledge related to their reproductive and life history parameters [@Delgado2015].
 
-Generally, the stock assessment of this type of exploited species is carried out with direct methods [@huges1981; @Bouzaidi2020a; @Zhang2021; @Lamine2020; @Colakoglu2014; @Derbalietal2016].  These methods are useful for establishing current information through snapshot, but they lack references that consider the fishing history and biological or empirical references to give advice to management. On the other hand, there are exercises with indirect methods which have been applied in various groups and types of species around the world, from gastropods [], bivalves[], echinoderms[] and cephalopods[]. Here reference levels are already provided in which the level of exploitation can be identified and thereby provide scientific advice for decision making. However, in most of these examples cited, the Data condition and sufficiency points to the application of poor standard models, in which dynamics are represented through performance per recruit or global models. In wedge clam, has a robust monthly monitoring program, which allows the collection of various pieces of information, ranging from empirical population indicators to environmental variables. We must add to this the abundant literature referring to reproductive parameters and life history of the species. With these elements, it was possible to apply an integrated model with monthly data and size dynamics, which used 10-year time series of landings, sizes, relative abundance indicators, among others. With these components, we model the population dynamics of coquina, obtaining model indicators based on spawning biomass and fishing mortality.
+Generally, the stock assessment of this type of exploited species is carried out with direct methods or empiricals indicators [@huges1981; @Bouzaidi2020a; @Zhang2021; @Lamine2020; @Colakoglu2014; @Derbalietal2016]. Although these indicators have been widely used by local administration to promote proper management, the use of empirical indicators and their separate analysis can lead to erroneous interpretations, especially when conflicting signals arise [REFS]. However, this process has lacked appropriate metrics for assessing its dynamics, population variables, and clear reference points for management and decision-making. On the other hand, without clear, specific, and measurable reference points or management objectives over time are factors that can lead to the failure of fishery management and, consequently, the population [REFS @Punt2016]. In these sense, and taking advantage of the variety of data collected over the past ten years by official fishery statistical and monitoring programs, incorporating this information into an integrated stock assessment models is a next step in this fishery. Integrated stock assessment models are relatively recent for invertebrate and benthic species. 
 
-Like most invertebrates, wedge clam is a species for which aging is complex [@Punt2013]. Therefore, a length-to-age model with age dynamics is used, which is transformed through a transition matrix based on the probabilities of age groups relative to the detailed structure. Integrated models have the capacity to reproduce the age dynamics of these populations and simultaneously transform them into population variables.
+Like most invertebrates, wedge clam is a species for which aging is complex [@Punt2013]. Therefore, a length-to-age model with age dynamics is used, which is transformed through a transition matrix based on the probabilities of age groups relative to the detailed structure. Stock assessment frameworks like length-to-age models have the capacity to reproduce the age dynamics of these populations and simultaneously transform them into population variables. There are exercises with indirect methods which have been applied in various groups and types of species where aging is difficult around the world, from gastropods [REF], bivalves[@Hernandez2011; @Canales2021], echinoderms[@Roa-Ureta2015; @Chen2003d; @Chen2003b] and cephalopods[REF]. 
 
-Although these indicators have been widely used by local administration to promote proper management, the use of empirical indicators and their separate analysis can lead to erroneous interpretations, especially when conflicting signals arise [REFS]. However, this process has lacked appropriate metrics for assessing its dynamics, population variables, and clear reference points for management and decision-making. On the other hand, without clear, specific, and measurable reference points or management objectives over time are factors that can lead to the failure of fishery management and, consequently, the population [REFS @Punt2016]. In these sense, and taking advantage of the variety of data collected over the past ten years by official fishery statistical and monitoring programs, incorporating this information into an integrated stock assessment models is a next step in this fishery. Integrated stock assessment models are relatively recent for invertebrate and benthic species. Examples such as @Baro2018; @Roa-Ureta2015; @Canales2021; @Smith2004b; @Chen2003d; @Chen2003b and others have opened the door to this approach for invertebrate stock resources. 
+To use a model-based approach for this species, it is necessary to establish a biological reference framework. In this context, most modern and internationally recognized fisheries management frameworks are based on the concept of Maximum Sustainable Yield (MSY) (Hilborn and Walters, 1992; Chen and Paloheimo, 1998; Walters, 1998). Within this background, modeling population dynamics through an integrated approach for the wedge clam allows reliable estimation of key parameters using appropriate statistical methods, providing estimates of state variables (e.g., biomass, abundance) and flow variables (e.g., fishing mortality, exploitation rates) for both the distribution area and the fishery, which can then be linked to MSY-based proxies. Proxies for BRPs have mostly been applied due to the difficulty of estimating MSY [@Hilborn2002; @Punt2013]. For example, initially to avoid growth overfishing, using F0.1 as the target BRP and Fmax as the limit BRP, based on yield per recruit [@Gabriel1975 and @Goodyear1993]. Then, to prevent recruitment overfishing, the use of a target BRP F40%SPR and a limit BRP F20%SPR is proposed, based on spawning biomass per recruit (Clark 1991 and 1993, Mace 1994, Mace and Sissenwine 1993). More recently, 40%SB0 (spawning biomass corresponding to 40% of virgin spawning biomass) has also been used as the target BRP and 20%SB0 as the limit (citation). Worldwide, reference frameworks for invertebrates fisheries have been proposed to give advice into management [@Baro2018; @Caddy1996d; @Caddy2004; @Canales2021; @FIPA2017; @Roa-Ureta2015; @Smith2004b; @Smith2004c]. For example, in Maine, it was estimated to use (F 0.1) as a reference [@Chen2003; @Chen2003b].  propose the use of BRPs based on spawning potential ratio (SPR) as a proxy for MSY according to  for California benthic fisheries. In this sense, the use of BRP that aim for MSY is proposed, according to the global fisheries scientific community.
 
-To use a model-based approach in this species we need to established a biological reference framework. In this context, most of the modern and currently valid international fisheries management reference frameworks are based on the concept of Maximum Sustainable Yield (MSY) (Hilborn and Walters, 1992; Chen and Paloheimo, 1998; Walters, 1998). Based on the background, to model population dynamics using an integrated approach for wedge clam population provide reliable estimates parameters using appropriate statistical methods to estimated state (biomass, abundance) and flow (fishing mortality or exploitation rates) variables in the distribution area and the fishery, which contain references based on the previously described MSY proxies. In this analysis, we propose using data from the wedge clam fishery monitoring program and establish the first stock assessment process using an integrated length-at-catch model in wedge clam in Cádiz Gulf based on reference levels that diagnoses the exploitation status and recommendations for sustainable harvesting using *ad-hoc* Biological Reference Points (BRP). With this we provide fishery advice for this sensitive ecosystem in the Gulf of Cadiz enhancing interest in its management and conservation.
+In this study, we proposed a biological framework based on a depletion level of 20% of current spawning biomass (relative to virgin biomass or to the initial year of the historical series) as a biological reference point. This threshold is widely accepted internationally and is commonly used by Regional Fisheries Management Organizations (RFMOs) \[REF]. By adopting this level, we ensure alignment with the reference framework applied by ICES \[REF], which allows us to consistently identify and interpret the stock status of the wedge clam in the Gulf of Cádiz.
 
-Proxies for BRPs have mostly been applied due to the difficulty of estimating MSY [@Hilborn2002; @Punt2013]. For example, initially to avoid growth overfishing, using F0.1 as the target BRP and Fmax as the limit BRP, based on yield per recruit [@Gabriel1975 and @Goodyear1993]. Then, to prevent recruitment overfishing, the use of a target BRP F40%SPR and a limit BRP F20%SPR is proposed, based on spawning biomass per recruit (Clark 1991 and 1993, Mace 1994, Mace and Sissenwine 1993). More recently, 40%SB0 (spawning biomass corresponding to 40% of virgin spawning biomass) has also been used as the target BRP and 20%SB0 as the limit (citation). Worldwide, reference frameworks for invertebrates fisheries have been proposed to give advice into management [@Baro2018; @Caddy1996d; @Caddy2004; @Canales2021; @FIPA2017; @Roa-Ureta2015; @Smith2004b; @Smith2004c]. For example, in Maine, it was estimated to use (F_{0.1}) as a reference [@Chen2003; @Chen2003b].  propose the use of BRPs based on spawning potential ratio (SPR) as a proxy for MSY according to  for California benthic fisheries. In this sense, the use of BRP that aim for MSY is proposed, according to the global fisheries scientific community.
+The estimated depletion levels under the four management scenarios tested were 10.2% for S1 (23 mm), 13.1% for S2 (24 mm), 14.6% for S3 (25 mm), and 16.1% for S4 (26 mm). All of these values remain below the proposed 20% threshold, indicating that the stock is currently above the limit reference point across scenarios. However, the increasing depletion levels observed when raising the minimum legal size suggest that higher size limits could enhance the long-term sustainability of the stock by maintaining a larger proportion of the spawning biomass. From a management perspective, these results highlight that adjusting the minimum legal size is an effective measure to influence the biological reference points and to ensure that the fishery operates safely above critical depletion thresholds.  
 
-## Model performance and validation
-
-The successful application of integrated model implemented in SS3 to wedge clam population assessment represents a significant methodological advance for short-lived invertebrate species in data-limited fisheries. The robust convergence and diagnostic performance across all MLS scenarios demonstrate that integrated stock assessment models can provide reliable insights even for species with complex life histories and high environmental variability. The consistency of model fits to multiple data sources—including commercial catches, abundance indices, and length compositions—strengthens confidence in the population estimates and scenario comparisons.
-
-The validation criteria established following @Carvalho2021b proved essential for ensuring model reliability. The absence of systematic residual patterns and low retrospective bias (Mohn's rho <0.30) across all scenarios indicates that the models adequately capture the underlying population dynamics without structural deficiencies. This level of performance is particularly noteworthy given the challenges typically associated with modeling bivalve populations, where recruitment variability and environmental drivers often complicate assessment efforts [@Hennen2004; @Powell2007].
-
-However, several model limitations warrant consideration. The assumption of constant natural mortality (M = 0.99) across ages and years represents a simplification that may not fully capture reality, particularly given the species' susceptibility to environmental stressors and predation pressure. Despite this limitations, sensitivity analyses confirmed that the relative ranking of MLS scenarios remained robust across reasonable parameter ranges, providing confidence in the management conclusions.
-
-The assessment reveals concerning population trends across all MLS scenarios, with current spawning stock biomass levels well below historical peaks and fishing mortality rates exceeding sustainable thresholds. The finding that all scenarios indicate overfishing conditions (F > F_MSY) aligns with broader patterns observed in Mediterranean and Atlantic wedge clam populations, where declining trends have been documented across multiple regions [@Delgado2017; @Lamine2020]. The classification of the 23 mm and 24 mm scenarios as both overfished and experiencing overfishing represents a critical warning for population sustainability.
-
-The current stock status reflects the cumulative impact of decades of intensive harvesting combined with the species' biological vulnerability. Wedge clams' short lifespan (4-5 years) and rapid growth make them particularly susceptible to recruitment overfishing, where fishing pressure prevents sufficient individuals from reaching reproductive maturity. The observed decline in spawning stock biomass since 2018 across all scenarios suggests that recent fishing mortality levels have exceeded the population's productive capacity, despite existing management measures.
+The current stock status reflects the cumulative impact of decades of intensive harvesting combined with the species' biological vulnerability. Wedge clams' short lifespan (4-5 years) and rapid growth make them particularly susceptible to recruitment overfishing, where fishing pressure prevents sufficient individuals from reaching reproductive maturity. The observed decline in spawning stock biomass since 2018 across all scenarios suggests that recent fishing mortality levels have exceeded the population productive capacity, despite existing management measures.
 
 Comparison with other *Donax trunculus* populations reveals similar patterns of overexploitation throughout the species' range [REF, REF]. Studies from the Western Mediterranean report comparable reductions in population biomass and average size, indicating that the challenges observed in the Gulf of Cádiz reflect broader regional pressures on this species [@Bargione2021; @Colakoglu2014]. This regional context underscores the importance of precautionary management approaches and the potential value of coordinated management strategies across jurisdictions.
 
@@ -317,17 +177,30 @@ The stock-recruitment analysis provides crucial insights into the population's r
 
 The correlation between spawning stock biomass and subsequent recruitment strength, while variable, demonstrates the importance of maintaining adequate reproductive capacity. The observed recruitment failures in recent years (2020-2024) across scenarios with lower MLS values highlight the compounding effects of reduced spawning biomass and environmental variability. This pattern suggests that populations operating under less conservative size limits may be more vulnerable to environmental perturbations and climate variability.
 
+The successful application of integrated model implemented in SS3 to wedge clam population assessment represents a significant methodological advance for short-lived invertebrate species in data-limited fisheries. The robust convergence and diagnostic performance across all MLS scenarios demonstrate that integrated stock assessment models can provide reliable insights even for species with complex life histories and high environmental variability. The consistency of model fits to multiple data sources—including commercial catches, abundance indices, and length compositions—strengthens confidence in the population estimates and scenario comparisons.
+
+The validation criteria established following @Carvalho2021b proved essential for ensuring model reliability. The absence of systematic residual patterns and low retrospective bias (Mohn's rho <0.30) across all scenarios indicates that the models adequately capture the underlying population dynamics without structural deficiencies. This level of performance is particularly noteworthy given the challenges typically associated with modeling bivalve populations, where recruitment variability and environmental drivers often complicate assessment efforts [@Hennen2004; @Powell2007].
+
+
+
+
+
+The temporal stability observed in both the residual diagnostics and length estimates across all four scenarios indicates robust model performance regardless of the minimum length scenario implemented.
+
+
 ## Impacts of minimum legal size regulations
 
 ### Biological consequences
 
-The quantitative analysis of MLS impacts reveals substantial biological consequences that extend beyond simple changes in harvestable biomass. The 23% difference in spawning stock biomass between the most and least restrictive scenarios (298 vs 387 tonnes) represents a biologically significant impact that could determine the population's long-term viability. This magnitude of difference is particularly concerning given that wedge clam populations exhibit strong stock-recruitment relationships, where reduced spawning biomass directly translates to decreased recruitment potential.
+The quantitative analysis of MLS impacts reveals substantial biological consequences that extend beyond simple changes in harvestable biomass. The 23% difference in spawning stock biomass between the most and least restrictive scenarios (104 vs 161 tonnes) represents a biologically significant impact that could determine the population's long-term viability. This magnitude of difference is particularly concerning given that wedge clam populations exhibit strong stock-recruitment relationships, where reduced spawning biomass directly translates to decreased recruitment potential.
 
 The age structure analysis demonstrates how different MLS regulations fundamentally alter population demographics. Lower MLS scenarios concentrate fishing mortality on younger age classes, reducing the probability that individuals survive to older, more fecund ages. This demographic truncation has cascading effects on population resilience, as older individuals typically contribute disproportionately to reproductive output through higher fecundity and improved egg quality [@Birkeland2005]. The preservation of older age classes under higher MLS scenarios provides a demographic buffer that can help populations weather environmental variability and fishing pressure fluctuations.
 
-The analysis of reproductive consequences reveals that MLS regulations operate at a critical life history bottleneck. Wedge clams typically reach sexual maturity at 20-22 mm, meaning that the current 25 mm MLS provides limited protection for newly mature individuals. The scenarios with higher MLS (26 mm) allow more individuals to contribute to multiple spawning events, potentially improving overall reproductive success and genetic diversity within the population. This extended reproductive opportunity is crucial for maintaining population adaptability and resilience to environmental change.
+The analysis of reproductive consequences reveals that MLS regulations operate at a critical life history bottleneck. Wedge clams typically reach sexual maturity at 10.8 mm [@Delgado2017], meaning that the current 25 mm MLS provides a wide protection for newly mature individuals. However, the scenarios with higher MLS (26 mm) allow more individuals to contribute to multiple spawning events, potentially improving overall reproductive success and genetic diversity within the population. This extended reproductive opportunity is crucial for maintaining population adaptability and resilience to environmental change.
 
 ### Fishery performance implications
+
+While no statistically significant differences were detected between scenarios, the levels of key population variables for wedge clam differ across management alternatives. Furthermore, all four scenarios indicate an overfished status, whereby even minimal changes in management measures such as minimum legal size (MLS) have implications not only for stock status but also for fishery sustainability. Under overfished conditions, the population's reduced resilience means that subtle variations in management regulations can have disproportionate effects on recovery trajectories and long-term viability. This suggests that statistical non-significance should not be interpreted as management equivalence, particularly when the stock operates below sustainable thresholds where small management adjustments may determine whether the fishery can rebuild or faces further decline. The current overfished state emphasizes the critical need for precautionary management approaches, as the narrow margin between scenarios may represent the difference between stock recovery and continued depletion in this vulnerable population.
 
 The complex relationship between MLS regulations and fishery performance reflects fundamental trade-offs between immediate economic benefits and long-term sustainability. While lower MLS scenarios initially appeared to offer higher catch potential by making smaller individuals available for harvest, this advantage proved ephemeral as reduced spawning stock biomass led to declining recruitment and overall population productivity. By 2024, the predicted sustainable yields were actually highest under the most restrictive scenario (26 mm: 167 tonnes) compared to the least restrictive (23 mm: 142 tonnes).
 
@@ -349,7 +222,7 @@ The negative impacts from lower MLS are not easily corrected, because once spawn
 
 The socioeconomic context of the wedge clam fishery adds important dimensions to MLS policy considerations. This artisanal fishery supports numerous small-scale operators along the Andalusian coast, many of whom depend on wedge clam harvesting for their livelihoods [REF]. The analysis suggests that more conservative MLS regulations need not impose significant economic hardships, as the improved population productivity under higher size limits can offset the initial reduction in harvestable biomass.
 
-Compliance and enforcement considerations are crucial for MLS effectiveness. The current open-access nature of the fishery and limited surveillance capacity create challenges for implementing size restrictions. Educational outreach emphasizing the long-term benefits of size restrictions could further enhance compliance rates. Community engagement in the regulatory process is essential for fostering buy-in and ensuring that management measures are socially acceptable. Participatory approaches that involve fishers in decision-making can help align regulations with local knowledge and practices, potentially improving compliance and enforcement outcomes.
+Compliance and enforcement considerations are crucial for MLS effectiveness. The current open-access nature of the fishery and limited surveillance capacity create challenges for implementing size restrictions. Educational outreach emphasizing the long-term benefits of size restrictions could further enhance compliance rates [@Beaumais2010; @Sordo2023]. Community engagement in the regulatory process is essential for fostering buy-in and ensuring that management measures are socially acceptable. Participatory approaches that involve fishers in decision-making can help align regulations with local knowledge and practices, potentially improving compliance and enforcement outcomes.
 
 The integration of MLS regulations with other management measures deserves careful consideration. The current system of designated management zones (*Zonas de Marisqueo*) provides a framework for implementing spatially explicit regulations that could complement size restrictions. Advancing towards the determination of catch quotas through complex and integrated models, such as the one developed in this research, can provide valuable support for establishing a sustainable management procedure.
 
@@ -379,6 +252,17 @@ Environmental data integration remains incomplete, despite the collection of bas
 The choice of natural mortality rate (M = 0.99) significantly influences population estimates and management conclusions. While this value is based on the best available life history information, it represents an average across ages and environmental conditions that may vary considerably in reality. The sensitivity analysis demonstrated that M is among the most influential parameters in the assessment, highlighting the importance of improved natural mortality estimation through tagging studies or other direct methods. As a next step, this parameter should be tested as time-varying, either through Bayesian approaches or by implementing random-walk processes [REF, REF], to better capture potential temporal variability in mortality.
 
 Stock-recruitment relationship parameterization introduces additional uncertainty, particularly the steepness parameter that determines the population resilience to low spawning stock biomass. The assumed steepness of 0.75 represents a moderate value typical for marine fish, but may not accurately reflect wedge clam population dynamics. Directed studies of early life stages and recruitment processes could provide more species-specific parameterization for future assessments.
+
+
+### Long-Term evaluation of curren management strategies
+
+
+The long-term implications of current MLS regulations remain uncertain, mainly because the assessment period is still relatively short and the dynamics of biological, environmental, and socioeconomic factors are highly complex \[REF]. Although the current assessment provides useful insights into stock status and the management trade-offs involved, it is clear that ongoing monitoring and periodic reassessment will be essential to adaptively manage the fishery as productivity conditions change \[REF].
+
+Looking ahead, the development of a formal management strategy evaluation (MSE) framework appears as a logical next step. Such an approach would provide a structured way to test alternative management strategies under uncertainty or under different productivity scenarios \[REF]. By doing so, it would allow managers and stakeholders to explore trade-offs between conservation and economic objectives over longer time horizons, ultimately supporting more robust decision-making \[REF]. This could well be the next step in advancing the management procedure of the wedge clam fishery.
+
+
+
 
 <!-- ## Broader implications for small-scale fisheries -->
 
@@ -423,7 +307,8 @@ Templates data and raw codes in [Repo Donax trunulus stock assesment](https://ma
 
 (Chequear con MD)
 
-This study was carried out under the project *Estudio integral en zonas de protección pesquera y marisquera y otras áreas marinas protegidas del litoral andaluz. Análisis y seguimiento de los recursos y actividades pesqueras de chirla y coquina en zonas de influencia de las reservas de pesca y marisqueras del litoral andaluz: Análisis de parámetros biológicos de la población de coquina (Donax trunculus)* funded by the Consejería de Agricultura y Pesca (Junta de Andalucía – European Fisheries Fund)
+This study was carried out under the project Proyecto FEMP_AND_04
+ (*Programa plurianual en el ámbito de la recopilación de datos de la comunidad autónoma de Andalucía: Análisis de la pesquería de coquina en el caladero del Golfo de Cádiz’; cofinanciado por FEMP*) funded by the Consejería de Agricultura y Pesca (Junta de Andalucía – European Fisheries Fund)
 
 \pagebreak
 
@@ -436,11 +321,118 @@ We would like to thank all those involved in the FEMP-04-AND project for their i
 
 # FIGURES AND TABLES 
 
+
+```{r areaconcept, out.width='100%', fig.cap="Top panel: Map of the study area in the Gulf of Cádiz, showing sampling point where is distributed of wedge clam populations. Red poligons are designated shellfishing areas (Zonas de Marisqueo). Bottom panel: Conceptual model to stock assessment population structure in wedge clam in Cádiz Gulf, Spain"}
+knitr::include_graphics("Fig/area_conceptual.png")
+```
+
+
+
+```{r tabselfix, out.width='70%', fig.cap="Scenarios of fishery selectivity fixed tested in modelling stock assessment in wedg clam in Gulf of Cádiz"}
+scenarios <- data.frame(
+  Scenario = c("S1", "S2", "S3", "S4"),
+  MLS = c(23, 24, 25, 26),
+  Description = c("Lower-than-current MLS",
+                  "Slightly below current MLS",
+                  "Current MLS (baseline)",
+                  "Above current MLS")
+)
+
+ft <- flextable(scenarios)
+ft <- autofit(ft)
+ft
+```
+
+```{r validation}
+# Table 3.1: Model validation summary for all MLS scenarios
+diagnosis_results <- read_csv("Model_Diagnosis_Results.csv")
+diagnosis_results %>%
+  flextable() %>%
+  set_caption("Model validation summary for all MLS scenarios. All models met acceptance criteria with maximum gradient <0.001, positive definite Hessian matrices, and Mohn's rho values <0.30") %>%
+  # Formatear números a 3 decimales
+  colformat_double(digits = 3) %>%
+  # Centrar todas las columnas
+  align(align = "center", part = "all") %>%
+  bold(part = "header") %>%
+  autofit() #%>%
+  # Alternar colores de filas (equivalente a "striped")
+  # bg(bg = "#f8f9fa", part = "body") %>%
+  # bg(i = seq(2, nrow(diag_tidy), 2), bg = "white", part = "body")
+
+```
+
+```{r residuals, fig.cap="Residual diagnostics (left panels) and estimated length distributions (right panels) for four minimum length scenarios (MLS) in the models to 2013-2023. Scenario 3 (25 cm MLS) represents the reference model. Shaded areas indicate confidence intervals for residuals, and right panels show annual length distribution estimates with medium values indicated by red dots."}
+# Figure 3.1: Residual plots for all scenarios
+# [This would show diagnostic plots with residuals over time and fitted values]
+knitr::include_graphics("Fig/residual_exp.jpeg")
+```
+
+
+```{r ssb-trends, fig.cap="Time series of total biomass (Bio_all), recruitment (Recruit_0), and spawning biomass (SpawnBio) for coquina stock assessment across four minimum landing size scenarios from 2005 to 2025. The reference model (S3, 25 cm MLS) is highlighted in red, with alternative scenarios shown in different colors and line styles."}
+# Figure 3.3: SSB time series
+knitr::include_graphics("Fig/summary_variables_7.jpeg")
+```
+
+
+```{r ssbtrends2, fig.cap="Boxplot distributions of total biomass (Bio_all), recruitment (Recruit_0), and spawning biomass (SpawnBio) across four minimum landing size scenarios for the coquina stock assessment. The reference model (S3, 25 cm MLS) is highlighted in red, showing median values, interquartile ranges, and outliers for each population parameter over the entire assessment period."}
+# Figure 3.3: SSB time series
+knitr::include_graphics("Fig/variables_summary_5.jpeg")
+```
+
+```{r deple-plot, fig.cap="Stock depletion trajectories relative to virgin biomass across four management scenarios from 2004-2025. The horizontal dashed line represents the 20% depletion threshold (0.2 Biomass Virgin)"}
+# Figure 3.6: Kobe plot for stock status
+knitr::include_graphics("Fig/depletion.jpeg")
+```
+
+```{r tabstatus}
+ssb_status <- data.frame(
+  Scenario = c("S1 (23mm)", "S2 (24mm)", "S3 (25mm)", "S4 (26mm)"),
+  SSB_2024_tonnes = c("92.12", "124.10", "132.25", "140.57"),
+  Depletion = c("10.2%", "13.1%", "14.6%", "16.1%"),
+  Percent_Change_vs_25mm = c("-30.34%", "-6.16%", "Reference", "+6.29%"),
+  P_SSB_decline_5yr = c("67.6%", "25.5%", "23.5%", "20.4%"),
+  Stock_Status = c("Overfished", "Overfished", "Overfished", "Overfished")
+)
+
+kable(ssb_status, caption = "Current spawning stock biomass status (2024) by MLS scenario. Values in parentheses represent 95% confidence intervals.")
+```
+
+```{r scenario-comparison}
+raw_data <- read_excel("model_summary.xlsx")
+
+comparison_table <- raw_data %>%
+  pivot_longer(cols = -Model, names_to = "Metric", values_to = "Value") %>%
+  pivot_wider(names_from = Model, values_from = Value) %>% 
+  head(-2) %>%
+  add_row(Metric = "EVI_norm_prom",
+          base.model1 = 0.383,
+          base.model2 = 0.425,
+          base.model3 = 0.413,
+          base.model4 = 0.391) %>%
+  add_row(Metric = "risk_decline_prom",
+          base.model1 = 236,
+          base.model2 = 169,
+          base.model3 = 163,
+          base.model4 = 157) %>% 
+  dplyr::filter(Metric != c("F_Fmsy",
+                            "Depletion2024",
+                            "SSB2024"))
+
+# Ver tabla
+kable(comparison_table,
+      caption = "Comprehensive comparison of MLS scenarios across biological, economic, and risk metrics for wedge clam stock assessment. Metrics include spawning stock biomass (SSB), B/B_MSY ratios, recruitment failure rates, SSB ratios, economic vulnerability index (EVI), and risk of population decline over 5 years.")
+```
+
+
+```{r tradeoff, fig.cap="Trade-off analysis between conservation (SSB) and economic (Economic Viability Index, EVI) objectives across MLS scenarios"}
+
+# Figure 3.8: Trade-off analysis
+knitr::include_graphics("Fig/riskplot.jpeg")
+```
+
 \pagebreak
 
 # REFERENCES
 
 
 
-
-quad
