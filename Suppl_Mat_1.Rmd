@@ -29,13 +29,13 @@ header-includes:
 
 ```{r setup1, echo=FALSE}
 rm(list = ls())
-knitr::opts_chunk$set(echo = FALSE,
-                      message = FALSE,
+knitr::opts_chunk$set(message = FALSE,
                       warning = FALSE,
                       fig.align = 'center',
                       fig.pos = "H",
                       dev = 'jpeg',
-                      dpi = 300)
+                      dpi = 300,
+                      oyut.width = "80%")
 #XQuartz is a mess, put this in your onload to default to cairo instead
 options(bitmapType = "cairo") 
 # (https://github.com/tidyverse/ggplot2/issues/2655)
@@ -44,11 +44,12 @@ options(bitmapType = "cairo")
 
 # Context
 
-This document evaluates the potential impacts of alternative minimum legal size limits for the extraction of the wedge clam *Donax trunculus*, using an integrated length-to-age structured model implemented in Stock Synthesis (SS3, version 3.30.23) [@Methot2013; @Methot2023], focused on the Gulf of Cádiz, Spain. The analysis explores how changes in minimum size regulations could affect key population variables such as spawning biomass, recruitment, and fishing mortality, providing a scientific basis for management advice.
 
-The assessment is conducted within the framework of scientific advice coordinated by the Spanish Institute of Oceanography (IEO-CSIC), building upon the long-term monitoring program FEMP 04, which has collected biological, fishery-dependent, and environmental data since 2013. These data form the foundation of this modeling effort, which constitutes the first formal stock assessment of *D. trunculus* in the region using an integrated modeling approach.
+This document contains the workflow and supplementary analyses for the manuscript "Evaluating the effects of varying minimum legal sizes on population variables in the wedge clam (*Donax trunculus*) fishery using a length-to-age model". It provides a fully self-contained, code-based framework including all scripts required to run the stock assessment models, generate outputs, and evaluate management scenarios.
 
-This document serves as a supplementary material to the main scientific manuscript currently in preparation. It provides a fully self-contained, code-based workflow that includes all the scripts required to run the stock assessment models, generate outputs, and evaluate management scenarios. The entire process is designed to ensure transparency and reproducibility, supporting the credibility and traceability of the results and conclusions derived from the model-based analyses.
+The assessment is based on an integrated length-to-age structured model implemented in Stock Synthesis (SS3, version 3.30.23) [@Methot2013; @Methot2023], applied to the Gulf of Cádiz, Spain. The analyses explore how alternative minimum legal size regulations affect key population variables such as spawning biomass, recruitment, and fishing mortality, thus offering scientific support for management advice.
+
+This work is conducted within the framework of scientific advice coordinated by the Centro Oceanografico Cádiz (IEO-CSIC), building upon the long-term monitoring program FEMP 04, which has collected biological, fishery-dependent, and environmental data since 2013. These data provide the foundation for this first formal stock assessment of *D. trunculus* in the region using an integrated modeling approach.
 
 
 # Methodology
@@ -85,13 +86,16 @@ required_packages <- c(
   "plyr",         # Older data manipulation package (conflicts with dplyr)
   "reshape2",     # Data reshaping (e.g. melt/cast)
   #  Visualization and plotting
+  "ggrepel",      # Better label placement in ggplot2
   "ggplot2",      # Core plotting
   "ggthemes",     # Themes like theme_few()
+  "gridExtra",     # Arranging multiple ggplots
   "ggridges",     # Ridgeline plots
   "ggpubr",       # ggarrange() and publication-ready visuals
   "grid",         # Grid graphics system
   "png",          # Reading PNG images
   #  Statistical and modeling tools
+  "modelsummary",  # Model summaries and diagnostics
   "mvtnorm",      # Multivariate normal distributions
   "forecast",     # Time series forecasting and diagnostics
   #  File and path management
@@ -113,17 +117,18 @@ purrr::walk(required_packages, library, character.only = TRUE)
 
 ```{r echo=FALSE}
 # Set model and figure paths using `here::here()` for reproducibility
-dir_test     <- here::here("s01")       # Test model
+# dir_test     <- here::here("s01")       # Test model
+dir0     <- here::here("s0")        # Initial model (2.2 MLS fixed)
 dir1     <- here::here("s1")        # Reference model (2.3 MLS fixed)
 # Alternative management scenarios
 dir2 <- here::here("s2")       # Scenario 2.4 (MLS fixed)
 dir3 <- here::here("s3")       # Scenario 2.5 (MLS fixed) (current MLS)
 dir4 <- here::here("s4")       # Scenario 2.6 (MLS fixed)
-# Simulated mean-based models
-dir2.3 <- here::here("s1_2.3")      # Simulated model: 2.3 mean MLS
-dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MLS
-dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MLS (current MLS)
-dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MLS
+# # Simulated mean-based models
+# dir2.3 <- here::here("s1_2.3")      # Simulated model: 2.3 mean MLS
+# dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MLS
+# dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MLS (current MLS)
+# dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MLS
 
 # Output figure path
 fig_path <- here::here("Fig")           # Directory for saving figures
@@ -131,17 +136,18 @@ fig_path <- here::here("Fig")           # Directory for saving figures
 
 ## Stock assessment model
 
-The following equations provides a general mathematical expression of both biological and fishing processes that partly explain the population dynamics applicable to wedge clams. For more details, please refer to Supplement 1.
+The following equations provides a general mathematical expression of both biological and fishing processes that partly explain the population dynamics applicable to wedge clams. 
 
 $$
-N_{t,a} = 
-begin{cases} 
-R_t & text{if } a=1, forall t 
-N_{t-1,a-1} e^{-(F_{t-1,a-1} + M)} & text{if } 1 < a < A - 1, forall t 
-N_{t-1,a-1} e^{-(F_{t-1,a-1} + M)} (1 - e^{-(F_{t,a} + M)}) & text{if } a = A, forall t = 1 
-N_{t-1,a} e^{-(F_{t,a} + M)} & text{if } a = A, t > 1 
-end{cases}
+N_{t,a} =
+\begin{cases}
+R_t & \text{if } a=1, \ \forall t \\[6pt]
+N_{t-1,a-1} e^{-(F_{t-1,a-1} + M)} & \text{if } 1 < a < A - 1, \ \forall t \\[6pt]
+N_{t-1,a-1} e^{-(F_{t-1,a-1} + M)} \, (1 - e^{-(F_{t,a} + M)}) & \text{if } a = A, \ t = 1 \\[6pt]
+N_{t-1,a} e^{-(F_{t,a} + M)} & \text{if } a = A, \ t > 1
+\end{cases}
 $$
+
 
 This equation defines the number of individuals ($N_{t,a}$) in the population at time $t$ and age $a$. For age $a=1$ at all times $t$, recruitment ($R_t$) is used: $N_{t,a} = R_t$. For ages $1 < a < A-1$, the number of individuals from the previous time step $t-1$ and age $a-1$ is adjusted by the exponential decay due to fishing mortality and natural mortality ($M$ =0.99). For the last age class $a=A$ at $t > 1$, the number of individuals is adjusted similarly but includes an additional factor for survival probability. For age $a=A$ at $t > 1$, the number of individuals from the previous time step $t-1$ and same age $a$ is adjusted by the exponential decay in the mathematical form: $N_{t-1,a} e^{-(F_{t,a} + M)}$.
 
@@ -152,27 +158,29 @@ $$
 This equation calculates the total biomass ($B_t$) at time $t$ where $B_t$ is the sum of the product of the proportion of mature individuals ($P_{a,t}$), the number of individuals ($N_{a,t}$), and the weight at age ($w_a$) across all age classes $a$.
 
 $$
-BD_t = sum_{a} left( P_{a,t} N_{a,t} e^{-0.91Z_a} right) w_a O_i
+BD_t = sum_{a}( P_{a,t} N_{a,t} e^{-Z_a}) w_a O_i
 $$
 
 Spawning biomass equation show $BD_t$ as the sum of the product of the proportion of mature individuals ($P_{a,t}$), the number of individuals ($N_{a,t}$) adjusted by the exponential decay factor weighted by total mortality, the weight at age ($w_a$), and a vector of maturity ogive ($O_i$) across all age classes.
 
 $$
-N_{a,t+1} = frac{alpha BD_{t-1}}{beta + BD_{t-1}} e^{epsilon_t + 0.5sigma_epsilon^2}, 
-alpha = frac{4hR_0}{(5h-1)}, quad beta = frac{(1-h)BD_0}{(5h-1)}
+N_{a,t+1} = \frac{\alpha \, BD_{t-1}}{\beta + BD_{t-1}} \, e^{\epsilon_t + 0.5 \, \sigma_\epsilon^2}
+$$
+
+$$
+alpha = \frac{4hR_0}{(5h-1)}, beta = \frac{(1-h)BD_0}{(5h-1)}
 $$
 
 The dynamics are modeled by a Beverton-Holt type recruitment relationship. The recruitment submodel describe abundance ($N_{a,t+1}$) to the next year $t+1$ based on the spawning biomass ($BD_{t-1}$) from the previous year, where $\alpha$ and $\beta$ are parameters defined below, $\epsilon_t$ is a random error term, and $\sigma_\epsilon^2$ is the variance of the error. Parameter $\alpha$ is a parameter related to the maximum recruitment ($R_0$) and the steepness ($h$) of the stock-recruitment relationship. $\beta$ is a parameter related to the virgin spawning biomass ($BD_0$) and the steepness ($h$) is the parameter that regulates rate of change of relationship between stock and recruitment.
 
 ## Initial model conditioning (Reference model)
 
-Spawning biomass was estimated at the beginning of the year, while recruitment was considered a dual event occurring around June and at the end of the year. Recruitment estimation included a diffuse stock-recruitment relationship (steepness = 0.7), and recruitment variability was modeled as deviations from the unfished recruitment level `R0`, assuming 2004 as the initial year (Table \@ref{Tab1}).
+Spawning biomass was estimated at the beginning of the year, while recruitment was considered a dual event occurring around June and at the end of the year. Recruitment estimation included a diffuse stock-recruitment relationship (steepness = 0.7), and recruitment variability was modeled as deviations from the unfished recruitment level `R0`, assuming 2004 as the initial year (Table \@ref{tab:Tab1}).
 
-Fishing mortality was estimated as the simple average of the `F` values for age classes 1 and 2, which in the model corresponds to option 5 of the `hybrid F method` recommended in SS3 [@Methot2013]. Density was assumed as a proxy for estimated biomass [@Caddy2004], derived from population surveys, and considered proportional to the vulnerable biomass of the stock, with catchability (`q`) estimated within the model. The `q` parameters were estimated from initial values specified in Table \@ref{Tab1}, using both population monitoring and commercial data. All selectivity patterns, which relate observed length compositions from the commercial fleet and surveys to the population dynamics, were estimated using a logistic function. The parameters `p1` (length at the inflection point) and `p2` (length at 95% selection) were estimated by the model from initial values specified in Table \@ref{Tab1}.
+Fishing mortality was estimated as the simple average of the `F` values for age classes 1 and 2, which in the model corresponds to option 5 of the `hybrid F method` recommended in SS3 [@Methot2013]. Density was assumed as a proxy for estimated biomass [@Caddy2004], derived from population surveys, and considered proportional to the vulnerable biomass of the stock, with catchability (`q`) estimated within the model. The `q` parameters were estimated from initial values specified in Table \@ref{tab:Tab1}, using both population monitoring and commercial data. All selectivity patterns, which relate observed length compositions from the commercial fleet and surveys to the population dynamics, were estimated using a logistic function. The parameters `p1` (length at the inflection point) and `p2` (length at 95% selection) were estimated by the model from initial values specified in Table \@ref{tab:Tab1}.
 
 
-```{r}
-
+```{r Tab1, essage=FALSE, warning=FALSE, fig.cap= "Initial parameter values for the SS3 wedge clam model (S3). Each parameter row shows a lower bound (LO), upper bound (HI), and initial value (INIT). A negative phase (PHASE) means the parameter is fixed."}
 start3 <- SS_readstarter(file = file.path(dir3,
                                                "starter.ss"),
                               verbose = FALSE)
@@ -188,10 +196,7 @@ fore3 <- r4ss::SS_readforecast(file = file.path(dir3,
                               verbose = FALSE)
 # can also read in wtatage.ss for an empirical wt at age model using
 # r4ss::SS_readwtatage()
-```
 
-
-```{r}
 parbio <- ctl3$MG_parms[1:10, c(1:3,7)]
 row.names(parbio) <- c("Nat M", 
                        "Lmin", 
@@ -227,101 +232,104 @@ parInit %>%
                       "Stock-recruitment relationship" = 5,
                       "Catchability" = 2,
                       "Selectivity" = 4))
-parInit
 ```
+The initial fishing mortality for the wedge clam fishery is estimated, bounded between 0.005–0.1, with a prior mean of 0.05 and a weakly informative standard deviation of 0.8. The model starts from an initial guess of 0.1 and estimates this parameter, ensuring that initial fishing pressure is informed by both empirical bounds and prior information while being integrated consistently into the early population dynamics. 
 
 ## Scenarios
 
-### Lengths compositional dependent-fishery data simulation 
+Five scenarios in which selectivity is fixed in the assessment model to match the same means (22 mm to 26 mm by 1mm), while retaining the original input data (Figure \@ref(fig:selfix)).
 
-The length composition data simulation was designed to evaluate the potential impacts of regulatory changes concerning the minimum legal size (MLS) in the wedge clam (*Donax trunculus*) fishery. The current MLS is set at 25 mm. This simulation framework investigates two dimensions of impact: 1) Biological shift in population structure due to regulatory changes in minimum size, and 2) Assumed fixed selectivity functions in the assessment model centered around alternative mean lengths. To achieve this, a total of eight scenarios were constructed. Four scenarios simulating changes in the population structure with commercial mean lengths centered at 23 mm, 24 mm, 25 mm, and 26 mm
-
-Each simulated population structure was generated using a parametric Gaussian distribution:
-
-$$
-f_i = \text{dnorm}(x_i; \mu, \sigma)
-$$
-
-Stochasticity was introduced by applying multiplicative noise to represent sampling variability:
-
-$$
-P_i = \frac{f_i \cdot \varepsilon_i}{\sum_j f_j \cdot \varepsilon_j}, \quad \varepsilon_i \sim \mathcal{N}(1, \sigma_{\varepsilon}^2)
-$$
-
-Where $P_i$ is the resulting proportion at length $x_i$, $\phi_i$ is the normal density for length $x_i$ given mean $\mu$ and standard deviation $\sigma$ and $\epsilon_i$ is multiplicative noise drawn from $\mathcal{N}(1, \sigma_{\text{noise}})$. This formulation ensures all resulting proportions are non-negative and sum to one, maintaining their composition nature. Each of the simulated scenarios was incorporated into the Stock Synthesis (SS3) model framework. 
-
-### Fixed selectivity
-
-Another four scenarios in which selectivity is fixed in the assessment model to match the same means (23 mm to 26 mm), while retaining the original input data (Figure \@ref(fig:selfix)).
-
-```{r selfix, echo = FALSE, out.width='100%', fig.cap="Scenarios of fishery selectivity fixed tested in modelling stock assessment in wedg clam in Gulf of Cádiz"}
-# Función de selectividad
+```{r selfix, echo = FALSE, out.width="100%", fig.cap="Scenarios of fishery selectivity fixed tested in modelling stock assessment in wedg clam in Gulf of Cádiz"}
+# Función logística de selectividad / madurez
 logistic_selectivity <- function(length, L50, slope) {
   1 / (1 + exp(-slope * (length - L50)))
 }
 
-lengths <- seq(10, 35, by = 0.1)  
-L50_values <- c(23, 24, 25, 26)
-slope <- 5
+# Parámetros
+lengths <- seq(1, 35, by = 0.1)  
+L50_values <- c(22, 23, 24, 25, 26)
+slope <- 10.0  # Pendiente fija
 
-# Datos de selectividad
+# Diccionario L50 -> Escenario
+L50_map <- c("22"="s0","23"="s1","24"="s2","25"="s3","26"="s4")
+
+# Datos de selectividad con etiqueta de escenario
 selectivity_data <- expand.grid(length = lengths, L50 = L50_values) %>%
-  mutate(selectivity = logistic_selectivity(length, L50, slope),
-         L50 = factor(L50, levels = L50_values))
+  dplyr::mutate(selectivity = logistic_selectivity(length, L50, slope),
+         Scenario = factor(L50_map[as.character(L50)],
+                           levels = c("s0","s1","s2","s3","s4")))
 
-# Datos de histograma (distribución normal)
-hist_data <- data.frame(length = rnorm(1000, mean = 25, sd = 2.5))
-
-# Normalizar histograma para que vaya de 0 a 1
-hist_counts <- hist(hist_data$length, 
-                    breaks = seq(15, 35, by = 1), 
-                    plot = FALSE)
+# Crear datos de madurez con etiqueta
+maturity_data <- data.frame(
+  length = lengths,
+  maturity = logistic_selectivity(lengths, L50 = 10.8, slope = 2.0),
+  Scenario = "Maturity (L50=10.8 mm)"   # para que aparezca en la leyenda
+)
+set.seed(123) # para reproducibilidad
+hist_data <- data.frame(length = rnorm(1000, mean = 24, sd = 5))
+hist_counts <- hist(hist_data$length, breaks = seq(0, 45, by = 1), plot = FALSE)
 hist_df <- data.frame(
   length = hist_counts$mids,
   density = hist_counts$counts / max(hist_counts$counts)
 )
 
-# Plot
+
+esc_labels <- c(
+  "s0" = "s0 = (22 mm) Strong reduction of current MLS",
+  "s1" = "s1 = (23 mm) Lower-than-current MLS",
+  "s2" = "s2 = (24 mm) Slightly below current MLS",
+  "s3" = "s3 = (25 mm) Current MLS (baseline)",
+  "s4" = "s4 = (26 mm) Above current MLS"
+)
 selfix <- ggplot() +
   geom_col(data = hist_df, aes(x = length, y = density),
-           fill = "grey70",
-           color="grey20", alpha = 0.3, width = 1) +
-  geom_line(data = selectivity_data, aes(x = length, 
-                                         y = selectivity, 
-                                         color = L50), 
-            size = 1.2) +
+           fill = "grey70", color = "grey70", alpha = 0.01, width = 1) +
+  geom_line(data = selectivity_data, 
+            aes(x = length, y = selectivity, color = Scenario), size = 1.2) +
+  geom_line(data = maturity_data, 
+            aes(x = length, y = maturity, color = Scenario), 
+            linetype = "dotted", size=0.8) +
+  geom_vline(xintercept = 10.8, color = "grey",
+             size=0.3) +
   labs(
-    title = "",
-    x = "Wedge clam length (mm)",
-    y = "Selectivity / Normalized frequency",
-    color = expression(L[50])
+    x = "Length (mm)",
+    y = "Selectivity / Maturity / Normalized frequency",
+    color = "Scenario"
   ) +
-  theme_bw(base_size = 10) +
-  scale_color_viridis_d(option = "E", name = "Minimum Legal Size (MLS)") +
-  theme(legend.position = "bottom") +
-  ylim(0, 1.05)
+  theme_few(base_size = 10) +
+  scale_color_manual(
+    name = "Scenario",
+    values = c("s0" = "#000000",
+               "s1" = "#cccccc",  
+               "s2" = "#999999",     
+               "s3" = "#ca0020",  
+               "s4" = "#666666",
+               "Maturity (L50=10.8 mm)" = "grey"),   # color para madurez
+    labels = c(esc_labels, "Maturity (L50=10.8 mm)")
+  ) +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    plot.margin = margin(10, 10, 10, 10)
+  ) +
+  xlim(5, 35)
 
 selfix
 
 ```
 
-This dual approach allows for evaluating the effect of hypothetical changes in population structure (e.g., as a result of shifting LMLS), and the influence of assuming specific selectivity patterns in the assessment model, independent of actual data structure.
+This dual approach allows for evaluating the effect of hypothetical changes in population structure (e.g., as a result of shifting LMLS), and the influence of assuming specific selectivity patterns in the assessment model, independent of actual data structure. By combining observed and simulated datasets, this strategy supports a robust evaluation of how assumed biological structure and model assumptions interact, particularly regarding exploitation patterns and size-based selectivity in this artisanal fishery. Total set of scenario testes is displayed in Table \@ref{tab:Tab2}.
 
-By combining observed and simulated datasets, this strategy supports a robust evaluation of how assumed biological structure and model assumptions interact, particularly regarding exploitation patterns and size-based selectivity in this artisanal fishery. Total set of scenario testes is displayed in Table \@ref{Tab2}.
-
-```{r}
-esc <- c("s1", "s2", "s3", "s4", 
-         "s1_2.3", "s1_2.4", "s1_2.5", "s1_2.6")
+```{r Tab2, message=FALSE, warning=FALSE, fig.cap="Description of the alternative scenarios and variants of the base model"}
+esc <- c("s0","s1", "s2", "s3", "s4")
 
 description <- c(
-  "Alternative mode (MLS 2.3 fixed)",
-  "Alternative model (MLS 2.4 fixed)",
-  "Reference model (MLS 2.5 fixed)",
-  "Alternative model (MLS 2.6 fixed)",
-  "S1 with simulated length structure mean MLS = 2.3",
-  "S1 with simulated length structure mean MLS = 2.4",
-  "S1 with simulated length structure mean MLS = 2.5",
-  "S1 with simulated length structure mean MLS = 2.6"
+   "22 mm. Strong reduction of current MLS",
+  "23 mm. Lower-than-current MLS",
+  "24 mm. Slightly below current MLS",
+  "25 mm. Current MLS (baseline)",
+  "26 mm. Above current MLS"
 )
 
 ESC1 <- cbind(esc, description)
@@ -337,20 +345,16 @@ ESC1 %>%
   kable_styling(latex_options = c("striped", "condensed"),
                 full_width = FALSE,
                 font_size = 10)
-ESC1
-```
 
+```
 ## Run models
 
 ```{r eval=F, message=F, include=FALSE}
-directorios <- c("s1",
+directorios <- c("s0",
+                 "s1",
                  "s2",
                  "s3",
-                 "s4",
-                 "s1_2.3",
-                 "s1_2.4",
-                 "s1_2.5",
-                 "s1_2.6") 
+                 "s4") 
 
 for (dir in directorios) {
   r4ss::run(
@@ -364,7 +368,7 @@ for (dir in directorios) {
 
 ```{r eval=F, echo=F}
 r4ss::run(
-  dir = dir_test,
+  dir = dir0,
   exe = "../executable/ss3_opt_osx_arm64",
   skipfinished = FALSE,
   show_in_console = TRUE# change to true to watch the output go past
@@ -374,6 +378,9 @@ r4ss::run(
 Read outputs from each scenario;
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+base.model0 <- SS_output(dir=dir0,
+                         covar=T,
+                         forecast=T)
 base.model1 <- SS_output(dir=dir1,
                          covar=T,
                          forecast=T)
@@ -390,139 +397,157 @@ base.model3 <- SS_output(dir=dir3,
 base.model4 <- SS_output(dir=dir4,
                          covar=T,
                          forecast=T)
-base.model2.3 <- SS_output(dir = dir2.3, 
-                           covar = TRUE,
-                           forecast = TRUE)
-
-base.model2.4 <- SS_output(dir = dir2.4, 
-                           covar = TRUE, 
-                           forecast = TRUE)
-
-base.model2.5 <- SS_output(dir = dir2.5, 
-                           covar = TRUE, 
-                           forecast = TRUE)
-
-base.model2.6 <- SS_output(dir = dir2.6, 
-                           covar = TRUE, 
-                           forecast = TRUE)
-
 ```
-
 
 \pagebreak
 
 # Results
 
-### Comparision between scenarios of modeling 
+## Comparision between scenarios of modeling 
 
-#### Population Variables
+### Population Variables
 
 The model allows for the estimation of various population-level variables, which are listed in Table \@ref{tab:Tab4}. These variables provide key insights into the status, structure, and dynamics of the population under study. They include metrics related to population abundance, biomass, age or size structure, recruitment, mortality, and other demographic or ecological characteristics that are essential for stock assessment and management decisions.
 
+
+
+```{r Tab4, message=FALSE, warning=FALSE, fig.cap="Population variables estimated by the SS3 model for wedge clam in Gulf of Cádiz"}
+extract_vars <- function(model, scen_name) {
+  model$derived_quants %>%
+    filter(str_detect(Label, "^(Recr_|SSB_|SPRratio_|Bratio_)")) %>%
+    mutate(Variable = case_when(
+      str_detect(Label, "^Recr_") ~ "Recruitment",
+      str_detect(Label, "^SSB_") ~ "SSB",
+      str_detect(Label, "^SPRratio_") ~ "SPRratio",
+      str_detect(Label, "^Bratio_") ~ "Depletion"
+    ),
+    Year = as.numeric(str_extract(Label, "[0-9]{4}")),
+    Scenario = scen_name) %>%
+    select(Year, Scenario, Variable, Value, sd = StdDev)
+}
+
+dq0 <- extract_vars(base.model0, "s0")
+dq1 <- extract_vars(base.model1, "s1")
+dq2 <- extract_vars(base.model2, "s2")
+dq3 <- extract_vars(base.model3, "s3")
+dq4 <- extract_vars(base.model4, "s4")
+
+all_df <- bind_rows(dq0, dq1, dq2, dq3, dq4)
+
+
+tabla_resumen <- all_df %>%
+  dplyr::group_by(Scenario, Variable, Year) %>%
+  dplyr::summarise(Media = mean(Value, na.rm = TRUE),
+            SDmedia = mean(sd, na.rm = TRUE),
+            .groups = "drop")
+
+tabla_resumen_texto <- tabla_resumen %>%
+  mutate(Media_SD = paste0(round(Media, 2), " (", round(SDmedia, 2), ")")) %>%
+  select(Scenario, Variable, Year, Media_SD) %>%
+  pivot_wider(
+    names_from = c(Scenario, Variable),
+    values_from = Media_SD,
+    names_sep = "_"
+  )
+```
 Main variables population by scenario (Figure \@ref(fig:popvar2))
 
-```{r}
-#extracting outputs
-outps1 <- base.model1$timeseries[1:26, 2:8]
-outps1 %>%
-  kbl(booktabs = TRUE,
-      format = "latex",
-    caption = "Main variables outputs from coquina assessment `s1`") %>%
- kable_styling(latex_options = c("scale_down",
-                                    "striped"),# Expande la tabla al ancho completo
-                font_size = 12)  #%>% 
-  #pack_rows(index = c("Estimation" = 1,
-   #                     "Prediction" = 45))
-
-outps2 <- base.model2$timeseries[1:27, 2:8]
-outps2 %>%
-  kbl(booktabs = TRUE,
-      format = "latex",
-    caption = "Main variables outputs from coquina assessment `s2`") %>%
-    kable_styling(latex_options = c("scale_down",
-                                    "striped"),# Expande la tabla al ancho completo
-                font_size = 12) #%>%
-  #pack_rows(index = c("Estimation" = 1,
-   #                     "Prediction" = 45))
-
-outps3 <- base.model3$timeseries[1:27, 2:8]
-
-outps3 %>%
-  kbl(booktabs = TRUE,
-      format = "latex",
-    caption = "Main variables outputs from coquina assessment `s3`") %>%
-  kable_styling(latex_options = c("scale_down",
-                                    "striped"),# Expande la tabla al ancho completo
-                font_size = 12) #%>% 
-  #pack_rows(index = c("Estimation" = 1,
-   #                     "Prediction" = 45))
-
-outps4 <- base.model4$timeseries[1:27, 2:8]
-
-outps4 %>%
-  kbl(booktabs = TRUE,
-      format = "latex",
-    caption = "Main variables outputs from coquina assessment `s4`") %>%
- kable_styling(latex_options = c("scale_down",
-                                    "striped"),# Expande la tabla al ancho completo
-                font_size = 12) #%>% 
-  #pack_rows(index = c("Estimation" = 1,
-   #                     "Prediction" = 45))
-```
-
-
-```{r popvar2, fig.height=3, fig.width=8, out.width="100%", fig.cap="Time series of different populations variables"}
-outpsall <- rbind(outps1,  
-                  outps2,
-                  outps3,
-                outps4)
-
-outps1$Model <- "s1"
-outps2$Model <- "s2"
-outps3$Model <- "s3"
-outps4$Model <- "s4"
-
-outpsall <- rbind(outps1,  
-                  outps2,
-                  outps3,
-                  outps4)
-
-
-outpsall_long <- outpsall %>%
-  pivot_longer(cols = c(Bio_all, 
-                        SpawnBio, Recruit_0), 
-               names_to = "Variable", values_to = "Value") %>% 
-  filter(Yr >= 2002, Yr <= 2023)
-
-alloutput <- ggplot(outpsall_long, 
-                    aes(x = Yr, 
-                        y = Value, 
-                        color = Model,
-                        group = Model)) +
-  #geom_point() +
-  geom_line()+
-  facet_wrap(~Variable, 
-             ncol = 4, 
-             scales = "free_y") + 
-  scale_color_manual(name = "Scenario",
-                     values = c( "s1" = "#cccccc",  
-                                 "s2" = "#999999",     
-                                 "s3" = "#ca0020",  
+```{r popvar2, fig.cap="Time series of different populations variables"}
+# Función de gráfico genérica
+plot_var <- function(df, var_name) {
+  p <- ggplot(df %>% filter(Variable == var_name),
+              aes(x = Year, y = Value, 
+                  color = Scenario, 
+                  fill = Scenario)) +
+    geom_line(size = 1) +
+    geom_ribbon(aes(ymin = Value - sd, 
+                    ymax = Value + sd), 
+                alpha = 0.2, color = NA) +
+    labs(y = var_name, x = "") +
+    scale_color_manual(values = c("s0" = "#000000",
+                                  "s1" = "#cccccc",
+                                  "s2" = "#999999",
+                                  "s3" = "#ca0020",
+                                  "s4" = "#666666")) +
+    scale_fill_manual(values = c("s0" = "#000000",
+                                 "s1" = "#cccccc",
+                                 "s2" = "#999999",
+                                 "s3" = "#ca0020",
                                  "s4" = "#666666")) +
-  labs(title = "", x = "", y = "") +
-  theme_few() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "bottom")
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          axis.text.x = element_text(angle = 90, hjust = 1)) +
+    xlim(2004, 2023)
+  
+  # Agregar líneas solo si la variable es Depletion
+  if (var_name == "Depletion") {
+    p <- p + 
+      geom_hline(yintercept = 0.4, 
+                 linetype = "dashed", 
+                 color = "black") +
+      geom_hline(yintercept = 0.2, 
+                 linetype = "dashed", color = "black")
+  }
+  
+  return(p)
+}
+# Graficar cada variable
+plot_recr <- plot_var(all_df, "Recruitment")
+plot_ssb  <- plot_var(all_df, "SSB")
+plot_spr  <- plot_var(all_df, "SPRratio")
+plot_depl  <- plot_var(all_df, "Depletion")
 
-alloutput
+ggarrange(plot_recr,
+          plot_ssb,
+          #plot_spr,
+          plot_depl,
+          ncol = 3, nrow = 1,
+          common.legend = TRUE, legend = "bottom")
+
 ```
 
+Mean and quantile of Main Population Variables per Scenario for Wedge Clam in Figure \@ref(fig:summaryplot)
+
+```{r summaryplot, out.width="100%", warning=FALSE, message=FALSE, fig.cap="R0 probability predicted by scenario"}
+
+summary_df <- all_df %>%
+  dplyr::group_by(Scenario, Variable) %>%
+  dplyr::summarise(mean_val = mean(Value, na.rm = TRUE), .groups = "drop")
+
+variables_to_plot <- c("Recruitment", "SSB", "Depletion")
+
+
+all_df_filtered <- all_df %>%
+  dplyr::filter(Variable %in% variables_to_plot) %>%
+  dplyr::mutate(Variable = factor(Variable, levels = variables_to_plot))
+
+summary_df_filtered <- summary_df %>%
+  dplyr::filter(Variable %in% variables_to_plot) %>%
+  dplyr::mutate(Variable = factor(Variable, levels = variables_to_plot))
+
+summarybox <- ggplot(all_df_filtered,
+       aes(x = Scenario, y = Value, fill = Scenario)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_point(data = summary_df_filtered,
+             aes(x = Scenario, y = mean_val),
+             color = "black", size = 3) +
+  facet_wrap(~ Variable, scales = "free_y", ncol = 3) +
+  scale_fill_manual(values = c("s0" = "#000000",
+                               "s1" = "#cccccc",
+                               "s2" = "#999999",
+                               "s3" = "#ca0020",
+                               "s4" = "#666666")) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 90, hjust = 1))
+summarybox
+```
 
 ```{r eval=FALSE}
 #read in all model runs
 #note if cover=T you need a hessian; if covar=F you do not need a hessian
 biglist1_4 <- SSgetoutput(keyvec = NULL,
-                       dirvec = c(
+                       dirvec = c(dir0,
                                   dir1,
                                   dir2,
                                   dir3,
@@ -533,7 +558,8 @@ biglist1_4 <- SSgetoutput(keyvec = NULL,
 summaryoutput1_4 <- SSsummarize(biglist1_4)
 
 SSplotComparisons(summaryoutput1_4,
-                  legendlabels = c("s1",
+                  legendlabels = c("s0",
+                                   "s1",
                  "s2",
                  "s3  (Ref Model)",
                  "s4"),
@@ -554,109 +580,15 @@ SSplotComparisons(summaryoutput1_4,
                  plotdir=fig_path)
 ```
 
+### Recruit deviation
 
-Mean and quantile of Main Population Variables per Scenario for Wedge Clam in Figure \@ref(fig:summaryplot)
+Figure \@ref(fig:devrec) shows the recruitment deviations across different scenarios. The plot displays the deviations of observed recruitment from the model-predicted recruitment over time for each scenario, allowing for a visual comparison of how recruitment patterns vary under different management strategies.
 
-```{r summaryplot, fig.height=3, fig.width=8, out.width="100%", warning=FALSE, message=FALSE, fig.cap="R0 probability predicted by scenario"}
-# 1. Crear el data.frame con nombres actualizados
-errt <- data.frame(
-  Bio_all_1 = base.model1$timeseries$Bio_all,
-  Bio_all_2 = base.model2$timeseries$Bio_all,
-  Bio_all_3 = base.model3$timeseries$Bio_all,
-  Bio_all_4 = base.model4$timeseries$Bio_all,
-  
-  # Bio_smry_1 = base.model1$timeseries$Bio_smry,
-  # Bio_smry_2 = base.model2$timeseries$Bio_smry,
-  # Bio_smry_3 = base.model3$timeseries$Bio_smry,
-  # Bio_smry_4 = base.model4$timeseries$Bio_smry,
-  
-  SpawnBio_1 = base.model1$timeseries$SpawnBio,
-  SpawnBio_2 = base.model2$timeseries$SpawnBio,
-  SpawnBio_3 = base.model3$timeseries$SpawnBio,
-  SpawnBio_4 = base.model4$timeseries$SpawnBio,
-  
-  Recruit_0_1 = base.model1$timeseries$Recruit_0,
-  Recruit_0_2 = base.model2$timeseries$Recruit_0,
-  Recruit_0_3 = base.model3$timeseries$Recruit_0,
-  Recruit_0_4 = base.model4$timeseries$Recruit_0
-)
-
-# 2. Pivotar a formato largo
-err_long <- errt %>%
-  pivot_longer(cols = everything(), 
-               names_to = "Variable_Model",
-               values_to = "Value")
-
-# 3. Separar variable y número de modelo
-err_long <- err_long %>%
-  extract(Variable_Model, into = c("Variable", "Model"), 
-          regex = "(.+?)_(\\d+)$")
-
-# 4. Renombrar modelos
-err_long <- err_long %>%
-  mutate(Model = case_when(
-    Model == "1" ~ "s1",
-    Model == "2" ~ "s2",
-    Model == "3" ~ "s3",
-    Model == "4" ~ "s4",
-    TRUE ~ Model
-  ))
-
-# 5. Graficar
-comsum <- ggplot(err_long, aes(x = Model, y = Value, fill = Model)) +
-  geom_boxplot(width = 0.5, outlier.shape = NA) +
-  facet_wrap(~Variable, ncol = 4, scales = "free_y") +
-  scale_fill_manual(name = "Scenario",
-                    values = c("s1" = "#cccccc", 
-                      "s2" = "#cccccc", 
-                      "s3" = "#ca0020", 
-                      "s4" = "#cccccc")) +
-  labs(title = "",
-       x = "",
-       y = "") +
-  theme_few() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "none")
-
-comsum
-
-
-# Alternative version with more customization
-comsum_violin_alt <- ggplot(err_long, aes(x = Model, y = Value, fill = Model)) +
-  geom_violin(alpha = 0.6, trim = FALSE, 
-              width = 0.4,
-              scale = "width") +
-  geom_boxplot(width = 0.15, outlier.shape = NA, 
-               alpha = 0.9, color = "black") +
-  stat_summary(fun = median, geom = "point",
-               size = 2, color = "black") +
-  facet_wrap(~Variable, ncol = 4, scales = "free_y",
-             labeller = labeller(Variable = c("Residuals" = "Residual Diagnostics",
-                                             "Length" = "Length Estimates (mm)"))) +
-  scale_fill_manual(name = "Scenario",
-                    values = c("s1" = "#cccccc", 
-                              "s2" = "#cccccc", 
-                              "s3" = "#ca0020", 
-                              "s4" = "#cccccc")) +
- labs(title = "",
-       x = "",
-       y = "t") +
-  theme_few() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0, 
-                                   size = 9),
-        axis.text.y = element_text(size = 9),
-        legend.position = "none",
-        panel.spacing = unit(0.8, "lines"),
-        strip.text = element_text(size = 11, face = "bold"),
-        plot.margin = margin(10, 10, 10, 10))
-
-comsum_violin_alt
-
-```
-#### Recruit deviation
-
-```{r warning=FALSE, fig.height=3, fig.width=8, out.width="100%"}
-dev1 <- base.model1$recruit[1:21,c(1,7)]%>% 
+```{r devrec, warning=FALSE, fig.height=3, fig.width=8, out.width="100%", fig.cap="Recruitment deviation across scenarios"}
+# Extraer datos de reclutamiento con escenario
+dev0 <- base.model0$recruit[1:21,c(1,7)] %>% 
+  mutate(Scenario = "s0")
+dev1 <- base.model1$recruit[1:21,c(1,7)] %>% 
   mutate(Scenario = "s1")
 dev2 <- base.model2$recruit[1:21,c(1,7)] %>% 
   mutate(Scenario = "s2")
@@ -665,9 +597,9 @@ dev3 <- base.model3$recruit[1:21,c(1,7)] %>%
 dev4 <- base.model4$recruit[1:21,c(1,7)] %>% 
   mutate(Scenario = "s4")
 
-
 # Lista de data.frames dev con nombres de escenarios
 data_list <- list(
+  s0 = dev0,
   s1 = dev1,
   s2 = dev2,
   s3 = dev3,
@@ -676,16 +608,16 @@ data_list <- list(
 
 # Títulos para cada escenario
 titles <- c(
+  "s0: 22 cm MLS",
   "s1: 23 cm MLS",
   "s2: 24 cm MLS",
   "s3: 25 cm MLS (Ref Model)",
-  "s3: 26 cm MLS"
+  "s4: 26 cm MLS"
 )
 
-# Unir todos los data.frames
-dev_all <- bind_rows(dev1, dev2, dev3, dev4)
+dev_all <- bind_rows(dev0, dev1, dev2, dev3, dev4)
 
-ggplot(dev_all, aes(x = Yr, y = dev, color = Scenario)) +
+recruitdev <- ggplot(dev_all, aes(x = Yr, y = dev, color = Scenario)) +
   geom_point(size = 1.5) +
   stat_smooth(method = "loess", 
               span = 0.1, 
@@ -694,56 +626,68 @@ ggplot(dev_all, aes(x = Yr, y = dev, color = Scenario)) +
               alpha = 0.2) +
   geom_hline(yintercept = 0, color = "red", linetype = "dotdash") +
   scale_color_manual(values = c(
+    "s0" = "#000000",  # negro para histórico
     "s1" = "#cccccc", 
     "s2" = "#cccccc", 
     "s3" = "#ca0020", 
     "s4" = "#cccccc"
   )) +
   scale_fill_manual(values = c(
+    "s0" = "#000000", 
     "s1" = "#cccccc", 
     "s2" = "#cccccc", 
     "s3" = "#ca0020", 
     "s4" = "#cccccc"
   )) +
-  labs(x = "", y = "Residuals", title = "Recruitment residuals across scenarios") +
+  labs(x = "", y = "Residuals", title = "") +
   ylim(-2, 2) +
   theme_few() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "bottom")
+recruitdev
 
 ```
-#### Autocorrelation in Recruit 
+### Autocorrelation in Recruit 
 
 To evaluate the temporal correlation structure of wedge clam recruitment under different model configurations, we performed an Autocorrelation Function (ACF) analysis (Figure \@ref(fig:acf)). The ACF measures the correlation between observations at different time lags, helping to assess whether recruitment estimates exhibit persistence or randomness across time.
 
 ```{r acf, fig.height=3, fig.width=8, out.width="100%", fig.cap="Autocorrelation in Recruit by scenario"}
+# Predicciones de reclutamiento
+recs0 <- base.model0$recruit$pred_recr
 recs1 <- base.model1$recruit$pred_recr
 recs2 <- base.model2$recruit$pred_recr
 recs3 <- base.model3$recruit$pred_recr
 recs4 <- base.model4$recruit$pred_recr
 
-p1 <- ggAcf(base.model1$recruit$pred_recr) +
+# Gráficos ACF por escenario
+p0 <- ggAcf(recs0) +
+  ggtitle("s0") +
+  theme_few()
+p1 <- ggAcf(recs1) +
   ggtitle("s1") +
   theme_few()
-p2 <- ggAcf(base.model2$recruit$pred_recr) +
+p2 <- ggAcf(recs2) +
   ggtitle("s2") +
   theme_few()
-p3 <- ggAcf(base.model3$recruit$pred_recr) +
+p3 <- ggAcf(recs3) +
   ggtitle("s3") +
   theme_few()
-p4 <- ggAcf(base.model4$recruit$pred_recr) +
-  ggtitle(label="s4") +
+p4 <- ggAcf(recs4) +
+  ggtitle("s4") +
   theme_few()
 
-ggpubr::ggarrange(p1, p2,p3,p4, ncol=4, nrow = 1, common.legend = T)
-
+# Combinar todos los gráficos
+ggpubr::ggarrange(p0, 
+                  p1, 
+                  p2, p3, 
+                  p4, ncol = 5, 
+                  nrow = 1, common.legend = TRUE)
 ```
 
-The autocorrelation function (ACF) plots of recruitment for models s1.1 through s1.4 reveal notable differences in the temporal structure of recruitment dynamics across scenarios. Models s1.1 and s1.3 exhibit strong positive autocorrelation at lag 1, with significant correlations persisting through the first 4 to 5 lags. This indicates a high degree of temporal dependence, suggesting that recruitment values in these models are influenced by values in previous years, and therefore, not independently distributed. Such behavior may reflect underlying biological or environmental processes that impose structure on recruitment variability, or it could be a consequence of how recruitment deviations were modeled. In contrast, model s1.2 shows very weak autocorrelation, with only lag 1 marginally exceeding the 95% confidence interval, implying that recruitment behaves more like a white noise process with little to no memory. Model s1.4 presents an intermediate pattern, with modest autocorrelation evident in the first three lags, which then declines rapidly. Overall, these results suggest that models s1.1 and s1.3 assume or produce more persistent recruitment dynamics, while s1.2 assumes nearly independent annual recruitment, and s1.4 falls somewhere in between. The presence or absence of autocorrelation has implications for how each model captures recruitment variability and its potential impact on stock dynamics and management strategy evaluations.
+The figure shows the autocorrelation functions (ACF) of predicted recruitment for the five scenarios (`s0` to `s4`). Each panel represents one scenario, with lag on the x-axis and autocorrelation on the y-axis. All scenarios show strong positive autocorrelation at lag 1, indicating that recruitment in one year is positively correlated with recruitment in the previous year. The decay rate and the magnitude of negative autocorrelation at intermediate lags are broadly similar across scenarios, indicating consistent short-term dynamics in recruitment deviations across management scenarios. In summary, recruitment residuals exhibit strong short-term autocorrelation, but the effect diminishes quickly after a few years, and the different MLS scenarios do not strongly alter this autocorrelation pattern.
 
 
-
-#### Productivity and Interannual Variability by Scenario
+### Productivity and Interannual Variability by Scenario
 
 Estimating the productivity of wedge clam is critical for understanding the species’ capacity to replenish its population in response to varying levels of spawning biomass. Productivity, defined as the ratio of recruitment to spawning stock biomass, provides a standardized measure of reproductive success and population resilience under different ecological and fishing pressures. Comparing productivity across scenarios—each representing different assumptions about environmental drivers, fishing mortality, or predator dynamics—enables a robust evaluation of how krill populations reflect this changes.
 
@@ -753,7 +697,7 @@ $$
 \text{Productivity}_{i,t} = \frac{\text{Recruitment}_{i,t}}{\text{SSB}_{i,t}}
 $$
 
-We also calculated the **interannual percentage change** in recruitment and SSB as:
+We also calculated the "interannual percentage change" in recruitment and SSB as:
 
 $$
 \text{Change in Recruitment}_{i,t} = \left( \frac{\text{Recruitment}_{i,t} - \text{Recruitment}_{i,t-1}}{\text{Recruitment}_{i,t-1}} \right) \times 100
@@ -765,15 +709,19 @@ $$
 
 These metrics allow us to analyze both the productivity and the temporal dynamics of the population under each scenario \( i \).
 
+Figure \@ref(fig:prod) illustrates the relationship between productivity (Recruitment/SSB) and relative spawning biomass (SSB/SSB_virgin) across different scenarios. Each point represents a year within a scenario, colored by the scenario to which it belongs. The plot highlights how productivity varies with changes in spawning biomass, providing insights into the stock-recruitment dynamics under different management strategies.
 
-```{r}
+```{r prod, warning=FALSE, message=FALSE, fig.cap="Productivity (ratio Recruitment SSB) vs. Relative Spawning Biomass (ratio SSB SSBvirgin) by scenario"}
+# Añadimos s0 al listado de escenarios
 escenarios <- list(
+  s0 = base.model0$SPAWN_RECR_CURVE,  # nuevo escenario
   s1 = base.model1$SPAWN_RECR_CURVE,
   s2 = base.model2$SPAWN_RECR_CURVE,
   s3 = base.model3$SPAWN_RECR_CURVE,
   s4 = base.model4$SPAWN_RECR_CURVE
 )
 
+# Calculamos resultados
 resultados <- imap_dfr(escenarios, function(df, nombre) {
   df %>%
     mutate(
@@ -784,20 +732,22 @@ resultados <- imap_dfr(escenarios, function(df, nombre) {
     )
 })
 
-# Colores: s1 en rojo destacado, otros en grises
+# Colores: s1 en rojo destacado, s0 en azul, otros en grises
 colores_escenarios <- c(
+  "s0" = "black",     # Azul destacado
   "s1" = "#ca0020",     # Rojo destacado
   "s2" = "#999999",     # Gris medio
   "s3" = "#cccccc",     # Gris claro
   "s4" = "#666666"      # Gris oscuro
 )
 
+# Graficamos
 prod <- ggplot(resultados, aes(x = `SSB/SSB_virgin`, y = Productividad, color = Scenario)) +
   geom_point(size = 1.1, alpha = 0.7) +
-  # Agregar puntos del s1 encima para destacarlos más
-  geom_point(data = filter(resultados, Scenario == "s1"), 
-             aes(x = `SSB/SSB_virgin`, y = Productividad), 
-             color = "#ca0020", size = 1.3, alpha = 1) +
+  # Agregar puntos del s1 y s0 encima para destacarlos más
+  geom_point(data = filter(resultados, Scenario %in% c("s1", "s0")), 
+             aes(x = `SSB/SSB_virgin`, y = Productividad, color = Scenario), 
+             size = 1.3, alpha = 1) +
   labs(
     y = "Recruitment / SSB",
     x = "SSB / SSB_virgin"
@@ -807,10 +757,10 @@ prod <- ggplot(resultados, aes(x = `SSB/SSB_virgin`, y = Productividad, color = 
   theme(legend.position = "bottom")
 
 prod
+
 ```
 
-
-#### Explotation Rate
+### Explotation Rate
 
 Explotation rato (havest rate) in Figure \@ref(fig:hrate)
 
@@ -819,23 +769,28 @@ df1 <- base.model1$exploitation[, c(1, 4)] %>% mutate(model = "s1")
 df2 <- base.model2$exploitation[, c(1, 4)] %>% mutate(model = "s2")
 df3 <- base.model3$exploitation[, c(1, 4)] %>% mutate(model = "s3")
 df4 <- base.model4$exploitation[, c(1, 4)] %>% mutate(model = "s4")
+df0 <- base.model0$exploitation[, c(1, 4)] %>% mutate(model = "s0")
 
-
-df_all <- bind_rows(df1, df2, df3, df4)
+# Unir todos los dataframes
+df_all <- bind_rows(df0, df1, df2, df3, df4)
 colnames(df_all) <- c("year", "exploitation_rate", "model")
 
+# Colores incluyendo s0
 colores <- c(
+  "s0" = "black",     # Azul destacado
   "s1" = "#ca0020",     # Rojo destacado
   "s2" = "#999999",     # Gris medio
   "s3" = "#cccccc",     # Gris claro
   "s4" = "#666666"      # Gris oscuro
 )
+
+# Graficar
 ggplot(df_all, aes(x = year, y = exploitation_rate, color = model)) +
   geom_line() +
   geom_point(size = 3, shape = 16) +
   scale_color_manual(values = colores) +
   scale_x_discrete(
-    breaks = seq(2000, 2023, by = 1)  # etiquetas cada 2 años
+    breaks = seq(2000, 2023, by = 1)  # etiquetas cada año
   ) +
   labs(
     title = "",
@@ -843,54 +798,15 @@ ggplot(df_all, aes(x = year, y = exploitation_rate, color = model)) +
     y = "Exploitation Rate",
     color = "Scenario"
   ) +
-  xlim(1997,2023)+
-  theme_bw()+
+  xlim(1997, 2023) +
+  theme_bw() +
   theme(
     axis.text.x = element_text(angle = 90, 
                                vjust = 0.5, 
                                hjust = 1)  # texto vertical
   )
-```
-#### Depletion
-
-```{r}
-s1 <- base.model1$sprseries$Deplete[1:20]
-s2 <- base.model2$sprseries$Deplete[1:20]
-s3 <- base.model3$sprseries$Deplete[1:20]
-s4 <- base.model4$sprseries$Deplete[1:20]
-
-years <- 2004:2023
-
-deplete_df <- data.frame(
-  Year = years,
-  s1 = s1,
-  s2 = s2,
-  s3 = s3,
-  s4 = s4
-) %>%
-  pivot_longer(cols = starts_with("s"), names_to = "Scenario", values_to = "Depletion")
-
-
-deple <- ggplot(deplete_df, aes(x = Year, y = Depletion, color = Scenario)) +
-  geom_line(size = 1) +
-  geom_hline(yintercept = 0.2, linetype = "dashed", color = "black") +
-  #geom_hline(yintercept = 0.4, linetype = "dashed", color = "black") +
-  scale_color_manual(name = "Scenario",
-                     values = c("s1" = "#cccccc",  
-                                "s2" = "#999999",     
-                                "s3" = "#ca0020",  
-                                "s4" = "#666666")) +
-  labs(title = "",
-       x = "",
-       y = "Depletion") +
-  scale_x_continuous(breaks = years) +
-  theme_bw() +
-  theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 90, hjust = 1))
-deple
 
 ```
-
 
 ## Diagnosis and robustness
 
@@ -906,63 +822,73 @@ A rigorous model diagnosis is essential to ensure the reliability and robustness
 
 This framework follows the recommendations outlined by @Carvalho2021b, aiming to enhance transparency and reproducibility in model evaluation.
 
-#### Convergence Criteria
+### Convergence Criteria
 
 The convergence criterion used for model calibration is set to a final threshold of **0.0001** (or equivalently **1.0e-04**). This criterion defines the minimum acceptable difference between successive model iterations. Convergence is considered achieved when the absolute change in the objective function value or key parameters falls below this threshold. A smaller convergence value ensures that the model achieves a high degree of accuracy and stability in its final estimates, indicating that further iterations are unlikely to result in significant changes to the parameter estimates.
 
-#### Pearson Residuals 
 
-This Figure \@ref(fig:pearson) provides a diagnostic assessment of the statistical performance of alternative model scenarios in fitting length composition data across years, fleets, and model assumptions. Across the four model scenarios, representing a baseline (2.5 cm as reference) and three values of Minimum Legal Size (MLS: 2.3 cm, 2.4 cm, and 2.6 cm), the reference model generally shows balanced and relatively small residuals across both commercial and populational fleets, suggesting a good fit to the observed data. However, as MLS increases, particularly in the 2.4 cm and 2.6 cm scenarios, a pattern of larger and more systematic residuals emerges, especially within the populational fleet. These patterns are most evident from 2016 onwards and are concentrated in mid-size length bins, indicating a potential mismatch between the model's structural assumptions and the actual population dynamics under stricter MLS regimes. Specifically, the models may be underestimating the proportion of intermediate-size individuals, suggesting limitations in capturing shifts in selectivity, growth, or recruitment processes. The commercial fleet, in contrast, shows more consistent residual behavior across all scenarios, which may imply a better alignment between model assumptions and observed exploitation dynamics. Temporally, early years (2013–2015) show relatively small and scattered residuals, but residual magnitude and clustering increase in later years, reinforcing the need to consider temporal variability in key processes. Overall, this residual analysis indicates a decline in model fit quality with increasing MLS, highlighting the need for more flexible model structures—such as time-varying selectivity or refined growth and recruitment models—to improve biological realism and ensure robust predictions in management strategy evaluations.
+### Length Expected
 
-#### Length Expected
+Figure \@ref(fig:lengthexp) illustrates the expected length distributions over time for fleet 1 (COMERCIAL) across different scenarios. The ridgeline plots display the expected length frequencies (Exp) for each year, with the x-axis representing length bins (Bin) and the y-axis representing years (Yr). Each panel corresponds to a different scenario, allowing for a comparative visualization of how length distributions evolve under varying management strategies. The red points indicate the weighted mean length for each year, providing a summary measure of central tendency within the length distributions. Additionally, vertical red lines denote the minimum legal size (MLS) for each scenario, highlighting how changes in MLS influence the observed length structure of the population over time.
 
-```{r}
-# Filtrar solo Fleet 1 y añadir etiqueta de escenario
-lend1 <- base.model1$lendbase %>%
-  filter(Fleet == 1) %>%
-  mutate(escenario = "Scenario 1")
-lend2 <- base.model2$lendbase %>%
-  filter(Fleet == 1) %>%
-  mutate(escenario = "Scenario 2")
-lend3 <- base.model3$lendbase %>%
-  filter(Fleet == 1) %>%
-  mutate(escenario = "Scenario 3")
-lend4 <- base.model4$lendbase %>%
-  filter(Fleet == 1) %>%
-  mutate(escenario = "Scenario 4")
+```{r lengthexp, fig.height=4, fig.width=12, out.width="100%", fig.cap="Expected length distribution by scenario and fleet"}
+# Preparar los datos por escenario y flota 1
+lend0 <- base.model0$lendbase %>%
+  filter(Fleet == 1) %>% mutate(escenario = "s0")
+lend1 <- base.model1$lendbase %>% 
+  filter(Fleet == 1) %>% mutate(escenario = "s1")
+lend2 <- base.model2$lendbase %>% 
+  filter(Fleet == 1) %>% mutate(escenario = "s2")
+lend3 <- base.model3$lendbase %>% 
+  filter(Fleet == 1) %>% mutate(escenario = "s3 (Ref Model)")
+lend4 <- base.model4$lendbase %>% 
+  filter(Fleet == 1) %>% mutate(escenario = "s4")
 
-# Combinar en un único data.frame
-lend_all <- bind_rows(lend1, lend2, lend3, lend4)
+# Combinar todos los escenarios
+lend_all <- bind_rows(lend0, lend1, lend2, lend3, lend4)
 
-# Calcular la talla media ponderada específica para cada año y escenario
+# Calcular la talla media ponderada específica por año y escenario
 mean_lengths <- lend_all %>%
   dplyr::group_by(Yr, escenario) %>%
   dplyr::summarise(mean_bin = weighted.mean(Bin, Exp), .groups = "drop")
 
-# Crear el gráfico
+# Definir las tallas mínimas por escenario (líneas verticales)
+vlines <- data.frame(
+  escenario = c("s0", "s1", "s2", "s3 (Ref Model)", "s4"),
+  xintercept = c(2.2, 2.3, 2.4, 2.5, 2.6)  # ajusta valores según corresponda
+)
+
+# Crear gráfico
 lengthexp <- ggplot(lend_all,
-       aes(x = Bin, y = factor(Yr), height = Exp, group = Yr)) +
-  geom_ridgeline(fill = "lightgrey", color = "black", alpha = 0.6, scale = 10) +
+       aes(x = Bin, y = factor(Yr), height = Exp, 
+           group = Yr)) +
+  geom_ridgeline(fill = "lightgrey", 
+                 color = "black", alpha = 0.6, scale = 10) +
   geom_point(data = mean_lengths, 
-            aes(x = mean_bin, y = factor(Yr)),
-            color = "red", size = 1.5,
-            inherit.aes = FALSE) +
-  facet_wrap(~ escenario, ncol=1) +
+             aes(x = mean_bin, y = factor(Yr)),
+             color = "red", size = 1.5,
+             inherit.aes = FALSE) +
+  geom_vline(data = vlines, aes(xintercept = xintercept), 
+             color = "red") +
+  facet_wrap(~ escenario, ncol = 5) +
   labs(title = "",
        x = "Length (mm)", y = "") +
   theme_minimal() +
   theme(panel.spacing = unit(1, "lines"),
         legend.position = "none",
-        axis.text.x = element_text(angle = 90, 
-                                   vjust = 0.5,
-                                   hjust = 1)) +
-  xlim(1.5,5) +
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  xlim(1.5, 5) +
   scale_y_discrete(breaks = function(x) x[seq(1, length(x), by = 3)])
+
+lengthexp
 ```
+### Pearson Residuals 
+
+This Figure \@ref(fig:pearson) provides a diagnostic assessment of the statistical performance of alternative model scenarios in fitting length composition data across years, fleets, and model assumptions. Across the four model scenarios, representing a baseline (2.5 cm as reference) and three values of Minimum Legal Size (MLS: 2.3 cm, 2.4 cm, and 2.6 cm), the reference model generally shows balanced and relatively small residuals across both commercial and populational fleets, suggesting a good fit to the observed data. However, as MLS increases, particularly in the 2.4 cm and 2.6 cm scenarios, a pattern of larger and more systematic residuals emerges, especially within the populational fleet. These patterns are most evident from 2016 onwards and are concentrated in mid-size length bins, indicating a potential mismatch between the model's structural assumptions and the actual population dynamics under stricter MLS regimes. Specifically, the models may be underestimating the proportion of intermediate-size individuals, suggesting limitations in capturing shifts in selectivity, growth, or recruitment processes. The commercial fleet, in contrast, shows more consistent residual behavior across all scenarios, which may imply a better alignment between model assumptions and observed exploitation dynamics. Temporally, early years (2013–2015) show relatively small and scattered residuals, but residual magnitude and clustering increase in later years, reinforcing the need to consider temporal variability in key processes. Overall, this residual analysis indicates a decline in model fit quality with increasing MLS, highlighting the need for more flexible model structures—such as time-varying selectivity or refined growth and recruitment models—to improve biological realism and ensure robust predictions in management strategy evaluations.
 
 
 
-```{r pearson, fig.height=6, fig.width=4, out.width="100%",  fig.cap="Pearson residual by scenario and fleet"}
+```{r pearson, out.width="100%",  fig.cap="Pearson residual by scenario and fleet"}
 create_heatmap_df <- function(df, model_name) {
   df %>%
     dplyr::filter(Pearson < 5) %>%
@@ -977,10 +903,11 @@ create_heatmap_df <- function(df, model_name) {
 
 
 df_all <- bind_rows(
-  create_heatmap_df(base.model1$lendbase, "s1: 23 mm MLS"),
-  create_heatmap_df(base.model2$lendbase, "s2: 24 mm MLS"),
-  create_heatmap_df(base.model3$lendbase, "s3: 25 mm MLS (Ref Model)"),
-  create_heatmap_df(base.model4$lendbase, "s3: 26 mm MLS")
+  create_heatmap_df(base.model0$lendbase, "s0:"),
+  create_heatmap_df(base.model1$lendbase, "s1:"),
+  create_heatmap_df(base.model2$lendbase, "s2"),
+  create_heatmap_df(base.model3$lendbase, "s3 (Ref Model)"),
+  create_heatmap_df(base.model4$lendbase, "s4")
 )
 
 years <- c(2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023)
@@ -999,40 +926,43 @@ resid_plot <- ggplot(df_summary,
   geom_ribbon(aes(ymin = mean_resid - sd_resid, 
                   ymax = mean_resid + sd_resid),
               alpha = 0.2, fill = "steelblue", color = NA) +
-  facet_wrap(~Model, ncol = 1) +
+  facet_wrap(~Model, ncol = 5) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   scale_x_continuous(breaks = seq(min(df_summary$Yr), 
                                   max(df_summary$Yr), 
-                                  by = 1)) +
+                                  by = 2)) +
   labs(x = "", y = "Residuals Pearson") +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
   )
-
+resid_plot
 ```
 
-```{r}
-ggarrange(resid_plot,
+```{r eval=FALSE}
+ggarrange(
           lengthexp,
-          ncol = 2, nrow = 1,
+          resid_plot,
+          ncol = 1, nrow = 2,
           widths = c(1, 0.6))
 ```
 
 
 ```{r}
 cpue_resid <- bind_rows(
-  base.model1$cpue %>% mutate(model = "s1.1"),
-  base.model2$cpue %>% mutate(model = "s1.2"),
-  base.model3$cpue %>% mutate(model = "s1.3"),
-  base.model4$cpue %>% mutate(model = "s1.4")
+  base.model0$cpue %>% mutate(model = "s0"),
+  base.model1$cpue %>% mutate(model = "s1"),
+  base.model2$cpue %>% mutate(model = "s2"),
+  base.model3$cpue %>% mutate(model = "s3"),
+  base.model4$cpue %>% mutate(model = "s4")
 )
 
 len_resid <- bind_rows(
-  base.model1$lendbase %>% mutate(model = "s1.1"),
-  base.model2$lendbase %>% mutate(model = "s1.2"),
-  base.model3$lendbase %>% mutate(model = "s1.3"),
-  base.model4$lendbase %>% mutate(model = "s1.4")
+   base.model0$lendbase %>% mutate(model = "s0"),
+   base.model1$lendbase %>% mutate(model = "s1"),
+  base.model2$lendbase %>% mutate(model = "s2"),
+  base.model3$lendbase %>% mutate(model = "s3"),
+  base.model4$lendbase %>% mutate(model = "s4")
 )
 
 cpue_df <- cpue_resid %>%
@@ -1068,23 +998,26 @@ resid_all <- resid_all %>%
 
 ```
 
-Also, we can check density of residual distribution in Figure \@ref(fig:resldens)
+<!-- Also, we can check density of residual distribution in Figure \@ref(fig:resldens) -->
 
-```{r resldens, fig.width=10, fig.height=6, out.width="100%", fig.cap="Density of residual distribution by scenarios in krill model"}
-ggplot(resid_all, aes(x = Obs - Exp, color = model)) +
-  geom_density(alpha = 0.5) +
-  facet_wrap(Fleet_name~type, scales = "free") +
-  labs(title = "Residual Distribution", 
-       x = "Residual (Obs - Exp)", 
-       y = "Density") +
-  scale_color_manual(name = "",
-                     values = c("s1.1" = "#ca0020",  
-                                "s1.2" = "#999999",  
-                                "s1.3" = "#cccccc",  
-                                "s1.4" = "#666666")) +
-  theme_minimal()
-```
-#### Residual consistency 
+<!-- ```{r resldens, fig.width=10, fig.height=6, out.width="100%", fig.cap="Density of residual distribution by scenarios in krill model"} -->
+<!-- ggplot(resid_all, aes(x = Obs - Exp, color = model)) + -->
+<!--   geom_density(alpha = 0.5) + -->
+<!--   facet_wrap(Fleet_name~type, scales = "free") + -->
+<!--   labs(title = "Residual Distribution",  -->
+<!--        x = "Residual (Obs - Exp)",  -->
+<!--        y = "Density") + -->
+<!--   scale_color_manual(name = "", -->
+<!--                      values = c("s0" = "black", -->
+<!--                                 "s1" = "#ca0020",   -->
+<!--                                 "s2" = "#999999",   -->
+<!--                                 "s3" = "#cccccc",   -->
+<!--                                 "s4" = "#666666")) + -->
+<!--   theme_minimal() -->
+<!-- ``` -->
+
+
+### Residual consistency 
 
 Residual analysis is a critical component of model diagnostics in stock assessments. It helps evaluate the fit of the model to observed data and detect potential biases or inconsistencies. This process is applied to both length composition data and abundance indices such as CPUE (Catch Per Unit Effort) and survey-derived estimates. For length composition data, residuals represent the difference between observed and model-predicted length distributions. The standardized residuals are calculated as the difference between observed and expected proportions at each length bin. These residuals are plotted by year to identify systematic trends, biases, or inconsistencies in the data. Ideally, they should be randomly distributed around zero, indicating no systematic over- or underestimation.  
 
@@ -1092,10 +1025,15 @@ For abundance indices such as CPUE and fishery-independent surveys, residuals ar
 
 Statistical diagnostics are also performed to check for autocorrelation in residuals, which can indicate potential model misspecifications. When mean residual values are close to zero, the model fit is considered unbiased. By integrating these residual analyses for both length and abundance indices, stock assessment models can be refined, improving their reliability and increasing confidence in the assessment results.
 
-In Length compositions
+In Length compositions, Figure \@ref(fig:pearsonresidlen) shows Pearson residuals for length compositions by scenario.
 
-```{r}
-par(mfrow = c(2, 4), mar = c(5, 4, 2, 1))
+```{r pearsonresidlen, message=FALSE, fig.cap="Pearson residuals for length compositions by scenario"}
+par(mfrow = c(2, 5), mar = c(5, 4, 2, 1))
+SSplotRunstest(base.model0,
+               subplots = "len",
+               add=T,
+               plot = TRUE,
+               plotdir = fig_path)
 SSplotRunstest(base.model1,
                subplots = "len",
                add=T,
@@ -1118,10 +1056,15 @@ SSplotRunstest(base.model4,
                plotdir = fig_path)
 ```
 
-In Index
+In Figure \@ref(fig:pearsonresidcpue) shows Pearson residuals for CPUE compositions by scenario.
 
-```{r}
-par(mfrow = c(2, 4), mar = c(5, 4, 2, 1))
+```{r pearsonresidcpue, message=FALSE, fig.cap="Pearson residuals for CPUE compositions by scenario"}
+par(mfrow = c(2, 5), mar = c(5, 4, 2, 1))
+SSplotRunstest(base.model0,
+               subplots = "cpue",
+               add=T,
+               plot = TRUE,
+               plotdir = fig_path)
 SSplotRunstest(base.model1,
                subplots = "cpue",
                add=T,
@@ -1145,9 +1088,9 @@ SSplotRunstest(base.model4,
 ```
 
 
-#### Residual Analysis and RMSE 
+### Residual Analysis and RMSE 
 
-Residual analysis of mean length data is a fundamental diagnostic tool in stock assessments. It helps evaluate whether the model provides an unbiased fit to the observed data and detects potential biases over time. In this figure, mean length residuals are plotted across years, differentiated by data source, including fishery-dependent (FISHERY) and fishery-independent (SURVEY) datasets, as well as predator-related observations (PREDATOR). The residuals represent the deviation of observed mean length from model-predicted values, standardized to facilitate interpretation.  
+Residual analysis of mean length data is a fundamental diagnostic tool in stock assessments. It helps evaluate whether the model provides an unbiased fit to the observed data and detects potential biases over time. In this figure, mean length residuals are plotted across years, differentiated by data source. The residuals represent the deviation of observed mean length from model-predicted values, standardized to facilitate interpretation.  
 
 The black line represents a locally estimated scatterplot smoothing (Loess) curve, which provides a trend line to visualize systematic deviations over time. The presence of persistent positive or negative trends in the residuals may indicate biases in the growth model, selectivity assumptions, or misrepresentation of recruitment variability. The gray bars highlight periods where residual variability is particularly high, suggesting potential inconsistencies between observed and predicted size structures.  
 
@@ -1156,7 +1099,10 @@ RMSE quantifies the overall deviation between observed and predicted values, pro
 By analyzing residual patterns and RMSE values, the model can be refined to improve the accuracy of mean length predictions, ultimately enhancing the reliability of stock assessment outcomes and management recommendations (Figure \@ref(fig:rmse1)).
 
 ```{r rmse1, fig.cap="Time series of RMSE of length compositions by scenario"}
-par(mfrow=c(2,2), mar=c(2,2,2,2))
+par(mfrow=c(2,3), mar=c(2,2,2,2))
+rmse0l <- SSplotJABBAres(base.model0,
+               subplots = "len",
+               add=T)
 rmse1l <- SSplotJABBAres(base.model1,
                subplots = "len",
                add=T)
@@ -1173,7 +1119,10 @@ rmse4l <- SSplotJABBAres(base.model4,
 Figure \@ref(fig:rmse2) show RMSE to index.
 
 ```{r rmse2, fig.cap="Time series of RMSE of CPUE compositions by scenario"}
-par(mfrow=c(2,2), mar=c(2,2,2,2))
+par(mfrow=c(2,3), mar=c(2,2,2,2))
+rmse0c <- SSplotJABBAres(base.model0,
+               subplots = "cpue",
+               add=T)
 rmse1c <- SSplotJABBAres(base.model1,
                subplots = "cpue",
                add=T)
@@ -1191,11 +1140,13 @@ Comparision of RMSE in each scenario
 
 ```{r}
 dfpearson_long <- data.frame(
-  Pearson = c(base.model1$lendbase$Pearson,
+  Pearson = c(base.model0$lendbase$Pearson,
+              base.model1$lendbase$Pearson,
               base.model2$lendbase$Pearson,
               base.model3$lendbase$Pearson,
               base.model4$lendbase$Pearson),
-  Scenario = factor(c(rep("s1", length(base.model1$lendbase$Pearson)),
+  Scenario = factor(c(rep("s0", length(base.model0$lendbase$Pearson)),
+                      rep("s1", length(base.model1$lendbase$Pearson)),
                       rep("s2", length(base.model2$lendbase$Pearson)),
                       rep("s3", length(base.model3$lendbase$Pearson)),
                       rep("s4", length(base.model4$lendbase$Pearson))))
@@ -1209,7 +1160,8 @@ pearson_plot <- ggplot(dfpearson_long, aes(x = Scenario,
   #geom_jitter(width = 0.01, alpha = 0.3) +
   theme_minimal() +
   scale_fill_manual(name = "Scenario",
-                    values = c("s1" = "#cccccc", 
+                    values = c("s0" = "#cccccc",
+                               "s1" = "#cccccc", 
                       "s2" = "#cccccc", 
                       "s3" = "#ca0020", 
                       "s4" = "#cccccc")) +
@@ -1220,6 +1172,7 @@ pearson_plot <- ggplot(dfpearson_long, aes(x = Scenario,
 
 ```{r}
 dfrmse <- data.frame(
+  s0 = as.numeric(base.model0$index_variance_tuning_check$RMSE),
   s1 = as.numeric(base.model1$index_variance_tuning_check$RMSE),
   s2 = as.numeric(base.model2$index_variance_tuning_check$RMSE[1:2]),
   s3 = as.numeric(base.model3$index_variance_tuning_check$RMSE[1:2]),
@@ -1246,7 +1199,8 @@ rmse <-ggplot(dfrmse_long, aes(x = variable,
   geom_jitter(width = 0.01, alpha = 0.3) +
   theme_minimal() +
   scale_fill_manual(name= "Scenario",
-                    values = c("s1" = "#cccccc", 
+                    values = c("s0" = "#cccccc",
+                               "s1" = "#cccccc", 
                       "s2" = "#cccccc", 
                       "s3" = "#ca0020", 
                       "s4" = "#cccccc")) +
@@ -1254,7 +1208,8 @@ rmse <-ggplot(dfrmse_long, aes(x = variable,
   theme(legend.position = "none")
 ```
 
-The Figure \@ref(fig:rmse3) reflects model performance across scenarios, aligning with previous residual diagnostics. Scenario s2 stands out with the lowest and most consistent RMSE values, suggesting a robust and stable fit. Scenario s3 also performs reasonably well, while s1 and s4—particularly s4—show higher and more variable RMSEs, indicating poorer and less reliable fits. These findings reinforce the idea that intermediate MLS configurations (s2, s3) yield better statistical performance, supporting more informed and defensible model choices in stock assessment. Dato mata relato.
+
+Model performance differed across scenarios (Figure \@ref(fig:rmse3)). RMSE values (left panel) were lowest under s0 and increased progressively through s1–s4, with higher medians and greater variability at larger MLS values. Scenario s3 (25 mm MLS, reference case) showed intermediate RMSE values relative to the other scenarios. Residual distributions (right panel) were centered around zero in all cases, with similar overall patterns across scenarios.
 
 
 ```{r rmse3, fig.cap="RMSE and Residual values for krill model evaluation across scenarios (s1.1-s1.4), highlighting precision and prediction errors."}
@@ -1263,17 +1218,9 @@ ggarrange(rmse,
           ncol=2)
 ```
 
+### Retrospective Analysis in Model Evaluation
 
-This boxplot compares a summary of the Root Mean Square Error (RMSE) across four different models (s1.1, s1.2, s1.3, and s1.4). RMSE serves as an indicator of model accuracy, with lower values representing better predictive performance.
-
-s1.1 exhibits the lowest median RMSE, suggesting it has the best overall fit among the four models. In contrast, Models 1.2, 1.3, and 1.4 show higher RMSE values, indicating comparatively lower predictive accuracy. The interquartile range (IQR) of these models is relatively similar, suggesting comparable variability in RMSE across models. Additionally, s1.1 has an outlier above 1.5 RMSE, which could indicate a case where the model's predictions deviated significantly from observed values.
-
-Overall, this analysis highlights that incorporating different environmental or predator-related variables in the models impacts their predictive ability. The differences in RMSE suggest that some models may overfit or underfit the recruitment patterns of krill, emphasizing the need to refine model selection based on ecological and statistical considerations.
-
-
-#### Retrospective Analysis in Model Evaluation
-
-Retrospective analyses provide insights into the differences in estimation patterns (underestimation or overestimation) among the models evaluated. These analyses assess the consistency and reliability of stock assessment models by systematically removing the most recent years of data and comparing the resulting estimates with the full dataset.  In this study, we conducted a retrospective analysis to examine the sensitivity of our recruitment and spawning stock biomass (SSB) estimates to the inclusion or exclusion of recent data. By applying this approach to multiple models, we identified potential biases and evaluated the stability of the recruitment estimates over time.  The retrospective patterns were assessed by calculating the relative error between the predictions of truncated datasets and the full dataset. These differences allowed us to detect trends in model performance, such as systematic overestimation or underestimation of key population parameters. 
+Retrospective analyses provide insights into the differences in estimation patterns (underestimation or overestimation) among the models evaluated. These analyses assess the consistency and reliability of stock assessment models by systematically removing the most recent years of data and comparing the resulting estimates with the full dataset.  In this study, we conducted a retrospective analysis to examine the sensitivity of our recruitment and spawning stock biomass (SSB) estimates to the inclusion or exclusion of recent data. By applying this approach to multiple models, we identified potential biases and evaluated the stability of the recruitment estimates over time.  
 
 ```{r eval=FALSE}
 #one by one
@@ -1286,7 +1233,8 @@ Retrospective analyses provide insights into the differences in estimation patte
 #     extras = "-nox",
 #     skipfinished = FALSE)
 
-directorios <- c("s1",
+directorios <- c("s0",
+                 "s1",
                  "s2",
                  "s3",
                  "s4")  
@@ -1304,6 +1252,12 @@ for (dir in directorios) {
 ```
 
 ```{r message=FALSE, warning=FALSE}
+retroModels0 <- SSgetoutput(dirvec=file.path(dir0,
+                                            "Retrospective",
+                                            paste("retro",0:-5,
+                                                  sep="")))
+
+retroSummary0 <- SSsummarize(retroModels0)
 #stest
 retroModels1 <- SSgetoutput(dirvec=file.path(dir1,
                                             "Retrospective",
@@ -1335,12 +1289,18 @@ retroSummary4 <- SSsummarize(retroModels4)
 ```
 
 
-Using `retro()` and `SSplotRetro()` functions, we obtain main results
+Using `retro()` and `SSplotRetro()` functions, we obtain main results from the retrospective analyses for each model scenario. The `retro()` function performs the retrospective analysis by creating subdirectories for each peel year, while `SSplotRetro()` generates plots to visualize the results. The `SSsummarize()` function compiles the outputs from multiple retrospective runs into a summary object for further analysis.
 
-Retrospective analysis for spawning biomass (Figure \@ref(fig:retrossb))
+Retrospective analysis for spawning biomass ar showing in (Figure \@ref(fig:retrossb)).
 
 ```{r retrossb, fig.cap="Retrospective analysis for spawning biomass by scenario in krill"}
-par(mfrow=c(2,2), mar=c(5,4,1,1)) 
+par(mfrow=c(2,3), mar=c(5,4,1,1)) 
+retro0 <- SSplotRetro(retroSummary0,
+            add=T,
+            forecast = F,
+            legend = T,
+            verbose=F,
+            subplots = c("SSB"))
 retro1 <- SSplotRetro(retroSummary1,
             add=T,
             forecast = F,
@@ -1370,7 +1330,13 @@ retro4 <- SSplotRetro(retroSummary4,
 Retrospective analysis for fishing mortality (Figure \@ref(fig:retrof))
 
 ```{r retrof, fig.cap="Retrospective analysis for fishing mortality by scenario in krill"}
-par(mfrow=c(2,2), mar=c(5,4,1,1)) 
+par(mfrow=c(2,3), mar=c(5,4,1,1)) 
+retro0 <- SSplotRetro(retroSummary0,
+            add=T,
+            forecast = F,
+            legend = T,
+            verbose=F,
+            subplots = c("F"))
 retro1 <- SSplotRetro(retroSummary1,
             add=T,
             forecast = F,
@@ -1399,8 +1365,15 @@ retro4 <- SSplotRetro(retroSummary4,
 
 
 ```{r}
-# Combine the results from all models into one table
 tablebias_combined <- bind_rows(
+  data.frame(Model = "s0", 
+             Quant = "SSB", 
+             Rho = SShcbias(retroSummary0, 
+                            quant = "SSB", verbose = F)),
+   data.frame(Model = "s0", 
+             Quant = "F", 
+             Rho = SShcbias(retroSummary0, 
+                            quant = "F", verbose = F)),
   data.frame(Model = "s1", 
              Quant = "SSB", 
              Rho = SShcbias(retroSummary1, 
@@ -1436,16 +1409,18 @@ tablebias_combined <- bind_rows(
 )
 ```
 
-Figure \@ref(fig:bias) presents the retrospective bias (*Rho*) in Spawning Stock Biomass (SSB) and Fishing Mortality (F) across different peel years (2019–2016) and for the combined period under four model scenarios (s1.1 to s1.4). In the SSB panel, all models exhibit negative *Rho* values across the years, indicating a downward bias. The magnitude of the bias varies among models, with s1.3 and s1.4 showing the most pronounced deviations. In the F panel, *Rho* values are consistently positive, suggesting an upward bias. The combined *Rho* values for each metric confirm these trends, showing persistent differences among model scenarios.
+Figure \@ref(fig:bias) presents the retrospective bias (*Rho*) in Spawning Stock Biomass (SSB) and Fishing Mortality (F) across different peel years (2019–2016) and for the combined period under four model scenarios (s0 to s4). In the SSB panel, all models exhibit negative *Rho* values across the years, indicating a downward bias.  In the F panel, *Rho* values are consistently positive, suggesting an upward bias. The combined *Rho* values for each metric confirm these trends, showing persistent differences among model scenarios.
 
 The highest positive correlations for SSB occur in 2018-2019 and in the combined analysis, with scenario 1 (s1, light gray) showing consistently higher values. Scenario 3 (s3, red) generally shows lower or more negative correlations across both metrics compared to other scenarios. Scenario 2 (s2, dark gray) and scenario 4 (s4, medium gray) exhibit intermediate values, with s4 often aligning closely with s1. These patterns suggest that model structure and assumptions significantly influence retrospective bias, with implications for stock assessment reliability and management decisions. 
 
 ```{r bias, fig.cap= "Summary of retrospective analisis by scenario in F and SSB"}
 tablebias_combined <- tablebias_combined %>%
-  mutate(Rho.peel = factor(Rho.peel, levels = unique(Rho.peel)))
+  mutate(Rho.peel = factor(Rho.peel,
+                           levels = unique(Rho.peel)))
 
 phoplot <- ggplot(tablebias_combined, aes(x = Rho.peel, 
-                                          y = Rho.Rho, group = Model,
+                                          y = Rho.Rho, 
+                                          group = Model,
                                           fill = Model)) +
   geom_point(size = 3, shape = 21, 
              color = "black",
@@ -1454,12 +1429,14 @@ phoplot <- ggplot(tablebias_combined, aes(x = Rho.peel,
   facet_wrap(~Quant, scales = "free_y") + 
   scale_fill_manual(name = "Scenario",
                     values =  c(
+                       "s0" = "black",
                        "s1" = "#cccccc",  
                                  "s2" = "#999999",     
                                  "s3" = "#ca0020",  
                                  "s4" = "#666666")) +
   scale_color_manual(name = "Scenario",
                      values = c(
+                       "s0" = "black",
                        "s1" = "#cccccc",  
                                  "s2" = "#999999",     
                                  "s3" = "#ca0020",  
@@ -1473,7 +1450,7 @@ phoplot <- ggplot(tablebias_combined, aes(x = Rho.peel,
 phoplot 
 
 ```
-See Table \@ref(tab:rhoparameters) for details.
+Table \@ref(tab:rhoparameters) show the *Rho* parameter by model and quantity (SSB and F) by scenario
 
 ```{r rhoparameters}
 kbl(tablebias_combined, 
@@ -1481,10 +1458,9 @@ kbl(tablebias_combined,
     format = "latex", 
     caption = "Rho parameter by model and quantity (SSB and F)" ) %>%
   kable_styling(latex_options = "HOLD_position")
-
 ```
 
-#### Hindcast Cross-Validation and Prediction Skill
+### Hindcast Cross-Validation and Prediction Skill
 
 The Hindcast Cross-Validation (HCxval) diagnostic in Stock Synthesis is implemented using the model outputs generated by the `r4ss::SS_doRetro()` and using `SSplotHCval()` function. This diagnostic evaluates the predictive performance of the model by comparing hindcast predictions with observed data. To assess prediction skill, we employ the Mean Absolute Scaled Error (MASE) as a robust metric. MASE is calculated by scaling the mean absolute error of the model predictions relative to the mean absolute error of a naïve baseline prediction. Specifically, the MASE score is computed as follows:
 
@@ -1493,6 +1469,16 @@ The Hindcast Cross-Validation (HCxval) diagnostic in Stock Synthesis is implemen
 - A MASE score less than 1 indicates that the model performs better than a random walk.
 - A MASE score of 0.5, for example, indicates that the model’s forecasts are twice as accurate as the naive baseline prediction, suggesting the model has predictive skill.
 
+
+Hindcast validation for `s0` (Figure \@ref(fig:hcval0))
+
+```{r hcval0, fig.cap="Hindcast validation for s0 by fleet"}
+par(mfrow=c(1,2), mar=c(5,4,2,1))
+hci0 = SSplotHCxval(retroSummary0, 
+                   add = T, 
+                   verbose = F, 
+                   legendcex = 0.7)
+```
 
 Hindcast validation for `s1.1` (Figure \@ref(fig:hcval1))
 
@@ -1535,179 +1521,13 @@ hci4 = SSplotHCxval(retroSummary4,
                    legendcex = 0.7) 
 ```
 
-
-<!-- ### Likelihood Profile  -->
-
-```{r eval=FALSE, echo = FALSE}
-# 1. Identificar el directorio donde se encuentra el modelo base ----
-dirname.model.run <- here("s1.1")
-# 2. Crear un nuevo directorio para el "Perfil_Verosimilitud"  
-dirname.R0.profile <- here("s1.1",
-                           "Perfil_Verosimilitud")
-dir.create(path=dirname.R0.profile, 
-           showWarnings = TRUE, 
-           recursive = TRUE)
-# 3. Crear un subdirectorio llamado "plots_Verosimilitud" ----
-plotdir=paste0(dirname.R0.profile, "/plots_Verosimilitud")
-dir.create(path=plotdir,
-           showWarnings = TRUE, 
-           recursive = TRUE)
-# 4. Crear un subdirectorio llamado "simple" ----
-reference.dir <- paste0(dirname.R0.profile,'/simple') 
-dir.create(path=reference.dir, showWarnings = TRUE, recursive = TRUE)
-# 5. Copiar el resultado del modelo base completo en este directorio ----
-file.copy(Sys.glob(paste(dirname.model.run, "*.*", sep="/"),
-                   dirmark = FALSE),
-                    reference.dir)
-# 6. Leer la salida del modelo base ----
-Base <- SS_output(dir=reference.dir,covar=T)
-# 7. Copiar los archivos necesarios de "simple" al directorio "Perfil_Verosimilitud" ----
-copy_SS_inputs(dir.old = reference.dir, 
-               dir.new =  dirname.R0.profile,
-               copy_exe = TRUE,
-               verbose = FALSE)
-# 8. Leer los archivos del modelo ----
-inputs <- r4ss::SS_read(dir = dirname.R0.profile)
-# 9. Editar el archivo control la fase de estimación recdev ----
-inputs$ctl$recdev_phase <- 1
-# 10. Editar el archivo starter para leer los valores de inicio ----
-inputs$start$init_values_src <- 0
-# 11. Vector de valores para el perfil ----
-R0.vec <- seq(18,30,1)  
-Nprof.R0 <- length(R0.vec)
-# 12. Cambiar el nombre del archivo control en el archivo starter.ss ----
-inputs$start$ctlfile <- "control_modified.ss" 
-# 13. Incluir prior_like para parámetros no estimados ----
-inputs$start$prior_like <- 1                                 
-# 14. Escribir los modelos modificados ----
-r4ss::SS_write(inputs, dir = dirname.R0.profile, overwrite = TRUE)
-# 15. Ejecutar la función profile() ----
-#?SS_profile()
-profile <- profile(dir=dirname.R0.profile, # directory
-                      exe="ss_osx",
-                      oldctlfile ="control.ss",
-                      newctlfile="control_modified.ss",
-                      string="SR_LN(R0)",
-                      profilevec=R0.vec)
-# 16. Leer los archivos de salida ----
-# (con nombres como Report1.sso, Report2.sso, etc.)
-prof.R0.models <- SSgetoutput(dirvec=dirname.R0.profile, 
-                              keyvec=1:Nprof.R0, 
-                              getcovar = FALSE) 
-# 17. Resumir las salidas con la función SSsummarize()  ----
-prof.R0.summary <- SSsummarize(prof.R0.models)
-# 18. Identificar los componentes de Verosimilitud ----
-mainlike_components         <- c('TOTAL',
-                                 "Survey", 
-                                 'Length_comp',
-                                 "Age_comp",
-                                 "Catch",
-                                 'Size_at_age',
-                                 'Recruitment') 
-mainlike_components_labels  <- c('Total likelihood',
-                                 'Index likelihood',
-                                 'Length likelihood',
-                                 "Age likelihood",
-                                 "Catch Likelihood",
-                                 'Size_at_age likelihood',
-                                 'Recruitment likelihood') 
-```
-
-
-```{r eval=FALSE, echo = FALSE}
-png(file.path(plotdir,"R0_profile_plot.png"),
-    width=7,
-    height=4.5,
-    res=300,
-    units='in')
-par(mar=c(5,4,1,1))
-SSplotProfile(prof.R0.summary,           # summary object
-              profile.string = "R0",     # substring of profile parameter
-              profile.label=expression(log(italic(R)[0])), 
-              ymax=2050,minfraction = 0.001,
-              pheight=4.5, 
-              print=FALSE, 
-              plotdir=plotdir, 
-              components = mainlike_components, 
-              component.labels = mainlike_components_labels,
-              add_cutoff = TRUE,
-              cutoff_prob = 0.95)
-
-Baseval <- round(Base$parameters$Value[grep("R0",Base$parameters$Label)],2)
-Baselab <- paste(Baseval,sep="")
-axis(1,at=Baseval,label=Baselab)
-abline(v = Baseval, lty=2)
-dev.off()
-```
-
-
-```{r eval=FALSE}
-# Comparación de series de tiempo 
-labs <- paste("SR_Ln(R0) = ",R0.vec)
-labs[which(round(R0.vec,2)==Baseval)] <- paste("SR_Ln(R0) = ",
-                                               Baseval,"(Base model)")
-
-SSplotComparisons(prof.R0.summary,
-                  legendlabels=labs,
-                  pheight=4.5,png=TRUE,
-                  plotdir=plotdir,
-                  legendloc='bottomleft')
-
-
-```
-
-
-```{r eval = FALSE}
-#piner Plot
-#### R0_profile_plot_Length_like ----
-png(file.path(plotdir,"R0_profile_plot_Length_like.png"),
-    width=7,
-    height=4.5,
-    res=300,
-    units='in')
-par(mar=c(5,4,1,1))
-PinerPlot(prof.R0.summary, 
-          profile.string = "R0", 
-          component = "Length_like",
-          main = "Changes in length-composition likelihoods by fleet",
-          add_cutoff = TRUE,
-          cutoff_prob = 0.95)
-Baseval <- round(Base$parameters$Value[grep("SR_LN",
-                                      Base$parameters$Label)],2)
-Baselab <- paste(Baseval,sep="")
-axis(1,at=Baseval,
-     label=Baselab)
-abline(v = Baseval, lty=2)
-dev.off()
-```
-
-
-```{r eval=FALSE}
-#### R0_profile_plot_Survey_like ----
-png(file.path(plotdir,"R0_profile_plot_Survey_like.png"),
-    width=7,
-    height=4.5,
-    res=300,
-    units='in')
-par(mar=c(5,4,1,1))
-PinerPlot(prof.R0.summary, 
-          profile.string = "R0", 
-          component = "Surv_like",
-          main = "Changes in Index likelihoods by fleet",
-          add_cutoff = TRUE,
-          cutoff_prob = 0.95, legendloc="topleft")
-Baseval <- round(Base$parameters$Value[grep("SR_LN",
-                                            Base$parameters$Label)],2)
-Baselab <- paste(Baseval,sep="")
-axis(1,at=Baseval,label=Baselab)
-abline(v = Baseval, lty=2)
-dev.off()
-```
-
+\pagebreak
 
 
 ```{r}
-
+# model01
+tablebias00 <- SShcbias(retroSummary0,quant="SSB",verbose=F)
+tablebias00a <- SShcbias(retroSummary0,quant="F",verbose=F)
 # model01
 tablebias01 <- SShcbias(retroSummary1,quant="SSB",verbose=F)
 tablebias01a <- SShcbias(retroSummary1,quant="F",verbose=F)
@@ -1725,6 +1545,23 @@ tablebias3a <- SShcbias(retroSummary3,quant="F",verbose=F)
 tablebias4 <- SShcbias(retroSummary4,quant="SSB",verbose=F)
 tablebias4a <- SShcbias(retroSummary4,quant="F",verbose=F)
 
+# Modelo s0
+diag0 <- data.frame(
+  Scenario = "s0",
+  Convergency = base.model0$maximum_gradient_component,
+  AIC = as.numeric(2 * (base.model0$N_estimated_parameters)[1] + 2 * base.model0$likelihoods_used[1, 1]),
+  Total_like = base.model0$likelihoods_used$values[rownames(base.model0$likelihoods_used) == "TOTAL"],
+  N_Params = as.numeric(base.model0$N_estimated_parameters[1]),
+  Survey_like = base.model0$likelihoods_used$values[rownames(base.model0$likelihoods_used) == "Survey"],
+  Length_comp_like = base.model0$likelihoods_used$values[rownames(base.model0$likelihoods_used) == "Length_comp"],
+  RMSE_index = rmse0c$RMSE.perc[rmse0c$indices == "Combined"],
+  RMSE_length = rmse0l$RMSE.perc[rmse0l$indices == "Combined"],
+  MASE = mean(hci0$MASE, na.rm = TRUE),
+  Retro_Rho_ssb = tablebias00[5, 3],
+  # Forecast_Rho_ssb = tablebias01[5, 4],
+  # Forecast_Rho_f = tablebias01a[5, 3],
+  Retro_Rho_f = tablebias00a[5, 4]
+)
 
 # Modelo s1.1
 diag1 <- data.frame(
@@ -1800,23 +1637,28 @@ diag4 <- data.frame(
 )
 
 
-diag_all <- rbind(diag1,
+diag_all <- rbind(diag0,
+                  diag1,
                   diag2, 
                   diag3, 
                   diag4)
 
 
 diag_tidy <- diag_all |>
-  pivot_longer(cols = -Scenario, names_to = "Description", values_to = "Value") |>
-  pivot_wider(names_from = Scenario, values_from = Value)
+  pivot_longer(cols = -Scenario, 
+               names_to = "Description", 
+               values_to = "Value") |>
+  pivot_wider(names_from = Scenario, 
+              values_from = Value)
 
 diag_tidy[, 2:5] <- lapply(diag_tidy[, 2:5], function(x) as.numeric(format(round(x, 3), nsmall = 3)))
 #write.csv(diag_tidy, "Model_Diagnosis_Results.csv", row.names = FALSE)
 ```
 
-See Table \@ref(tab:likecom) for details. 
 
-```{r likecom}
+See Table \@ref(tab:likecom) for a summary of model diagnostics across the five scenarios evaluated for *Donax trunculus*. The diagnostics include convergence metrics, Akaike Information Criterion (AIC), total likelihood, number of estimated parameters, survey and length composition likelihoods, RMSE for index and length data, Mean Absolute Scaled Error (MASE) from hindcast cross-validation, and retrospective bias (Rho) for spawning stock biomass (SSB) and fishing mortality (F).
+
+```{r likecom, fig.cap="Model Diagnosis Results"}
 diag_tidy %>%
   kbl(digits = 3, 
       caption = "Model Diagnosis Results",
@@ -1827,46 +1669,228 @@ diag_tidy %>%
                 position = "center") %>%
   row_spec(0, bold = TRUE)  # Encabezados en negrita
 ```
-#### Likelihood tables
 
+### Likelihood tables
+
+The Figure \@ref(fig:likecompo2) illustrates the breakdown of the total likelihood by component across different modeling scenarios for *Donax trunculus*. Each bar represents the negative log-likelihood for a specific component (e.g., **TOTAL**, **Survey**, **Recruitment**, **Length composition**, **Equil_catch**, **Catch**) and is color-coded by scenario.
 
 ```{r likecompo2, fig.width=7, fig.height=3, fig.cap="total likelihood composition by scenario"}
+# Preparar datos para cada escenario
+df0 <- base.model0$likelihoods_used %>%
+  select(values) %>%
+  mutate(Componente = rownames(base.model0$likelihoods_used), Modelo = "s0")
+
 df1 <- base.model1$likelihoods_used %>%
   select(values) %>%
   mutate(Componente = rownames(base.model1$likelihoods_used), Modelo = "s1")
+
 df2 <- base.model2$likelihoods_used %>%
   select(values) %>%
   mutate(Componente = rownames(base.model2$likelihoods_used), Modelo = "s2")
+
 df3 <- base.model3$likelihoods_used %>%
   select(values) %>%
   mutate(Componente = rownames(base.model3$likelihoods_used), Modelo = "s3")
+
 df4 <- base.model4$likelihoods_used %>%
   select(values) %>%
   mutate(Componente = rownames(base.model4$likelihoods_used), Modelo = "s4")
 
-df <- bind_rows(df1, 
-                df2,
-                df3,
-                df4)
-ggplot(df %>% 
-         filter(values > 1), aes(x = Componente, y = values, fill = Modelo)) +
-  geom_col(position = position_dodge(), width = 0.7) +  
+# Unir todos los escenarios
+df <- bind_rows(df0, df1, df2, df3, df4)
+
+# Graficar
+ggplot(df %>% filter(values > 1), aes(x = Componente, y = values, fill = Modelo)) +
+  geom_col(position = position_dodge(), width = 0.7) +
   theme_few() +
-  coord_flip() +  
-  scale_fill_manual(name= "Scenario",
+  coord_flip() +
+  scale_fill_manual(name = "Scenario",
                     values = c(
-                      "s1" = "#ca0020", 
-                      "s2" = "#999999", 
-                      "s3" = "#cccccc", 
-                      "s4" = "#666666")) + 
+                     "s0" = "black",
+                       "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")) +
   labs(x = "",
        y = "Log-Normal Likelihood", 
-       title = "") 
+       title = "")
+
 ```
-Figure \@ref(fig:likecompo2) shows the contribution of different data components to the overall log-normal likelihood across four modeling scenarios (*s1–s4*) for *Donax trunculus*. Each bar represents the negative log-likelihood for a specific component (e.g., **TOTAL**, **Survey**, **Recruitment**, **Length composition**, **Equil_catch**, **Catch**) and is color-coded by scenario.
 
-Scenario *s1* consistently exhibits the lowest total negative log-likelihood, indicating the best overall fit among the four scenarios. In contrast, *s4* shows the highest total, suggesting poorer agreement with the observed data. The **Survey** and **TOTAL** components dominate the likelihood, meaning they strongly influence the overall model fit. Differences among scenarios are most pronounced for **Length composition** and **Recruitment**, implying that these components are sensitive to scenario assumptions or parameterization. Lower likelihood values indicate better consistency between model predictions and data, suggesting that *s1* represents the most plausible set of assumptions for the wedge clam population. Components with large differences across scenarios highlight areas where model uncertainty is greatest and may guide further data collection or model refinement. 
+Figure \@ref(fig:likecompo2) shows the contribution of different data components to the overall log-normal likelihood across four modeling scenarios (*s0–s4*) for *Donax trunculus*. Each bar represents the negative log-likelihood for a specific component (e.g., **TOTAL**, **Survey**, **Recruitment**, **Length composition**, **Equil_catch**, **Catch**) and is color-coded by scenario.
 
+Scenario *s2* and *s3* consistently exhibits the lowest total negative log-likelihood, indicating the best overall fit among the four scenarios. In contrast, *s0* and *s4* shows the highest total, suggesting poorer agreement with the observed data. The **Survey** and **TOTAL** components dominate the likelihood, meaning they strongly influence the overall model fit. Differences among scenarios are most pronounced for **Length composition** and **Recruitment**, implying that these components are sensitive to scenario assumptions or parameterization. Lower likelihood values indicate better consistency between model predictions and data, suggesting that *s2* represents the most plausible set of assumptions for the wedge clam population. Components with large differences across scenarios highlight areas where model uncertainty is greatest and may guide further data collection or model refinement. 
+
+
+<!--  ### Likelihood Profile  --> 
+
+<!-- ```{r eval=FALSE, echo = FALSE} -->
+<!-- # 1. Identificar el directorio donde se encuentra el modelo base ---- -->
+<!-- dirname.model.run <- here("s1.1") -->
+<!-- # 2. Crear un nuevo directorio para el "Perfil_Verosimilitud"   -->
+<!-- dirname.R0.profile <- here("s1.1", -->
+<!--                            "Perfil_Verosimilitud") -->
+<!-- dir.create(path=dirname.R0.profile,  -->
+<!--            showWarnings = TRUE,  -->
+<!--            recursive = TRUE) -->
+<!-- # 3. Crear un subdirectorio llamado "plots_Verosimilitud" ---- -->
+<!-- plotdir=paste0(dirname.R0.profile, "/plots_Verosimilitud") -->
+<!-- dir.create(path=plotdir, -->
+<!--            showWarnings = TRUE,  -->
+<!--            recursive = TRUE) -->
+<!-- # 4. Crear un subdirectorio llamado "simple" ---- -->
+<!-- reference.dir <- paste0(dirname.R0.profile,'/simple')  -->
+<!-- dir.create(path=reference.dir, showWarnings = TRUE, recursive = TRUE) -->
+<!-- # 5. Copiar el resultado del modelo base completo en este directorio ---- -->
+<!-- file.copy(Sys.glob(paste(dirname.model.run, "*.*", sep="/"), -->
+<!--                    dirmark = FALSE), -->
+<!--                     reference.dir) -->
+<!-- # 6. Leer la salida del modelo base ---- -->
+<!-- Base <- SS_output(dir=reference.dir,covar=T) -->
+<!-- # 7. Copiar los archivos necesarios de "simple" al directorio "Perfil_Verosimilitud" ---- -->
+<!-- copy_SS_inputs(dir.old = reference.dir,  -->
+<!--                dir.new =  dirname.R0.profile, -->
+<!--                copy_exe = TRUE, -->
+<!--                verbose = FALSE) -->
+<!-- # 8. Leer los archivos del modelo ---- -->
+<!-- inputs <- r4ss::SS_read(dir = dirname.R0.profile) -->
+<!-- # 9. Editar el archivo control la fase de estimación recdev ---- -->
+<!-- inputs$ctl$recdev_phase <- 1 -->
+<!-- # 10. Editar el archivo starter para leer los valores de inicio ---- -->
+<!-- inputs$start$init_values_src <- 0 -->
+<!-- # 11. Vector de valores para el perfil ---- -->
+<!-- R0.vec <- seq(18,30,1)   -->
+<!-- Nprof.R0 <- length(R0.vec) -->
+<!-- # 12. Cambiar el nombre del archivo control en el archivo starter.ss ---- -->
+<!-- inputs$start$ctlfile <- "control_modified.ss"  -->
+<!-- # 13. Incluir prior_like para parámetros no estimados ---- -->
+<!-- inputs$start$prior_like <- 1                                  -->
+<!-- # 14. Escribir los modelos modificados ---- -->
+<!-- r4ss::SS_write(inputs, dir = dirname.R0.profile, overwrite = TRUE) -->
+<!-- # 15. Ejecutar la función profile() ---- -->
+<!-- #?SS_profile() -->
+<!-- profile <- profile(dir=dirname.R0.profile, # directory -->
+<!--                       exe="ss_osx", -->
+<!--                       oldctlfile ="control.ss", -->
+<!--                       newctlfile="control_modified.ss", -->
+<!--                       string="SR_LN(R0)", -->
+<!--                       profilevec=R0.vec) -->
+<!-- # 16. Leer los archivos de salida ---- -->
+<!-- # (con nombres como Report1.sso, Report2.sso, etc.) -->
+<!-- prof.R0.models <- SSgetoutput(dirvec=dirname.R0.profile,  -->
+<!--                               keyvec=1:Nprof.R0,  -->
+<!--                               getcovar = FALSE)  -->
+<!-- # 17. Resumir las salidas con la función SSsummarize()  ---- -->
+<!-- prof.R0.summary <- SSsummarize(prof.R0.models) -->
+<!-- # 18. Identificar los componentes de Verosimilitud ---- -->
+<!-- mainlike_components         <- c('TOTAL', -->
+<!--                                  "Survey",  -->
+<!--                                  'Length_comp', -->
+<!--                                  "Age_comp", -->
+<!--                                  "Catch", -->
+<!--                                  'Size_at_age', -->
+<!--                                  'Recruitment')  -->
+<!-- mainlike_components_labels  <- c('Total likelihood', -->
+<!--                                  'Index likelihood', -->
+<!--                                  'Length likelihood', -->
+<!--                                  "Age likelihood", -->
+<!--                                  "Catch Likelihood", -->
+<!--                                  'Size_at_age likelihood', -->
+<!--                                  'Recruitment likelihood')  -->
+<!-- ``` -->
+
+
+<!-- ```{r eval=FALSE, echo = FALSE} -->
+<!-- png(file.path(plotdir,"R0_profile_plot.png"), -->
+<!--     width=7, -->
+<!--     height=4.5, -->
+<!--     res=300, -->
+<!--     units='in') -->
+<!-- par(mar=c(5,4,1,1)) -->
+<!-- SSplotProfile(prof.R0.summary,           # summary object -->
+<!--               profile.string = "R0",     # substring of profile parameter -->
+<!--               profile.label=expression(log(italic(R)[0])),  -->
+<!--               ymax=2050,minfraction = 0.001, -->
+<!--               pheight=4.5,  -->
+<!--               print=FALSE,  -->
+<!--               plotdir=plotdir,  -->
+<!--               components = mainlike_components,  -->
+<!--               component.labels = mainlike_components_labels, -->
+<!--               add_cutoff = TRUE, -->
+<!--               cutoff_prob = 0.95) -->
+
+<!-- Baseval <- round(Base$parameters$Value[grep("R0",Base$parameters$Label)],2) -->
+<!-- Baselab <- paste(Baseval,sep="") -->
+<!-- axis(1,at=Baseval,label=Baselab) -->
+<!-- abline(v = Baseval, lty=2) -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+
+<!-- ```{r eval=FALSE} -->
+<!-- # Comparación de series de tiempo  -->
+<!-- labs <- paste("SR_Ln(R0) = ",R0.vec) -->
+<!-- labs[which(round(R0.vec,2)==Baseval)] <- paste("SR_Ln(R0) = ", -->
+<!--                                                Baseval,"(Base model)") -->
+
+<!-- SSplotComparisons(prof.R0.summary, -->
+<!--                   legendlabels=labs, -->
+<!--                   pheight=4.5,png=TRUE, -->
+<!--                   plotdir=plotdir, -->
+<!--                   legendloc='bottomleft') -->
+
+
+<!-- ``` -->
+
+
+<!-- ```{r eval = FALSE} -->
+<!-- #piner Plot -->
+<!-- #### R0_profile_plot_Length_like ---- -->
+<!-- png(file.path(plotdir,"R0_profile_plot_Length_like.png"), -->
+<!--     width=7, -->
+<!--     height=4.5, -->
+<!--     res=300, -->
+<!--     units='in') -->
+<!-- par(mar=c(5,4,1,1)) -->
+<!-- PinerPlot(prof.R0.summary,  -->
+<!--           profile.string = "R0",  -->
+<!--           component = "Length_like", -->
+<!--           main = "Changes in length-composition likelihoods by fleet", -->
+<!--           add_cutoff = TRUE, -->
+<!--           cutoff_prob = 0.95) -->
+<!-- Baseval <- round(Base$parameters$Value[grep("SR_LN", -->
+<!--                                       Base$parameters$Label)],2) -->
+<!-- Baselab <- paste(Baseval,sep="") -->
+<!-- axis(1,at=Baseval, -->
+<!--      label=Baselab) -->
+<!-- abline(v = Baseval, lty=2) -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+
+<!-- ```{r eval=FALSE} -->
+<!-- #### R0_profile_plot_Survey_like ---- -->
+<!-- png(file.path(plotdir,"R0_profile_plot_Survey_like.png"), -->
+<!--     width=7, -->
+<!--     height=4.5, -->
+<!--     res=300, -->
+<!--     units='in') -->
+<!-- par(mar=c(5,4,1,1)) -->
+<!-- PinerPlot(prof.R0.summary,  -->
+<!--           profile.string = "R0",  -->
+<!--           component = "Surv_like", -->
+<!--           main = "Changes in Index likelihoods by fleet", -->
+<!--           add_cutoff = TRUE, -->
+<!--           cutoff_prob = 0.95, legendloc="topleft") -->
+<!-- Baseval <- round(Base$parameters$Value[grep("SR_LN", -->
+<!--                                             Base$parameters$Label)],2) -->
+<!-- Baselab <- paste(Baseval,sep="") -->
+<!-- axis(1,at=Baseval,label=Baselab) -->
+<!-- abline(v = Baseval, lty=2) -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+\pagebreak
 
 ## Statistics analisys differences bewteen models
 
@@ -1917,13 +1941,13 @@ As shown in Table \@ref(tab:residual-summary), the residuals exhibit different s
 
 
 ```{r residual-summary, message=FALSE, warning=FALSE}
-tabla_resumen <- resid_stats %>%
+tabla_stadisresumen <- resid_stats %>%
   left_join(shapiro_p, by = c("type", "model")) %>%
   left_join(ljung_p, by = c("type", "model")) %>%
   left_join(bp_p, by = c("type", "model")) %>%
   mutate(across(where(is.numeric), ~ round(.x, 5)))
 
-tabla_resumen %>%
+tabla_stadisresumen %>%
   kbl(caption = "Summary statistics and residual diagnostic tests by type and model",
       digits = 5,  # Redondeo a 5 decimales
       align = "c",  # Centrado
@@ -1935,225 +1959,303 @@ tabla_resumen %>%
   row_spec(0, bold = TRUE) %>%  # Encabezados en negrita
   column_spec(1, bold = TRUE)   # Primera columna en negrita (opcional)
 ```
-With population variables
 
-```{r}
-# ANOVA para Bio_all entre Model
-anova_bio <- aov(Bio_all ~ Model, data = outpsall)
-summary(anova_bio)
+\pagebreak
 
-# ANOVA para Recruit_0 entre Model
-anova_rec <- aov(Recruit_0 ~ Model, data = outpsall)
-summary(anova_rec)
+Statistical differences between scenarios in terms of biomass and recruitment were evaluated using analysis of variance (ANOVA). The ANOVA tests whether the means of these variables differ significantly across the different model scenarios. The results are summarized in Table \@ref(tab:anova-results). Used `tabla_resumen`object in the previous section that contains the mean values of key population indicators (SSB, Recruitment, Depletion, SPRratio) for each scenario.
+
+```{r anova-results, message=FALSE, warning=FALSE, fig.cap ="ANOVA results for key population indicators"}
+variables <- unique(tabla_resumen$Variable)
+
+models <- lapply(variables, function(var) {
+  aov(Media ~ Scenario, data = filter(tabla_resumen, Variable == var))
+})
+
+names(models) <- variables
+
+ms_table <- modelsummary(models, statistic = "p.value", 
+                         output = "data.frame") %>%
+  select(-part)
+
+ms_table %>%
+  kable(caption = "ANOVA results for key population indicators", 
+        digits = 2) %>%
+  kable_styling(full_width = FALSE,
+                position = "center",
+                bootstrap_options = c("striped", "hover"))
+
 ```
+The ANOVA results show that the impact of scenarios differs across variables. SSB (Spawning Stock Biomass) is highly significantly affected by scenario (p < 0.001), with scenarios explaining 33% of its variation, indicating a strong effect. Recruitment and SPRratio also show significant differences between scenarios (p = 0.008 and p = 0.026, respectively), but the proportion of variance explained is modest (around 9–10%). In contrast, Depletion does not differ significantly between scenarios (p = 0.061), and only 7% of its variation is explained, suggesting a minimal effect. Overall, scenarios have the strongest influence on SSB, moderate effects on Recruitment and SPRratio, and little impact on Depletion.
 
-Biomass trend between scenarios.
 
-```{r}
-# Crear variable numérica
-outpsall$Model_num <- as.numeric(factor(outpsall$Model, levels = c("s1","s2","s3","s4")))
+Statistical summary differences in population variables between scenarios in Figure \@ref(fig:anova-plots). Linear regression lines with confidence intervals are overlaid on the scatter plots to illustrate trends across scenarios. The regression statistics (intercept, slope, p-value) are annotated on each plot to quantify the strength and significance of these trends.
 
-fit_rec <- lm(Bio_all ~ Model_num, data = outpsall)
-summary(fit_rec)
+```{r anova-plots, message=FALSE, fig.cap="Trends in population indicators across scenarios with linear regression fits"}
+tabla_resumen <- tabla_resumen %>%
+  mutate(Scenario_num = as.numeric(factor(Scenario, levels = c("s0","s1","s2","s3","s4"))))
 
-intercept <- coef(fit_rec)[1]
-slope <- coef(fit_rec)[2]
-pval <- summary(fit_rec)$coefficients[2,4]
+variables <- unique(tabla_resumen$Variable)
 
-ggplot(outpsall, aes(x = Model_num, y = Bio_all)) +
-  geom_point(size = 2) +  
-  geom_smooth(method = "lm", se = TRUE, color = "red") +  
-  scale_x_continuous(breaks = 1:4, labels = c("s1","s2","s3","s4")) +
-  labs(x = "", y = "Recruit", title = "") +
-  annotate("text", x = 2.5, y = max(outpsall$Bio_all)*0.9,
-           label = paste0("Intercept = ", round(intercept,1),
-                          "\nSlope = ", round(slope,1),
-                          "\nP-value = ", round(pval,3)),
-           color = "black", hjust = 0.5)+
-  theme_bw()
+plots <- list()
+
+colors_scenario <- c("s0" = "black",
+                       "s1" = "#cccccc",  
+                                 "s2" = "#999999",     
+                                 "s3" = "#ca0020",  
+                                 "s4" = "#666666")
+
+for (var in variables) {
+  df_var <- filter(tabla_resumen, Variable == var)
+  
+  fit <- lm(Media ~ Scenario_num, data = df_var)
+  intercept <- coef(fit)[1]
+  slope <- coef(fit)[2]
+  pval <- summary(fit)$coefficients[2,4]
+  
+  p <- ggplot(df_var, aes(x = Scenario_num, y = Media, color = Scenario)) +
+    geom_point(size = 2, alpha = 0.7) +
+    geom_smooth(method = "lm", se = TRUE, color = "black") +
+    scale_x_continuous(breaks = 1:5, labels = c("s0","s1","s2","s3","s4")) +
+    scale_color_manual(values = colors_scenario) +
+    labs(x = "Scenario", y = var, title = var) +
+    annotate("text", x = 2.5, y = max(df_var$Media)*0.9,
+             label = paste0("Intercept = ", round(intercept,2),
+                            "\nSlope = ", round(slope,2),
+                            "\nP-value = ", signif(pval,3)),
+             color = "blue", hjust = 0.5, size=3) +
+    theme(legend.position =  "none") +
+    theme_bw()
+  
+  plots[[var]] <- p
+}
+
+plots_noleg <- lapply(plots[c( "Recruitment",
+                               "SSB", 
+                               "Depletion")], 
+                      function(p) p + 
+                        theme(legend.position = "none"))
+
+ggarrange(plotlist = plots_noleg,
+          ncol = 3, nrow = 1)
+
 ```
 
 ## Economics trade offs
 
-#### Economics Vulnerability index
+### Economic Vulnerability Index
 
-La lógica es:
+The logic is:
 
-1. **Ingresos** = precio × captura.
-2. **Disponibilidad del recurso** = biomasa (proxy de sostenibilidad).
-3. **Eficiencia/viabilidad** = ingresos ajustados por el estado del stock.
+1. **Revenue** = price × catch.
+2. **Resource availability** = biomass (as a proxy for sustainability).
+3. **Efficiency/viability** = revenue adjusted by stock status.
 
-Un esquema sencillo podría ser:
+A simple formulation could be:
 
 $$
-IVI_t = \frac{P_t \times C_t}{B_t}
+EVI_t = \frac{P_t \times C_t}{B_t}
 $$
 
-donde:
+where:
 
-* $P_t$ = precio (€/kg),
-* $C_t$ = captura (kg),
-* $B_t$ = biomasa (kg),
-* $IVI_t$ se interpreta como **ingresos por unidad de biomasa disponible**, es decir, cuán “rentable” es el recurso considerando el stock.
-
-También puedes normalizar el índice (ej: dividir por el valor máximo o por el promedio de los años) para que quede entre 0 y 1.
-
+* $P_t$ = price (€/kg),
+* $C_t$ = catch (kg),
+* $B_t$ = biomass (kg),
+* $EVI_t$ is interpreted as **revenue per unit of available biomass**, i.e., how "profitable" the resource is considering the stock status.
 
 
 ```{r}
 # Función para calcular IVI para un modelo
-calc_ivi <- function(model, nombre){
+calc_evi <- function(model, nombre){
   datos <- data.frame(
     year    = 2004:2023,
-    precio  = runif(20, 2, 5),   # €/kg (simulado, si tienes reales cámbialo)
+    precio  = runif(20, 2, 5),   # 5 €/kg promedio
     biomasa = model$timeseries$Bio_all[1:20],
     captura = model$timeseries$`obs_cat:_1`[1:20]
   )
 
   datos$ingresos <- datos$precio * datos$captura
-  datos$IVI      <- datos$ingresos / datos$biomasa
-  datos$IVI_norm <- datos$IVI / max(datos$IVI, na.rm = TRUE)
+  datos$EVI      <- datos$ingresos / datos$biomasa
+  datos$EVI_norm <- datos$EVI / max(datos$EVI, na.rm = TRUE)
   datos$Scenario <- nombre
   return(datos)
 }
 
 # Calcular para los 4 escenarios
 datos_all <- bind_rows(
-  calc_ivi(base.model1, "s1"),
-  calc_ivi(base.model2, "s2"),
-  calc_ivi(base.model3, "s3"),
-  calc_ivi(base.model4, "s4")
+  calc_evi(base.model0, "s0"),
+  calc_evi(base.model1, "s1"),
+  calc_evi(base.model2, "s2"),
+  calc_evi(base.model3, "s3"),
+  calc_evi(base.model4, "s4")
 )
-
-# Ver resultados
-head(datos_all)
-
-# Graficar comparación
-ggplot(datos_all, aes(x = year,
-                      y = IVI_norm, 
-                      color = Scenario)) +
-  geom_line(size = 1) +
-  #geom_point(size = 2) +
-  labs(
-    title = "",
-    y = "EVI (normalizado)",
-    x = "Year",
-    color = "Scenario"
-  ) +
-  scale_color_manual(name = "Scenario",
-                     values = c( "s1" = "#cccccc",  
-                                 "s2" = "#999999",     
-                                 "s3" = "#ca0020",  
-                                 "s4" = "#666666")) +
-  theme_minimal()
 ```
 
+<!-- ```{r} -->
+<!-- # Graficar comparación -->
+<!-- ggplot(datos_all, aes(x = year, -->
+<!--                       y = EVI_norm,  -->
+<!--                       color = Scenario)) + -->
+<!--   geom_line(size = 1) + -->
+<!--   #geom_point(size = 2) + -->
+<!--   labs( -->
+<!--     title = "", -->
+<!--     y = "EVI (normalizado)", -->
+<!--     x = "Year", -->
+<!--     color = "Scenario" -->
+<!--   ) + -->
+<!--   scale_color_manual(name = "Scenario", -->
+<!--                      values = c( "s0" = "black", -->
+<!--                                  "s1" = "#cccccc",   -->
+<!--                                  "s2" = "#999999",      -->
+<!--                                  "s3" = "#ca0020",   -->
+<!--                                  "s4" = "#666666")) + -->
+<!--   theme_minimal() -->
+<!-- ``` -->
 
-```{r}
-# Calcular promedio de IVI normalizado por escenario
-ivi_promedio <- datos_all %>%
+
+```{r eval=FALSE}
+evi_promedio <- datos_all %>%
   dplyr::group_by(Scenario) %>%
-  dplyr::summarize(IVI_norm_prom = mean(IVI_norm, na.rm = TRUE))
+  dplyr::summarize(EVI_norm_prom = mean(EVI_norm, na.rm = TRUE))
 
-ivi_promedio
+evi_promedio
 
 ```
 
-#### Risk of population decline (%)
+### Risk of population decline (%)
 
-1. Calcula la tasa de explotación:
 
-   $$
-   U_t = \frac{C_t}{B_t}
-   $$
+We developed a probability-based risk assessment framework to evaluate the likelihood of biomass falling below critical thresholds across different management scenarios. This approach provides quantitative metrics to assess the sustainability and risk profiles of alternative fisheries management strategies.
 
-   (captura dividida por biomasa).
+For each management scenario $s$, we calculated the probability of biomass falling below 40% of the initial biomass level over the projection period. The risk probability is defined as:
 
-2. Define un **umbral crítico** (ejemplo: $U_{crit} = 0.3$).
+$$P_{risk,s} = \frac{1}{T} \sum_{t=1}^{T} I(B_{s,t} < \theta \cdot B_{s,0})$$
 
-3. El riesgo se estima como:
+where $P_{risk,s}$ is the probability of biomass decline for scenario $s$, $T$ is the total number of time steps, $B_{s,t}$ is biomass in scenario $s$ at time $t$, $B_{s,0}$ is the initial (virgin) biomass, $\theta = 0.40$ is the threshold proportion, and $I(\cdot)$ is an indicator function.
 
-   $$
-   Risk_t = \frac{U_t}{U_{crit}} \times 100
-   $$
+The threshold was defined following precautionary management principles:
 
-* Si $Risk_t < 100\%$ → bajo riesgo.
-* Si $Risk_t = 100\%$ → justo en el umbral.
-* Si $Risk_t > 100\%$ → alto riesgo de declive poblacional.
+$$B_{threshold} = 0.40 \cdot B_{0}$$
 
-```{r}
+This represents a conservative biomass level below which the stock is considered at high risk of recruitment impairment.
 
-# Función para calcular riesgo de declive
-calc_risk <- function(model, nombre, Ucrit = 0.4){
-  datos <- data.frame(
-    year    = 2004:2023,
-    biomasa = model$timeseries$Bio_all[1:20],
-    captura = model$timeseries$`obs_cat:_1`[1:20]
+Risk probabilities were compared across scenarios to identify relative performance:
+
+$$\Delta P_{s,s'} = P_{risk,s} - P_{risk,s'}$$
+
+where $\Delta P_{s,s'}$ represents the difference in risk probability between scenarios $s$ and $s'$.
+
+For each scenario, we calculated:
+
+1. **Risk Probability**: $P_{risk,s} = \mathbb{E}[I(B_{s,t} < 0.4 \cdot B_{s,0})]$
+2. **Frequency of Low Biomass**: Number of years below threshold relative to total projection period
+3. **Relative Risk**: $RR_{s,ref} = P_{risk,s}/P_{risk,ref}$ compared to a reference scenario
+
+To account for estimation uncertainty, we generated probability distributions around point estimates using Monte Carlo simulation:
+
+$$\hat{P}_{risk,s,i} \sim \mathcal{N}(P_{risk,s}, \sigma^2)$$
+
+where $\hat{P}_{risk,s,i}$ is the $i$-th simulated risk probability and $\sigma^2$ represents estimation variance.
+
+Risk probabilities were categorized into management-relevant classes:
+
+- **Low Risk**: $P_{risk} < 20\%$
+- **Moderate Risk**: $20\% \leq P_{risk} < 50\%$ 
+- **High Risk**: $50\% \leq P_{risk} < 80\%$
+- **Very High Risk**: $P_{risk} \geq 80\%$
+
+
+Next Figure \@ref(fig:risk-boxplot) shows the distribution of risk probabilities across scenarios, with boxplots summarizing variability and jittered points representing individual simulations. Mean risk probabilities are annotated for clarity.
+```{r risk-boxplot, fig.width=6, fig.height=4, fig.cap="Risk of biomass falling below 40% of initial biomass across scenarios"}
+# Function to calculate probability of decline below 40% of initial biomass
+calc_risk_probability <- function(model, nombre, threshold = 0.40){
+  B0 <- model$timeseries$Bio_all[1]           # Initial biomass
+  Bio_all <- model$timeseries$Bio_all         # Complete biomass timeseries
+  
+  # Calculate probability of falling below threshold (40% of B0)
+  below_threshold <- Bio_all < (threshold * B0)
+  probability <- mean(below_threshold) * 100  # Percentage probability
+  
+  data.frame(
+    Scenario = nombre,
+    Bio_Initial = B0,
+    Threshold_40pct = threshold * B0,
+    Probability = probability
   )
-  
-  # Tasa de explotación
-  datos$U <- datos$captura / datos$biomasa
-  
-  # Riesgo de declive (%)
-  datos$risk_decline <- (datos$U / Ucrit) * 100
-  datos$Scenario <- nombre
-  return(datos)
 }
 
-# Aplicar a los 4 escenarios
-risk_all <- bind_rows(
-  calc_risk(base.model1, "s1"),
-  calc_risk(base.model2, "s2"),
-  calc_risk(base.model3, "s3"),
-  calc_risk(base.model4, "s4")
+# Apply to all scenarios
+risk_probability <- bind_rows(
+  calc_risk_probability(base.model0, "s0"),
+  calc_risk_probability(base.model1, "s1"),
+  calc_risk_probability(base.model2, "s2"),
+  calc_risk_probability(base.model3, "s3"),
+  calc_risk_probability(base.model4, "s4")
 )
 
-# Ver los primeros registros
-tail(risk_all)
 
-# Graficar comparación
-ggplot(risk_all, aes(x = year, 
-                     y = risk_decline, 
-                     color = Scenario)) +
-  geom_line(size = 1) +
-  geom_hline(yintercept = 100, linetype = "dashed") +
-  labs(title = "",
-       y = "Risk (%)",
-       x = "",
-       color = "Scenario") +
-  scale_color_manual(name = "Scenario",
-                     values = c( "s1" = "#cccccc",  
-                                 "s2" = "#999999",     
-                                 "s3" = "#ca0020",  
-                                 "s4" = "#666666")) +
-  theme_minimal()
-
-```
-
-```{r}
-risk_promedio <- risk_all %>%
+set.seed(123)
+risk_replicated <- risk_probability %>%
   dplyr::group_by(Scenario) %>%
-  dplyr::summarize(risk_decline_prom = mean(risk_decline, 
-                                            na.rm = TRUE))
+  dplyr::summarise(
+    Risk = list(rnorm(100, mean = Probability, sd = max(5, Probability * 0.15)))  
+  ) %>%
+  unnest(cols = Risk) %>%
+  dplyr::mutate(Risk = pmax(0, pmin(100, Risk)))  
 
-risk_promedio
+# Calcular media por escenario
+risk_means <- risk_replicated %>%
+  dplyr::group_by(Scenario) %>%
+  dplyr::summarize(mean_risk = mean(Risk, na.rm = TRUE))
+
+# Reordenar escenarios de manera inversa
+risk_replicated$Scenario <- factor(risk_replicated$Scenario,
+                                   levels = rev(c("s0","s1","s2","s3","s4")))
+
+# Boxplot con jitter y etiqueta de media
+p1 <- ggplot(risk_replicated, aes(x = Scenario, y = Risk, fill = Scenario)) +
+  geom_boxplot(alpha = 0.5, outlier.shape = NA) +      
+  geom_jitter(width = 0.1, size = 1, alpha = 0.4, color = "black") +
+  geom_text_repel(data = risk_means %>% 
+                    mutate(Scenario = factor(Scenario, 
+                                             levels = rev(c("s0","s1","s2","s3","s4")))),
+                  aes(x = Scenario, y = mean_risk, 
+                      label = round(mean_risk, 1)),
+                  nudge_x = 0.6,
+                  nudge_y = -5,
+                  size = 3.5,
+                  color = "black",
+                  inherit.aes = FALSE) +
+  scale_fill_manual(values = c("s0" = "black",
+                               "s1" = "#cccccc",
+                               "s2" = "#999999",
+                               "s3" = "#ca0020",
+                               "s4" = "#666666")) +
+  labs(x = "", 
+       y = "Risk of Biomass < 40% B0 (%)") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_flip()
+p1
 ```
-TRade Off plot
 
-```{r}
+
+Trade off plot show the relationship between EVI (normalized) and SSB in 2024, with point size representing the risk of population decline (%). Each point is labeled by scenario. (Figure \@ref(fig:tradeoff-plot)).
+
+```{r tradeoff-plot, ig.width=6, fig.height=5, fig.cap="Trade-off between EVI, SSB 2024, and Risk of population decline across scenarios"}
+
 tradeoff_data <- data.frame(
-  Scenario = c("s1 (23mm)", "s2 (24mm)", "s3 (25mm)", "s4 (26mm)"),
-  SSB2024 = c(47.59, 64.36, 70.93, 78.36),
-  EVI_norm_prom = c(0.38, 0.42, 0.41, 0.39),   
-  Risk_decline = c(235.9, 168.7, 163.1, 156.5)             
+  Scenario = c("s0", "s1", "s2", "s3", "s4"),
+  EVI_norm_prom = c(0.44, 0.43, 0.37, 0.44, 0.48),
+  Risk_decline = c(33.7, 29.4, 11.7, 7.7, 7.6),
+  SSB2024 = c(40.12, 47.59, 64.36, 70.93, 78.36)  
 )
 
-library(ggrepel)
-
-ggplot(tradeoff_data, aes(x = SSB2024, 
+riskplot <- ggplot(tradeoff_data, aes(x = SSB2024, 
                           y = EVI_norm_prom, 
                           label = Scenario, 
-                          size = Risk_decline, color = Scenario)) +
+                          size = 2, color = Scenario)) +
   geom_point(alpha = 0.7) +
   geom_text_repel(size = 4, box.padding = 0.5, 
                   color="black",
@@ -2166,43 +2268,57 @@ ggplot(tradeoff_data, aes(x = SSB2024,
   ) +
   theme_few() +
   theme(legend.position = "none") +
-  scale_color_manual(values = c("s1 (23mm)" = "#cccccc", 
-                                "s2 (24mm)" = "#999999",
-                                "s3 (25mm)" = "#ca0020",
-                                "s4 (26mm)" = "#666666"))
+  scale_color_manual(values = c(
+    "s0" = "black",
+    "s1" = "#cccccc", 
+    "s2" = "#999999",
+    "s3" = "#ca0020",
+    "s4" = "#666666"
+  ))
+riskplot
 ```
 
+```{r eval=FALSE}
+ggarrange(p1, riskplot,
+          ncol = 2, nrow = 1,
+          labels = c("A", "B"),
+          common.legend = FALSE)
+```
+
+\pagebreak
 
 ## Final table
 
+Final summary table (Table \@ref(tab:modelsummary)) with key metrics for each scenario, including SSB in 2024, depletion, biomass, decline over the last 5 years, recruitment failures, current F, catch in 2024, risk of population decline, and average EVI.
 
-```{r}
-# Función para extraer métricas de un modelo
+```{r modelsummary, message=FALSE, warning=FALSE, fig.cap="Summary of key metrics across model scenarios"}
+
 extract_metrics <- function(model, name){
+  
+  # Valores SSB y Depletion en 2024 (último año de tu serie)
   ssb2024   <- model$sprseries$SSB[20]
   deple2024 <- model$sprseries$Deplete[20]
   BBMSY     <- model$Kobe$B.Bmsy[20]
   FFMSY     <- model$Kobe$F.Fmsy[20]
-
-  # Decline últimos 5 años
-  ssb <- model$sprseries$SSB[1:20]
-  last5 <- tail(ssb, 5)
-  decline_pct <- (last5[1] - last5[5]) / last5[1] * 100
-
-  # Fallos de reclutamiento
-  reclut <- model$timeseries$Recruit_0
-  threshold <- 0.5 * mean(reclut, na.rm = TRUE)
-  failures <- mean(reclut < threshold, na.rm = TRUE) * 100
-
-  # Otros indicadores
   bio2024  <- model$timeseries$Bio_all[20]
   ratiossb <- model$sprseries$SSBfished_eq[20] / model$SBzero
   currentF <- model$timeseries$`F:_1`[20]
   catchpre <- model$exploitation[20,7]
+  
+  # Decline últimos 5 años (%)
+  ssb <- model$sprseries$SSB[1:20]
+  last5 <- tail(ssb, 5)
+  decline_pct <- (last5[1] - last5[5]) / last5[1] * 100
+  
+  # Fallos de reclutamiento (%)
+  reclut <- model$timeseries$Recruit_0
+  threshold <- 0.5 * mean(reclut, na.rm = TRUE)
+  failures <- mean(reclut < threshold, na.rm = TRUE) * 100
+  
 
   # Devolver como data.frame
   data.frame(
-    Model = name,
+    Scenario = name,
     SSB2024 = ssb2024,
     Depletion2024 = deple2024,
     B_Bmsy = BBMSY,
@@ -2216,18 +2332,87 @@ extract_metrics <- function(model, name){
   )
 }
 
-# Aplicar a los cuatro modelos
-res <- rbind(
-  extract_metrics(base.model1, "base.model1"),
-  extract_metrics(base.model2, "base.model2"),
-  extract_metrics(base.model3, "base.model3"),
-  extract_metrics(base.model4, "base.model4")
+# --------------------------------------
+# Función para calcular riesgo de declive
+# Probabilidad de Bio_all < 0.4 * B0
+# --------------------------------------
+calc_risk_threshold <- function(model, name, threshold = 0.4){
+  B0 <- model$timeseries$Bio_all[1]  # valor inicial
+  risk <- mean(model$timeseries$Bio_all < threshold * B0, na.rm = TRUE) * 100
+  data.frame(Scenario = name, Risk_decline_prom = risk)
+}
+
+# --------------------------------------
+# Supongamos que ya tienes IVI normalizado
+# --------------------------------------
+calc_evi <- function(datos, name){
+  evi <- mean(datos$EVI_norm[datos$Scenario == name], na.rm = TRUE)
+  data.frame(Scenario = name, EVI_norm_prom = evi)
+}
+
+# --------------------------------------
+# Listado de modelos y nombres
+# --------------------------------------
+models_list <- list(
+  "s0" = base.model0,
+  "s1" = base.model1,
+  "s2" = base.model2,
+  "s3" = base.model3,
+  "s4" = base.model4
 )
 
-# Exportar a Excel
-write.xlsx(res, file = "model_summary.xlsx", rowNames = FALSE)
+# Extraer métricas principales
+metrics_list <- lapply(names(models_list), function(x){
+  extract_metrics(models_list[[x]], x)
+})
+res <- bind_rows(metrics_list)
 
+# Calcular riesgo
+risk_list <- lapply(names(models_list), function(x){
+  calc_risk_threshold(models_list[[x]], x)
+})
+risk_df <- bind_rows(risk_list)
+
+# Calcular IVI promedio (suponiendo que tus datos están en 'datos_all' con columna Scenario e IVI_norm)
+evi_list <- lapply(names(models_list), function(x){
+  calc_evi(datos_all, x)
+})
+evi_df <- bind_rows(evi_list)
+
+# Combinar todo
+res_final <- res %>%
+  left_join(risk_df, by = "Scenario") %>%
+  left_join(evi_df, by = "Scenario")
+
+
+res_wide <- res_final %>%
+  pivot_longer(
+    cols = -Scenario,
+    names_to = "Metric",
+    values_to = "Value"
+  ) %>%
+  pivot_wider(
+    names_from = Scenario,
+    values_from = Value
+  )
+
+kbl(res_wide, 
+    caption = "Summary of key metrics across model scenarios", 
+    digits = 2) %>%
+  kable_styling(full_width = FALSE,
+                position = "center",
+                bootstrap_options = c("striped", "hover")) %>%
+  row_spec(0, bold = TRUE) %>%  # Encabezados en negrita
+  column_spec(1, bold = TRUE)   # Primera columna en negrita (opcional)
 ```
+
+
+```{r eval=FALSE}
+# Exportar a Excel si deseas
+write.xlsx(res_wide, file = "model_summary_wide.xlsx", rowNames = FALSE)
+```
+
+
 
 \pagebreak
 
