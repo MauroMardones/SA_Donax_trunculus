@@ -185,9 +185,8 @@
 #
 #_Q_parms(if_any);Qunits_are_ln(q)
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type      PHASE    env-var    use_dev   dev_mnyr   dev_mxyr     dev_PH      Block    Blk_Fxn  #  parm_name
-#  LnQ_base_COMERCIAL(1)
--5 5 -0.12	0	99	0	4	0	0	0	0	0	0	0 #  LnQ_base_COMERCIAL(1)
--5 5 -0.12	0	99	0	4	0	0	0	0	0	0	0  #  LnQ_base_POBLACIONAL(2)
+-5 0 -3	0	99	0	4	0	0	0	0	0	0	0 #  LnQ_base_COMERCIAL(1)
+-5 0 -3	0	99	0	4	0	0	0	0	0	0	0  #  LnQ_base_POBLACIONAL(2)
 #_no timevary Q parameters
 #
 #_size_selex_patterns

@@ -70,7 +70,7 @@
 #_note that link functions are specified in Q_setup section of control file
 #_Fleet Units Errtype SD_Report
 1 2 0 0 # COMERCIAL #
-2 1 0 0 # POBLACIONAL #
+2 0 0 0 # POBLACIONAL #
 #_yr month fleet obs stderr
 2018	6	1	4.06	0.2	#_	COMERCIAL
 2019	6	1	5.12	0.2	#_	COMERCIAL
