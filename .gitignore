@@ -6,7 +6,6 @@
 images/
 s0/
 s01/
-s1/
 s2/
 s3/
 s4/
@@ -29,3 +28,12 @@ Suppl_Mat_3_files/
 *tex
 *log
 *sty
+
+# Ignorar todo dentro de la carpeta del modelo
+s1/*
+
+# Pero no ignorar estos archivos
+!s1/*.dat
+!s1/*.ctl
+!s1/starter.ss
+!s1/forecast.ss

@@ -275,15 +275,15 @@ hist_df <- data.frame(
 
 
 esc_labels <- c(
-  "s0" = "s0 = (22 mm) Strong reduction of current MLS",
-  "s1" = "s1 = (23 mm) Lower-than-current MLS",
-  "s2" = "s2 = (24 mm) Slightly below current MLS",
-  "s3" = "s3 = (25 mm) Current MLS (baseline)",
-  "s4" = "s4 = (26 mm) Above current MLS"
+  "s0" = "s0: MLS = 22 mm",
+  "s1" = "s1: MLS = 23 mm",
+  "s2" = "s2: MLS = 24 mm",
+  "s3" = "s3: MLS = 25 mm (Baseline)",
+  "s4" = "s4: MLS = 26 mm"
 )
 selfix <- ggplot() +
   geom_col(data = hist_df, aes(x = length, y = density),
-           fill = "grey70", color = "grey70", alpha = 0.01, width = 1) +
+           fill = "grey70", color = "white", alpha = 0.2, width = 1) +
   geom_line(data = selectivity_data, 
             aes(x = length, y = selectivity, color = Scenario), size = 1.2) +
   geom_line(data = maturity_data, 
@@ -293,7 +293,7 @@ selfix <- ggplot() +
              size=0.3) +
   labs(
     x = "Length (mm)",
-    y = "Selectivity / Maturity / Normalized frequency",
+    y = "Selectivity / Maturity / Theorical length frequency",
     color = "Scenario"
   ) +
   theme_few(base_size = 10) +
@@ -313,7 +313,7 @@ selfix <- ggplot() +
     legend.title = element_text(size = 9),
     plot.margin = margin(10, 10, 10, 10)
   ) +
-  xlim(5, 35)
+  xlim(5, 40)
 
 selfix
 
@@ -347,6 +347,7 @@ ESC1 %>%
                 font_size = 10)
 
 ```
+
 ## Run models
 
 ```{r eval=F, message=F, include=FALSE}
@@ -381,6 +382,15 @@ Read outputs from each scenario;
 base.model0 <- SS_output(dir=dir0,
                          covar=T,
                          forecast=T)
+SS_plots(base.model0,
+         uncertainty=T,
+         datplot = F,
+         png=T,
+         aalresids = F,
+         btarg=0.40,
+         minbthresh=0.2,
+         forecast=F)
+
 base.model1 <- SS_output(dir=dir1,
                          covar=T,
                          forecast=T)
@@ -398,6 +408,97 @@ base.model4 <- SS_output(dir=dir4,
                          covar=T,
                          forecast=T)
 ```
+
+## Data sources
+
+Time series of data sources used in this analysis (Figure \@ref(fig:data)).
+
+```{r}
+SSplotData(base.model3,
+           subplots = 1)
+```
+
+### Length comositions
+
+Length compositions in Figure \@ref(fig:length)
+
+```{r length, warning=FALSE}
+dat_long <- dat3$lencomp %>% 
+  pivot_longer(cols = starts_with("l"),  
+               names_to = "Talla",  
+               values_to = "Frecuencia") %>% 
+  dplyr::mutate(Talla = as.numeric(sub("l", "", Talla))) %>%  
+  dplyr::mutate(fleet = dplyr::recode(fleet,
+                                      `1` = "FISHERY",
+                                      `2` = "SURVEY")) %>%
+  dplyr::mutate(fleet = factor(fleet, levels = c("FISHERY", 
+                                                 "SURVEY")))
+
+dat_plot <- dat_long %>% filter(Frecuencia > 0)
+
+library(ggplot2)
+library(ggridges)
+
+ggplot(dat_long, aes(x = Talla, 
+                     y = factor(year),
+                     height = Frecuencia, 
+                     group = year,
+                     fill = factor(year))) +
+  geom_density_ridges(stat = "identity", 
+                      scale = 2, 
+                      alpha = 0.5,
+                      color = "grey",
+                      fill = "grey") +
+  geom_vline(xintercept = 1.08, linetype = 
+               "dotted", color = "red", size = 1) +
+    geom_vline(xintercept = 2.5, linetype = 
+               "dotted", color = "black", size = 1) +
+  facet_wrap(~ fleet) +
+  labs(x = "", y = "", fill = "Año") +
+  theme_few() +
+  theme(legend.position = "none")
+
+```
+
+
+### Index
+
+Abundance index in Figure \@ref(fig:index) used in modelling for wedge clam.
+
+```{r index,  message = FALSE, warning= FALSE, fig.cap="Index trends inwedg clam"}
+dat3_std <- dat3$CPUE %>%
+  mutate(
+    index_std = (obs - min(obs)) / (max(obs) - min(obs)),
+    index = dplyr::recode(index,
+                           `1` = "FISHERY",
+                           `2` = "SURVEY"),
+    index = factor(index, levels = c("FISHERY", "SURVEY")),
+    category = case_when(
+      index %in% "FISHERY" ~ "fishery_category",
+      index %in% "SURVEY"  ~ "survey_category",
+      TRUE ~ NA_character_
+    )
+  )
+
+indexplot <- ggplot(dat3_std, aes(x = year,
+                                   y = index_std, 
+                                   group = index, 
+                                   color = category)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~index, scales = "free_y", ncol = 5) +
+  scale_color_manual(values = c("FISHERY" = '#1b9e77', 
+                                "SURVEY" = '#d95f02')) + 
+  scale_x_continuous(breaks = unique(dat3_std$year)) +  # mostrar todos los años
+  theme_minimal() +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),  # vertical
+        axis.text.y = element_blank()) +
+  labs(title = "", x = "", y = "Standard index", color = "Category")
+
+indexplot
+```
+
 
 \pagebreak
 
@@ -440,6 +541,7 @@ tabla_resumen <- all_df %>%
   dplyr::summarise(Media = mean(Value, na.rm = TRUE),
             SDmedia = mean(sd, na.rm = TRUE),
             .groups = "drop")
+#writexl::write_xlsx(tabla_resumen, "tabla_resumen.xlsx")
 
 tabla_resumen_texto <- tabla_resumen %>%
   mutate(Media_SD = paste0(round(Media, 2), " (", round(SDmedia, 2), ")")) %>%
@@ -452,7 +554,7 @@ tabla_resumen_texto <- tabla_resumen %>%
 ```
 Main variables population by scenario (Figure \@ref(fig:popvar2))
 
-```{r popvar2, fig.cap="Time series of different populations variables"}
+```{r popvar2, fig.height=4, fig.width=8, out.width="100%", fig.cap="Time series of different populations variables"}
 # Función de gráfico genérica
 plot_var <- function(df, var_name) {
   p <- ggplot(df %>% filter(Variable == var_name),
@@ -542,6 +644,150 @@ summarybox <- ggplot(all_df_filtered,
         axis.text.x = element_text(angle = 90, hjust = 1))
 summarybox
 ```
+another plot with SSB and references asociated (Figure \@ref{fig:SSBref})
+
+```{r SSBref, fig.cap= "SSB by scenario with references}
+ssb_data <- all_df %>%
+  filter(Variable == "SSB",
+         Year < 2024)
+
+# Calcular promedios de referencia (asumiendo datos históricos disponibles)
+# Promedio histórico: todos los años con datos disponibles
+historical_avg <- ssb_data %>%
+  filter(!is.na(Year) & !is.na(Value)) %>%
+  summarise(avg_ssb = mean(Value, na.rm = TRUE)) %>%
+  pull(avg_ssb)
+
+# Promedio últimos 10 años: años más recientes con datos
+recent_years <- ssb_data %>%
+  filter(!is.na(Year) & !is.na(Value)) %>%
+  arrange(desc(Year)) %>%
+  slice_head(n = min(10, nrow(.))) %>%
+  summarise(avg_ssb = mean(Value, na.rm = TRUE)) %>%
+  pull(avg_ssb)
+
+# Crear el plot
+p <- ggplot(ssb_data, aes(x = Year, y = Value, color = Scenario, fill = Scenario)) +
+  geom_ribbon(aes(ymin = Value - sd, ymax = Value + sd), 
+              alpha = 0.2, color = NA) +
+  geom_line(size = 1.2, alpha = 0.8) +
+
+  # líneas horizontales con "aes(linetype)"
+  geom_hline(aes(yintercept = historical_avg, linetype = "Promedio histórico"), 
+             color = "black", size = 1, alpha = 0.8) +
+  geom_hline(aes(yintercept = recent_years, linetype = "Promedio últimos 10 años"), 
+             color = "blue", size = 1, alpha = 0.8) +
+
+  scale_x_continuous(breaks = seq(min(ssb_data$Year, na.rm = TRUE), 
+                                  max(ssb_data$Year, na.rm = TRUE), by = 1)) +
+  labs(
+    title = "",
+    subtitle = paste0("Promedio histórico: ", round(historical_avg, 1), 
+                      " | Promedio últimos 10 años: ", round(recent_years, 1)),
+    x = "",
+    y = "Biomasa Reproductora (SSB)",
+    color = "Escenario",
+    fill = "Escenario",
+    linetype = "Referencia"
+  ) +
+
+  scale_color_manual(values = c("s0" = "#000000",
+                                "s1" = "#cccccc", 
+                                "s2" = "#999999",
+                                "s3" = "#ca0020",
+                                "s4" = "#666666"),
+                     labels = c("s0" = "22mm",
+                                "s1" = "23mm",
+                                "s2" = "24mm", 
+                                "s3" = "25mm",
+                                "s4" = "26mm")) +
+  scale_fill_manual(values = c("s0" = "#000000",
+                               "s1" = "#cccccc", 
+                               "s2" = "#999999",
+                               "s3" = "#ca0020",
+                               "s4" = "#666666"),
+                    labels = c("s0" = "22mm",
+                               "s1" = "23mm",
+                               "s2" = "24mm", 
+                               "s3" = "25mm",
+                               "s4" = "26mm")) +
+
+  # Tema
+  theme_bw() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    axis.title = element_text(size = 12),
+    legend.position = "right",
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 90)
+  )
+
+p
+
+# Opcionalmente, guardar el plot
+# ggsave("ssb_scenarios_plot.png", p, width = 12, height = 8, dpi = 300)
+```
+
+Table with diferences
+
+```{r}
+anio_referencia <- 2023
+
+# Obtener datos del año 2023 para todos los escenarios
+datos_2023 <- all_df %>%
+  filter(Year == anio_referencia, Variable == "SSB") %>%
+  select(Scenario, Value, sd)
+
+# Obtener el valor de referencia (s3 = 25mm)
+valor_referencia <- datos_2023 %>%
+  filter(Scenario == "s3") %>%
+  pull(Value)
+
+# Crear tabla con diferencias
+tabla_comparacion <- datos_2023 %>%
+  mutate(
+    # Etiquetas de escenarios
+    Escenario = case_when(
+      Scenario == "s0" ~ "22mm",
+      Scenario == "s1" ~ "23mm", 
+      Scenario == "s2" ~ "24mm",
+      Scenario == "s3" ~ "25mm",
+      Scenario == "s4" ~ "26mm",
+      TRUE ~ Scenario
+    ),
+    # Calcular diferencias
+    Diferencia_t = Value - valor_referencia,
+    Diferencia_porcentaje = ((Value - valor_referencia) / valor_referencia) * 100,
+    # Redondear valores
+    SSB = round(Value, 2),
+    SD = round(sd, 2),
+    Diferencia_t = round(Diferencia_t, 2),
+    Diferencia_porcentaje = round(Diferencia_porcentaje, 2)
+  ) %>%
+  select(Escenario, SSB, SD, Diferencia_t, Diferencia_porcentaje) %>%
+  arrange(Escenario)
+
+
+# Crear tabla formateada con kableExtra (opcional)
+tabla_formateada <- tabla_comparacion %>%
+  kable(
+    col.names = c("Escenario", "SSB (t)", "SD (t)", "Diferencia (t)", "Diferencia (%)"),
+    caption = "Comparación de SSB con escenario 25mm - Año 2023",
+    align = c("c", "c", "c", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  row_spec(which(tabla_comparacion$Escenario == "25mm"), 
+           bold = TRUE, background = "#f0f0f0")
+
+tabla_comparacion
+#write.csv(tabla_comparacion, "tabla_SSB_dif.csv")
+```
+
 
 ```{r eval=FALSE}
 #read in all model runs
@@ -1453,11 +1699,13 @@ phoplot
 Table \@ref(tab:rhoparameters) show the *Rho* parameter by model and quantity (SSB and F) by scenario
 
 ```{r rhoparameters}
-kbl(tablebias_combined, 
-    booktabs = TRUE, 
-    format = "latex", 
-    caption = "Rho parameter by model and quantity (SSB and F)" ) %>%
-  kable_styling(latex_options = "HOLD_position")
+kbl(tablebias_combined,
+    booktabs = TRUE,
+    format = "latex",
+    caption = "Rho parameter by model and quantity (SSB and F)",
+    longtable = TRUE) %>%
+  kable_styling(latex_options = c("repeat_header"))
+
 ```
 
 ### Hindcast Cross-Validation and Prediction Skill
@@ -1990,7 +2238,7 @@ The ANOVA results show that the impact of scenarios differs across variables. SS
 
 Statistical summary differences in population variables between scenarios in Figure \@ref(fig:anova-plots). Linear regression lines with confidence intervals are overlaid on the scatter plots to illustrate trends across scenarios. The regression statistics (intercept, slope, p-value) are annotated on each plot to quantify the strength and significance of these trends.
 
-```{r anova-plots, message=FALSE, fig.cap="Trends in population indicators across scenarios with linear regression fits"}
+```{r anova-plots, message=FALSE, fig.height=4, fig.width=8, out.width="100%", fig.cap="Trends in population indicators across scenarios with linear regression fits"}
 tabla_resumen <- tabla_resumen %>%
   mutate(Scenario_num = as.numeric(factor(Scenario, levels = c("s0","s1","s2","s3","s4"))))
 
@@ -2065,23 +2313,53 @@ where:
 
 
 ```{r}
-# Función para calcular IVI para un modelo
+# Función para calcular IVI con medias y sd en el mismo df
 calc_evi <- function(model, nombre){
   datos <- data.frame(
     year    = 2004:2023,
-    precio  = runif(20, 2, 5),   # 5 €/kg promedio
+    precio  = runif(20, 2, 5),   # precios simulados
     biomasa = model$timeseries$Bio_all[1:20],
     captura = model$timeseries$`obs_cat:_1`[1:20]
   )
-
-  datos$ingresos <- datos$precio * datos$captura
-  datos$EVI      <- datos$ingresos / datos$biomasa
-  datos$EVI_norm <- datos$EVI / max(datos$EVI, na.rm = TRUE)
-  datos$Scenario <- nombre
+  
+  datos <- datos %>%
+    dplyr::mutate(
+      ingresos = precio * captura,
+      EVI      = ingresos / biomasa,
+      EVI_norm = EVI / max(EVI, na.rm = TRUE),
+      Scenario = nombre
+    )
+  
+  # Calcular medias y sd
+  stats <- datos %>%
+    dplyr::summarise(
+      across(c(precio, biomasa, captura, ingresos, EVI, EVI_norm),
+             list(mean = ~mean(.x, na.rm = TRUE),
+                  sd   = ~sd(.x, na.rm = TRUE))),
+      .groups = "drop"
+    )
+  
+  # Añadir medias y sd como columnas repetidas en cada fila
+  datos <- datos %>%
+    dplyr::mutate(
+      precio_mean   = stats$precio_mean,
+      precio_sd     = stats$precio_sd,
+      biomasa_mean  = stats$biomasa_mean,
+      biomasa_sd    = stats$biomasa_sd,
+      captura_mean  = stats$captura_mean,
+      captura_sd    = stats$captura_sd,
+      ingresos_mean = stats$ingresos_mean,
+      ingresos_sd   = stats$ingresos_sd,
+      EVI_mean      = stats$EVI_mean,
+      EVI_sd        = stats$EVI_sd,
+      EVI_norm_mean = stats$EVI_norm_mean,
+      EVI_norm_sd   = stats$EVI_norm_sd
+    )
+  
   return(datos)
 }
 
-# Calcular para los 4 escenarios
+# Calcular para los 5 escenarios y juntar en un único df
 datos_all <- bind_rows(
   calc_evi(base.model0, "s0"),
   calc_evi(base.model1, "s1"),
@@ -2089,6 +2367,7 @@ datos_all <- bind_rows(
   calc_evi(base.model3, "s3"),
   calc_evi(base.model4, "s4")
 )
+
 ```
 
 <!-- ```{r} -->
@@ -2117,7 +2396,8 @@ datos_all <- bind_rows(
 ```{r eval=FALSE}
 evi_promedio <- datos_all %>%
   dplyr::group_by(Scenario) %>%
-  dplyr::summarize(EVI_norm_prom = mean(EVI_norm, na.rm = TRUE))
+  dplyr::summarize(EVI_norm_prom = mean(EVI_norm, na.rm = TRUE),
+                   EVI_norm_prom_sd = mean(EVI_norm_sd, na.rm = TRUE))
 
 evi_promedio
 
@@ -2241,30 +2521,61 @@ p1
 ```
 
 
-Trade off plot show the relationship between EVI (normalized) and SSB in 2024, with point size representing the risk of population decline (%). Each point is labeled by scenario. (Figure \@ref(fig:tradeoff-plot)).
+Trade off plot show the relationship between EVI (normalized) and SSB in 2024, with point size representing the risk of population decline (%). Each point is labeled by scenario. 
 
-```{r tradeoff-plot, ig.width=6, fig.height=5, fig.cap="Trade-off between EVI, SSB 2024, and Risk of population decline across scenarios"}
+```{r}
+# ---- 1. Resumen de EVI_norm desde datos_all ----
+resumen_evi <- datos_all %>%
+  dplyr::group_by(Scenario) %>%
+  dplyr::summarise(
+    EVI_norm_prom = mean(EVI_norm, na.rm = TRUE),
+    EVI_norm_sd   = sd(EVI_norm, na.rm = TRUE),
+    .groups = "drop"
+  )
 
-tradeoff_data <- data.frame(
-  Scenario = c("s0", "s1", "s2", "s3", "s4"),
-  EVI_norm_prom = c(0.44, 0.43, 0.37, 0.44, 0.48),
-  Risk_decline = c(33.7, 29.4, 11.7, 7.7, 7.6),
-  SSB2024 = c(40.12, 47.59, 64.36, 70.93, 78.36)  
-)
+# ---- 2. Riesgo desde risk_means ----
+resumen_risk <- risk_means %>%
+  select(Scenario, Risk_decline = mean_risk)
 
-riskplot <- ggplot(tradeoff_data, aes(x = SSB2024, 
-                          y = EVI_norm_prom, 
-                          label = Scenario, 
-                          size = 2, color = Scenario)) +
-  geom_point(alpha = 0.7) +
-  geom_text_repel(size = 4, box.padding = 0.5, 
-                  color="black",
-                  point.padding = 0.5) +
-  scale_size_continuous(range = c(3,8), name = "Risk of decline (%)") +
+# ---- 3. Biomasa (SSB2024) desde tabla_resumen ----
+resumen_ssb <- tabla_resumen %>%
+  filter(Variable == "SSB", Year == 2024) %>%
+  select(Scenario, SSB2024 = Media, SSB2024_sd = SDmedia)
+
+# ---- 4. Unir todo en tradeoff_data ----
+tradeoff_data <- resumen_evi %>%
+  left_join(resumen_risk, by = "Scenario") %>%
+  left_join(resumen_ssb, by = "Scenario")
+
+tradeoff_data
+```
+
+
+```{r tradeoff-plot, out.width="75%", fig.cap="Trade-off between EVI, SSB 2024, and Risk of population decline across scenarios"}
+tradeoffplot <- ggplot(tradeoff_data, aes(x = SSB2024,
+                                      y = EVI_norm_prom,
+                                      label = Scenario,
+                                      color = Scenario)) +
+  # puntos medios
+  geom_point(size = 3, alpha = 0.7) +
+  
+  # error bars en Y (EVI_norm sd)
+  geom_errorbar(aes(ymin = EVI_norm_prom - EVI_norm_sd,
+                    ymax = EVI_norm_prom + EVI_norm_sd),
+                width = 0.6, alpha = 0.6) +
+  
+  # error bars en X (SSB2024 sd)
+  geom_errorbarh(aes(xmin = SSB2024 - SSB2024_sd,
+                     xmax = SSB2024 + SSB2024_sd),
+                 height = 0.05, alpha = 0.6) +
+  
+  # etiquetas
+  geom_text_repel(size = 4, box.padding = 0.5,
+                  color = "black", point.padding = 0.5) +
+  
   labs(
     x = "SSB 2024 (tonnes)",
-    y = "EVI (normalized)",
-    title = ""
+    y = "EVI (normalized)"
   ) +
   theme_few() +
   theme(legend.position = "none") +
@@ -2274,12 +2585,24 @@ riskplot <- ggplot(tradeoff_data, aes(x = SSB2024,
     "s2" = "#999999",
     "s3" = "#ca0020",
     "s4" = "#666666"
-  ))
-riskplot
+  ))+
+  ylim(0,1)+
+  xlim(0,100)
+
+tradeoffplot
+
 ```
 
+ > El gráfico muestra la relación entre la biomasa desovante proyectada para 2024 y el índice de vulnerabilidad económica (EVI) normalizado, ilustrando el trade-off entre sostenibilidad biológica y rentabilidad económica. Los escenarios s0 y s1 se sitúan con biomasas bajas y una vulnerabilidad económica media pero muy incierta, reflejando una alta presión sobre el recurso y riesgos de sostenibilidad. En contraste, los escenarios s2 y s3 presentan biomasas intermedias y un EVI más bajo, lo que indica menor dependencia económica del stock, aunque con mayor variabilidad en los resultados. Finalmente, el escenario s4 destaca con la biomasa más alta y un EVI relativamente favorable, mostrando un mejor equilibrio entre conservación y retorno económico, aunque con incertidumbre en la proyección del stock. En conjunto, el gráfico evidencia cómo los escenarios que aseguran mayor biomasa tienden a reducir la vulnerabilidad económica relativa y ofrecen un camino más sostenible a largo plazo.
+
+
+Figure \@ref(fig:tradeoff-plot) illustrates the relationship between projected spawning biomass in 2024 and the normalized Economic Vulnerability Index (EVI), highlighting the trade-off between biological sustainability and economic profitability in wedge clam fishery. Scenarios s0 and s1 are positioned with low biomass and medium but highly uncertain economic vulnerability, reflecting strong pressure on the resource and higher sustainability risks. In contrast, scenarios s2 and s3 achieve intermediate biomass levels with lower EVI, indicating reduced economic dependence on the stock but greater variability in outcomes. Finally, scenario s4 stands out with the highest biomass and a relatively favorable EVI, suggesting a better balance between conservation and economic returns, despite uncertainty in biomass projections. Overall, the plot demonstrates that scenarios preserving higher biomass tend to reduce relative economic vulnerability and provide a more sustainable pathway in the long term.
+
+¿Quieres que estos párrafos los deje listos en formato **`caption` para acompañar directamente a tu figura en el artículo**?
+
+
 ```{r eval=FALSE}
-ggarrange(p1, riskplot,
+ggarrange(p1, tradeoffplot,
           ncol = 2, nrow = 1,
           labels = c("A", "B"),
           common.legend = FALSE)
