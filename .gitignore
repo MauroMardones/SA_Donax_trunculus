@@ -4,12 +4,7 @@
 .Ruserdata
 *xlsx
 images/
-s0/
 s01/
-s2/
-s3/
-s4/
-s5/
 s1_2.3/
 s1_2.4/
 s1_2.5/
@@ -29,11 +24,36 @@ Suppl_Mat_3_files/
 *log
 *sty
 
-# Ignorar todo dentro de la carpeta del modelo
+# Ignorar todo dentro de las carpetas de los modelos
+s0/*
 s1/*
+s2/*
+s3/*
+s4/*
 
 # Pero no ignorar estos archivos
-!s1/*.dat
-!s1/*.ctl
+!s0/*data.ss
+!s0/*control.ss
+!s0/starter.ss
+!s0/forecast.ss
+
+!s1/*data.ss
+!s1/*control.ss
 !s1/starter.ss
 !s1/forecast.ss
+
+!s2/*data.ss
+!s2/*control.ss
+!s2/starter.ss
+!s2/forecast.ss
+
+!s3/*data.ss
+!s3/*control.ss
+!s3/starter.ss
+!s3/forecast.ss
+
+!s4/*data.ss
+!s4/*control.ss
+!s4/starter.ss
+!s4/forecast.ss
+
