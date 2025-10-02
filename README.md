@@ -8,7 +8,7 @@ This repository contains all the files, models, and code used to evaluate the im
 
 The repository is organized into four main model scenario folders:
 
-- `s01/` — Scenario with minimum legal size at **22 mm**.
+- `s0/` — Scenario with minimum legal size at **22 mm**.
 - `s1/` — Scenario with minimum legal size at **23 mm**.
 - `s2/` — Scenario with minimum legal size at **24 mm**.
 - `s3/` — **Reference model** with legal minimum size at **25 mm**.
