@@ -67,7 +67,7 @@ knitr::include_graphics(here::here("Fig",
 \end{landscape}
 
 
-## Setting Aseesement workflow
+## Setting Assessment workflow
 
 This section outlines the general workflow used in the stock assessment model for *Donax trunculus* (wedge clam). It describes the main components, data sources, and the sequence of running models, fitting, and interpreting the integrated model of different scenarios.
 
@@ -106,12 +106,13 @@ required_packages <- c(
 )
 
 # Optionally install missing packages
-missing <- required_packages[!required_packages %in% installed.packages()[, "Package"]]
+missing <- required_packages[!required_packages %in% 
+                               installed.packages()[, "Package"]]
 if (length(missing)) install.packages(missing)
-
 # Load packages with modern purrr approach
-purrr::walk(required_packages, library, character.only = TRUE)
-
+purrr::walk(required_packages, 
+            library, 
+            character.only = TRUE)
 ```
 
 
@@ -367,22 +368,22 @@ for (dir in directorios) {
 }
 ```
 
-```{r eval=F, echo=F}
+```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
 r4ss::run(
-  dir = dir4,
+  dir = dir0,
   exe = "../executable/ss3_opt_osx_arm64",
   skipfinished = FALSE,
-  show_in_console = TRUE# change to true to watch the output go past
+  show_in_console = TRUE
 )
 ```
 
-Read outputs from each scenario;
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
+#dir0<-here("s0")
 base.model0 <- SS_output(dir=dir0,
                          covar=T,
                          forecast=T)
-# SS_plots(base.model4,
+# SS_plots(base.model0,
 #          uncertainty=T,
 #          datplot = F,
 #          png=T,
@@ -391,11 +392,12 @@ base.model0 <- SS_output(dir=dir0,
 #          minbthresh=0.2,
 #          forecast=F)
 
+#dir1<-here("s1")
 base.model1 <- SS_output(dir=dir1,
                          covar=T,
                          forecast=T)
 
-
+#dir2<-here("s2")
 base.model2 <- SS_output(dir=dir2,
                          covar=T,
                          forecast=T)
