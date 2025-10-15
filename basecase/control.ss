@@ -241,7 +241,7 @@
 #0.02    4     2.5         2.5           0.5             0          2          0          0          0          0          0          1          2  #SizeSel p1 COMERCIAL(1)
 #0.01         4     0.15        0.15          0.5             0          2          0          0          0          0          0          0          0  #  #SizeSel p2 COMERCIAL(1)
 2            5       3           3              0.5             0          2          0          0          0          0          0          1          2  #  Size_DblN_peak_SizeSelCOMERCIAL(1)
--10         -1      -6          -6            0.2             0          3          0          0          0          0          0          0          0  #  Size_DblN_top_logit_SizeSeCOMERCIAL(1)
+-10         -1      -6          -6            0.2             0          2          0          0          0          0          0          0          0  #  Size_DblN_top_logit_SizeSeCOMERCIAL(1)
 -5          0       -1         -1             0.5             0          3          0          0          0          0          0          0          0  #  Size_DblN_ascend_se_SizeSelCOMERCIAL(1)
 -5          -1      -2         -2             0.2             0          4          0          0          0          0          0          0          0  #  Size_DblN_descend_se_SizeSelCOMERCIAL(1)
 -999        15      -999        0             0.5             0        -99          0          0          0          0          0          0          0  #  Size_DblN_start_logit_SizeSelCOMERCIAL(1)
@@ -257,8 +257,8 @@
 #_No_Dirichlet parameters
 # timevary selex parameters
 #_LO	HI	INIT	PRIOR	PR_SD	PR_type	PHASE
-0.02	  4	  3	  0	    0	    0	      2	#_Size_DblN_peak_SizeSelCOMERCIAL(1)_BLK1add_2005
-0.02	  4	  2.5 	0	    0     0	      2	#_Size_DblN_peak_SizeSelCOMERCIAL(1)__BLK1add_2016
+0.02	  4	  3	  0	    0	    0	     3	#_Size_DblN_peak_SizeSelCOMERCIAL(1)_BLK1add_2005
+0.02	  4	  2.5 	0	    0     0	      3	#_Size_DblN_peak_SizeSelCOMERCIAL(1)__BLK1add_2016
 # info on dev vectors created for selex parms are reported with other devs after tag parameter section
 #
 0 #  use 2D_AR1 selectivity(0/1):  experimental feature
