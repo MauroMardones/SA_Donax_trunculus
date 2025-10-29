@@ -15,7 +15,7 @@
 1 #_Nseas
 12 #_months/season
 2 #_Nsubseasons (even number, minimum is 2)
-2 #_spawn_month
+7 #_spawn_month
 1 #_Ngenders: 1, 2, -1  (use -1 for 1 sex setup with SSB multiplied by female_frac parameter)
 5 #_Nages=accumulator age, first age is always age 0
 1 #_Nareas

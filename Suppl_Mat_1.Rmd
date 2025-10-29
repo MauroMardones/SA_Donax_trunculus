@@ -383,7 +383,7 @@ r4ss::run(
 base.model0 <- SS_output(dir=dir0,
                          covar=T,
                          forecast=T)
-# SS_plots(base.model0,
+# SS_plots(base.model3,
 #          uncertainty=T,
 #          datplot = F,
 #          png=T,
@@ -653,14 +653,14 @@ ssb_data <- all_df %>%
   filter(Variable == "SSB",
          Year < 2024)
 
-# Calcular promedios de referencia (asumiendo datos históricos disponibles)
-# Promedio histórico: todos los años con datos disponibles
+# Calculate reference averages (assuming historical data available)
+# Historical average: all years with available data
 historical_avg <- ssb_data %>%
   filter(!is.na(Year) & !is.na(Value)) %>%
   summarise(avg_ssb = mean(Value, na.rm = TRUE)) %>%
   pull(avg_ssb)
 
-# Promedio últimos 10 años: años más recientes con datos
+# Average of the last 10 years: most recent years with data
 recent_years <- ssb_data %>%
   filter(!is.na(Year) & !is.na(Value)) %>%
   arrange(desc(Year)) %>%
@@ -668,29 +668,29 @@ recent_years <- ssb_data %>%
   summarise(avg_ssb = mean(Value, na.rm = TRUE)) %>%
   pull(avg_ssb)
 
-# Crear el plot
+# Create the plot
 p <- ggplot(ssb_data, aes(x = Year, y = Value, color = Scenario, fill = Scenario)) +
   geom_ribbon(aes(ymin = Value - sd, ymax = Value + sd), 
               alpha = 0.2, color = NA) +
   geom_line(size = 1.2, alpha = 0.8) +
 
-  # líneas horizontales con "aes(linetype)"
-  geom_hline(aes(yintercept = historical_avg, linetype = "Promedio histórico"), 
+  # Horizontal reference lines with "aes(linetype)"
+  geom_hline(aes(yintercept = historical_avg, linetype = "Historical average"), 
              color = "black", size = 1, alpha = 0.8) +
-  geom_hline(aes(yintercept = recent_years, linetype = "Promedio últimos 10 años"), 
+  geom_hline(aes(yintercept = recent_years, linetype = "Average last 10 years"), 
              color = "blue", size = 1, alpha = 0.8) +
 
   scale_x_continuous(breaks = seq(min(ssb_data$Year, na.rm = TRUE), 
                                   max(ssb_data$Year, na.rm = TRUE), by = 1)) +
   labs(
     title = "",
-    subtitle = paste0("Promedio histórico: ", round(historical_avg, 1), 
-                      " | Promedio últimos 10 años: ", round(recent_years, 1)),
+    subtitle = paste0("Historical average: ", round(historical_avg, 1), 
+                      " | Average last 10 years: ", round(recent_years, 1)),
     x = "",
-    y = "Biomasa Reproductora (SSB)",
-    color = "Escenario",
-    fill = "Escenario",
-    linetype = "Referencia"
+    y = "Spawning Biomass (SSB)",
+    color = "Scenario",
+    fill = "Scenario",
+    linetype = "Reference"
   ) +
 
   scale_color_manual(values = c("s0" = "#000000",
@@ -698,23 +698,23 @@ p <- ggplot(ssb_data, aes(x = Year, y = Value, color = Scenario, fill = Scenario
                                 "s2" = "#999999",
                                 "s3" = "#ca0020",
                                 "s4" = "#666666"),
-                     labels = c("s0" = "22mm",
-                                "s1" = "23mm",
-                                "s2" = "24mm", 
-                                "s3" = "25mm",
-                                "s4" = "26mm")) +
+                     labels = c("s0" = "22 mm",
+                                "s1" = "23 mm",
+                                "s2" = "24 mm", 
+                                "s3" = "25 mm",
+                                "s4" = "26 mm")) +
   scale_fill_manual(values = c("s0" = "#000000",
                                "s1" = "#cccccc", 
                                "s2" = "#999999",
                                "s3" = "#ca0020",
                                "s4" = "#666666"),
-                    labels = c("s0" = "22mm",
-                               "s1" = "23mm",
-                               "s2" = "24mm", 
-                               "s3" = "25mm",
-                               "s4" = "26mm")) +
+                    labels = c("s0" = "22 mm",
+                               "s1" = "23 mm",
+                               "s2" = "24 mm", 
+                               "s3" = "25 mm",
+                               "s4" = "26 mm")) +
 
-  # Tema
+  # Theme
   theme_bw() +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
@@ -2318,10 +2318,10 @@ where:
 # Función para calcular IVI con medias y sd en el mismo df
 calc_evi <- function(model, nombre){
   datos <- data.frame(
-    year    = 2004:2023,
-    precio  = runif(20, 2, 5),   # precios simulados
-    biomasa = model$timeseries$Bio_all[1:20],
-    captura = model$timeseries$`obs_cat:_1`[1:20]
+    year    = 2004:2024,
+    precio  = runif(21, 2, 5),   # precios simulados
+    biomasa = model$timeseries$Bio_all[1:21],
+    captura = model$timeseries$`obs_cat:_1`[1:21]
   )
   
   datos <- datos %>%
@@ -2481,7 +2481,9 @@ set.seed(123)
 risk_replicated <- risk_probability %>%
   dplyr::group_by(Scenario) %>%
   dplyr::summarise(
-    Risk = list(rnorm(100, mean = Probability, sd = max(5, Probability * 0.15)))  
+    Risk = list(rnorm(100, 
+                      mean = Probability, 
+                      sd = max(5, Probability * 0.15)))  
   ) %>%
   unnest(cols = Risk) %>%
   dplyr::mutate(Risk = pmax(0, pmin(100, Risk)))  

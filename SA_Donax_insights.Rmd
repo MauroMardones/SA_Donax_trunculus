@@ -297,6 +297,52 @@ We would like to thank all those involved in the FEMP_AND_04 project for their i
 ```{r areaconcept, out.width='100%', fig.cap="Top panel: Map of the study area in the Gulf of Cádiz, showing sampling point where is distributed of wedge clam populations. Red polygons are designated shellfishing areas (Zonas de Marisqueo). Bottom panel: Conceptual model to stock assessment population structure in wedge clam in Cádiz Gulf, Spain"}
 knitr::include_graphics("Fig/area_conceptual.png")
 ```
+```{r}
+library(flextable)
+library(dplyr)
+
+# Crear el data frame
+table_data <- tribble(
+  ~Data, ~Period, ~`Data source`, ~`Use in model`,
+  "Annual landings (tons)", 
+  "2004 - 2023", 
+  "Official landings (IDAPES)", 
+  "Direct input data: catch time series",
+  
+  "Length-frequency (commercial and survey)", 
+  "2013 - 2023", 
+  "Monitoring program FEMP_AND_04 (IEO-CSIC)", 
+  "Direct input data: composition data",
+  
+  "Indices - Population surveys (density)\n- CPUE commercial", 
+  "2017 - 2023\n2018 - 2023", 
+  "Monitoring program FEMP_AND_04 (IEO-CSIC)", 
+  "Direct input data: abundance index",
+  
+  "Biological parameters (growth parameters, weight-length relation, natural mortality (M), maturity ogive)", 
+  "-", 
+  "Scientific literature & local studies (Delgado et al., 2017; Çolakoglu, 2014; Lamine et al., 2020)", 
+  "Direct input control: Fixed biological parameters",
+  
+  "Environmental data (temperature, salinity, chlorophyll, sediment granulometry)", 
+  "2013 - 2023", 
+  "Monitoring program FEMP_AND_04 (IEO-CSIC)", 
+  "Not included in the model; used to interpret variability in recruitment and condition"
+)
+
+# Crear la tabla con flextable
+ft <- flextable(table_data) %>%
+  set_caption("Table X. Summary of data sources used for the wedge clam (Donax trunculus) stock assessment in the GoC.") %>%
+  autofit() %>%
+  theme_vanilla() %>%
+  fontsize(size = 10, part = "all") %>%
+  bold(part = "header") %>%
+  align(align = "left", part = "all") %>%
+  set_table_properties(width = .9, layout = "autofit")
+
+ft
+
+```
 
 
 
@@ -354,8 +400,6 @@ knitr::include_graphics("Fig/summary_variables_10.jpeg")
 # Figure 3.3: SSB time series
 knitr::include_graphics("Fig/summary_variable_11.jpeg")
 ```
-
-
 
 ```{r anova-scene, fig.cap="ANOVA results comparing biomass across four minimum landing size scenarios for wedge clam stock assessment."}
 knitr::include_graphics("Fig/anova_scene.jpeg")

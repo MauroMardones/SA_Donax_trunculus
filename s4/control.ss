@@ -69,10 +69,10 @@
 #_growth_parms
 #_ LO HI INIT PRIOR PR_SD PR_type PHASE env_var&link dev_link dev_minyr dev_maxyr dev_PH Block Block_Fxn
 # S+A11:R41ex: 1  BioPattern: 1  NatMort																
-0.05	2	0.99	0.99	0	0	3	0	0	0	0	0	0	0	#	NatM_uniform_Fem_GP_1	
+0.05	2	0.99	0.99	0	0	-3	0	0	0	0	0	0	0	#	NatM_uniform_Fem_GP_1	
 # Sex: 1  BioPattern: 1  Growth																
 1	3.5	2.3	2.3	0.5	0	5	0	0	0	0	0	0	0 # L_at_Amin_Fem_GP_1			
-2	8	4.9	4.9	99	0	3	0	0	0	0	0	0	0 # L_at_Amax_Fem_GP_1			
+2	8	4.67	4.67	99	0	 3	0	0	0	0	0	0	0 # L_at_Amax_Fem_GP_1				
 0.08	0.80	0.48	0.48	99	0	-1	0	0	0	0	0	0	0 # VonBert_K_Fem_GP_1			
 0.05	0.5	0.3	0.3	0.8	0	-3	0	0	0	0	0	0	0	#	CV_young_Fem_GP_1	
 0.05	0.25	0.1	0.1	0.8	0	-3	0	0	0	0	0	0	0	#	CV_old_Fem_GP_1	
@@ -121,11 +121,11 @@
 1  # 0/1 to use steepness in initial equ recruitment calculation
 0  #  future feature:  0/1 to make realized sigmaR a function of SR curvature
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type      PHASE    env-var    use_dev   dev_mnyr   dev_mxyr     dev_PH      Block    Blk_Fxn #  parm_name
-  3            30       10          10            15             0          1          0          0          0          0          0          0          0 # SR_LN(R0)
-  0.2             1      0.75           0.75          0.05             1          -4          0          0          0          0          0          0          0 # SR_BH_steep
-  0             1           0.2           0.2           0.8             0         -4          0          0          0          0          0          0          0 # SR_sigmaR
-  -5             5             0.1             0.1             0             0         -4          0          0          0          0          0          0          0 # SR_regime
-  0             0             0             0             0             0        99          0          0          0          0          0          0          0 # SR_autocorr
+3         50           20          20            15             0          1          0          0          0          0          0          0          0 # SR_LN(R0)
+0.2       1           0.75           0.75          0.05             1          2          0          0          0          0          0          0          0 # SR_BH_steep
+0         1           0.54           0.2           0.8             0         -4          0          0          0          0          0          0          0 # SR_sigmaR
+-5        5             0.1             0.1             0             0         -4          0          0          0          0          0          0          0 # SR_regime
+0         0             0             0             0             0        99          0          0          0          0          0          0          0 # SR_autocorr
 #_no timevary SR parameters
 1 #do_recdev:  0=none; 1=devvector (R=F(SSB)+dev); 2=deviations (R=F(SSB)+dev); 3=deviations (R=R0*dev; dev2=R-f(SSB)); 4=like 3 with sum(dev2) adding penalty
 2003 # first year of main recr_devs; early devs can preceed this era
@@ -136,11 +136,11 @@
 -4 #_recdev_early_phase
 0 #_forecast_recruitment phase (incl. late recr) (0 value resets to maxphase+1)
 1 #_lambda for Fcast_recr_like occurring before endyr+1
-1900 #_last_yr_nobias_adj_in_MPD; begin of ramp
-1900 #_first_yr_fullbias_adj_in_MPD; begin of plateau
-2001 #_last_yr_fullbias_adj_in_MPD
-2002 #_end_yr_for_ramp_in_MPD (can be in forecast to shape ramp, but SS3 sets bias_adj to 0.0 for fcast yrs)
-1 #_max_bias_adj_in_MPD (typical ~0.8; -3 sets all years to 0.0; -2 sets all non-forecast yrs w/ estimated recdevs to 1.0; -1 sets biasadj=1.0 for all yrs w/ recdevs)
+2006.6   #_last_early_yr_nobias_adj_in_MPD 
+2012.3   #_first_yr_fullbias_adj_in_MPD 
+2023.4   #_last_yr_fullbias_adj_in_MPD 
+2023.7   #_first_recent_yr_nobias_adj_in_MPD 
+0.863  #_max_bias_adj_in_MPD (1.0 to mimic pre-2009 models)
 0 #_period of cycles in recruitment (N parms read below)
 -5 #min rec_dev
 5 #max rec_dev
