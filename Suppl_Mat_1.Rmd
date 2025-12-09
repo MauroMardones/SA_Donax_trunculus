@@ -73,7 +73,7 @@ This section outlines the general workflow used in the stock assessment model fo
 
 Libraries necessaries to do this analysis;
 
-```{r}
+```{r  warning=FALSE, message=FALSE}
 # List of required packages grouped by functionality
 required_packages <- c(
   # Stock assessment + SS3 tools
@@ -119,7 +119,8 @@ purrr::walk(required_packages,
 ```{r echo=FALSE}
 # Set model and figure paths using `here::here()` for reproducibility
 # dir_test     <- here::here("s01")       # Test model
-dir0     <- here::here("s0")        # Initial model (2.2 MLS fixed)
+dirb     <- here::here("basecase")        # Initial model (2.2 MLS fixed)
+dir0    <- here::here("s0")        # Scenario 2.2 (MLS fixed)
 dir1     <- here::here("s1")        # Reference model (2.3 MLS fixed)
 # Alternative management scenarios
 dir2 <- here::here("s2")       # Scenario 2.4 (MLS fixed)
@@ -370,7 +371,7 @@ for (dir in directorios) {
 
 ```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
 r4ss::run(
-  dir = dir0,
+  dir = dirb,
   exe = "../executable/ss3_opt_osx_arm64",
   skipfinished = FALSE,
   show_in_console = TRUE
@@ -379,18 +380,25 @@ r4ss::run(
 
 
 ```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
+#dir_test<-here("s01")
+base <- SS_output(dir=dirb,
+                         covar=T,
+                         forecast=T)
+
+SS_plots(base,
+         uncertainty=T,
+         datplot = F,
+         png=T,
+         aalresids = F,
+         btarg=0.40,
+         minbthresh=0.2,
+         forecast=F)
+
 #dir0<-here("s0")
 base.model0 <- SS_output(dir=dir0,
                          covar=T,
                          forecast=T)
-# SS_plots(base.model3,
-#          uncertainty=T,
-#          datplot = F,
-#          png=T,
-#          aalresids = F,
-#          btarg=0.40,
-#          minbthresh=0.2,
-#          forecast=F)
+
 
 #dir1<-here("s1")
 base.model1 <- SS_output(dir=dir1,
@@ -791,11 +799,12 @@ tabla_comparacion
 ```
 
 
-```{r eval=FALSE}
+```{r eval=FALSE, warning=FALSE, message=FALSE}
 #read in all model runs
 #note if cover=T you need a hessian; if covar=F you do not need a hessian
 biglist1_4 <- SSgetoutput(keyvec = NULL,
-                       dirvec = c(dir0,
+                       dirvec = c(dirb,
+                                  dir0,
                                   dir1,
                                   dir2,
                                   dir3,
@@ -806,7 +815,8 @@ biglist1_4 <- SSgetoutput(keyvec = NULL,
 summaryoutput1_4 <- SSsummarize(biglist1_4)
 
 SSplotComparisons(summaryoutput1_4,
-                  legendlabels = c("s0",
+                  legendlabels = c("base",
+                                   "s0",
                                    "s1",
                  "s2",
                  "s3  (Ref Model)",

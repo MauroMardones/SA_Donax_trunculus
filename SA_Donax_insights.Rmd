@@ -266,12 +266,12 @@ The ecosystem context of the wedge clam fishery highlights the importance of con
 # CRediT
 
 
-**Conceptualization**: Mauricio Mardones; Marina Delgado, Luis Silva
-**Formal Analysis**: Mauricio Mardones
+**Conceptualization**: Mauricio Mardones; Marina Delgado
+**Formal Analysis**: Mauricio Mardones; María José Zúñiga
 **Methodology**: Mauricio Mardones, Marina Delgado
-**Visualization**: Mauricio Mardones
+**Visualization**: Mauricio Mardones; María José Zúñiga
 **Writing – Original Draft Preparation**: Mauricio Mardones, Marina Delgado...
-**Writing– review & editing**: Mauricio Mardones, Marina Delgado, Luis Silva...
+**Writing– review & editing**: Mauricio Mardones, Marina Delgado, María José Zúñiga...
 
 \pagebreak
 

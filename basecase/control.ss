@@ -72,7 +72,7 @@
 0.05	5	0.99	0.99	0	0	-3	0	0	0	0	0	0	0	#	NatM_uniform_Fem_GP_1	
 # Sex: 1  BioPattern: 1  Growth																
 1	3.5	2.3	  2.3	0.5	0	3	0	0	0	0	0	0	0 # L_at_Amin_Fem_GP_1			
-2	8	  4.9	  4.9	99	0	-3	0	0	0	0	0	0	0 # L_at_Amax_Fem_GP_1			
+2	8	  4.9	  4.9	99	0	3	0	0	0	0	0	0	0 # L_at_Amax_Fem_GP_1			
 0.08	0.80	0.48	0.48	99	0	-1	0	0	0	0	0	0	0 # VonBert_K_Fem_GP_1			
 0.05	0.5	  0.30	0.3	0.8	0	-3	0	0	0	0	0	0	0	#	CV_young_Fem_GP_1	
 0.0 	0.25	0.1	0.1	0.8	0	-3	0	0	0	0	0	0	0	#	CV_old_Fem_GP_1	
@@ -210,7 +210,7 @@
 #Pattern:_42; parm=special+3+2; cubic spline; like 27, with 2 additional param for scaling (average over bin range)
 #_discard_options:_0=none;_1=define_retention;_2=retention&mortality;_3=all_discarded_dead;_4=define_dome-shaped_retention
 #_Pattern Discard Male Special
-24 0 0 0 # 1 logistic; with 95% width specification
+1 0 0 0 # 1 logistic; with 95% width specification
 1 0 0 0 # 2 logistic; with 95% width specification
 #1 0 0 0 # 3 Logistic
 #
@@ -233,23 +233,23 @@
 #Pattern:_42; parm=2+special+3; // cubic spline; with 2 additional param for scaling (average over bin range)
 #Age patterns entered with value >100 create Min_selage from first digit and pattern from remainder
 #_Pattern Discard Male Special
-10 0 0 0 #  FISHERY1
+0 0 0 0 #  FISHERY1
 0 0 0 0 #  FISHERY2
 #
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type      PHASE    env-var    use_dev   dev_mnyr   dev_mxyr     dev_PH      Block    Blk_Fxn  #  parm_name
 # 1 FISHERY LenSelex
-#0.02    4     2.5         2.5           0.5             0          2          0          0          0          0          0          1          2  #SizeSel p1 COMERCIAL(1)
-#0.01         4     0.15        0.15          0.5             0          2          0          0          0          0          0          0          0  #  #SizeSel p2 COMERCIAL(1)
-2            5       3           3              0.5             0          2          0          0          0          0          0          1          2  #  Size_DblN_peak_SizeSelCOMERCIAL(1)
--10         -1      -6          -6            0.2             0          2          0          0          0          0          0          0          0  #  Size_DblN_top_logit_SizeSeCOMERCIAL(1)
--5          0       -1         -1             0.5             0          3          0          0          0          0          0          0          0  #  Size_DblN_ascend_se_SizeSelCOMERCIAL(1)
--5          -1      -2         -2             0.2             0          4          0          0          0          0          0          0          0  #  Size_DblN_descend_se_SizeSelCOMERCIAL(1)
--999        15      -999        0             0.5             0        -99          0          0          0          0          0          0          0  #  Size_DblN_start_logit_SizeSelCOMERCIAL(1)
--999        15     -999         0             0.5             0          -99          0          0          0          0          0          0          0  #  Size_DblN_end_logit_SizeSelCOMERCIAL(1)
+0.02    4     2.2         2.2           0.5             0          2          0          0          0          0          0          1          2  #SizeSel p1 COMERCIAL(1)
+0.01         4     0.15        0.15          0.5             0          2          0          0          0          0          0          0          0  #  #SizeSel p2 COMERCIAL(1)
+#2            5       3           3              0.5             0          2          0          0          0          0          0          1          2  #  Size_DblN_peak_SizeSelCOMERCIAL(1)
+#-10         -1      -6          -6            0.2             0          2          0          0          0          0          0          0          0  #  Size_DblN_top_logit_SizeSeCOMERCIAL(1)
+#-5          0       -1         -1             0.5             0          3          0          0          0          0          0          0          0  #  Size_DblN_ascend_se_SizeSelCOMERCIAL(1)
+#-5          -1      -2         -2             0.2             0          4          0          0          0          0          0          0          0  #  Size_DblN_descend_se_SizeSelCOMERCIAL(1)
+#-999        15      -999        0             0.5             0        -99          0          0          0          0          0          0          0  #  Size_DblN_start_logit_SizeSelCOMERCIAL(1)
+#-999        15     -999         0             0.5             0          -99          0          0          0          0          0          0          0  #  Size_DblN_end_logit_SizeSelCOMERCIAL(1)
 #  0.001           0.6      0.043592             0           0.5             0          2          0          0          0          0          0          0          0  #  SizeSel_P3_Type25_size_exponential-logistic(1)
 # 1 FISHERY LenSelex
-  0.02             3      0.5             0.5           0.5             0          2          0          0          0          0          0          0          0  #  #SizeSel p1 POBLACIONAL(2)
-  0                0.5    0.1             0.1           0.1             0          2          0          0          0          0          0          0          0  #  #SizeSel p1 POBLACIONAL(2)
+0.02             3      0.5             0.5           0.5             0          2          0          0          0          0          0          0          0  #  #SizeSel p1 POBLACIONAL(2)
+0                0.5    0.1             0.1           0.1             0          2          0          0          0          0          0          0          0  #  #SizeSel p1 POBLACIONAL(2)
 #  0.001           0.6      0.043592             0           0.5             0          2          0          0          0          0          0          0          0  #  SizeSel_P3_Type25_size_exponential-logistic(2)
 # 1 FISHERY LenSelex
 #  25            80       40.8734            50          0.01             1          3          0          0          0          0          0          0          0  #  Size_inflection_Type1_size_logistic(3)
