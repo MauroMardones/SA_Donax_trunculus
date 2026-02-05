@@ -108,7 +108,6 @@
 #0.01 0.5 0.1 0.1 0.8 0 3 0 5 1979 2020 2 0 0 # M2_pred1
 #0.0001 2 1.7 0.5 0.5 -6 -5 # M2_pred1_dev_se
 # -0.99 0.99 0 0 0.5 -6 -6 # M2_pred1_dev_autocorr
-
 #
 #_no timevary MG parameters
 #

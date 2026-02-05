@@ -12,6 +12,9 @@ s1_2.5/
 s1_2.6/
 executable/
 Fig/
+docs/
+outputs/
+bib/
 *docx
 *pdf
 *csl
@@ -31,6 +34,7 @@ s1/*
 s2/*
 s3/*
 s4/*
+
 
 # Pero no ignorar estos archivos
 !s0/*data.ss

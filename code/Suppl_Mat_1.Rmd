@@ -385,14 +385,14 @@ base <- SS_output(dir=dirb,
                          covar=T,
                          forecast=T)
 
-SS_plots(base,
-         uncertainty=T,
-         datplot = F,
-         png=T,
-         aalresids = F,
-         btarg=0.40,
-         minbthresh=0.2,
-         forecast=F)
+# SS_plots(base,
+#          uncertainty=T,
+#          datplot = F,
+#          png=T,
+#          aalresids = F,
+#          btarg=0.40,
+#          minbthresh=0.2,
+#          forecast=F)
 
 #dir0<-here("s0")
 base.model0 <- SS_output(dir=dir0,
@@ -446,10 +446,8 @@ dat_long <- dat3$lencomp %>%
 
 dat_plot <- dat_long %>% filter(Frecuencia > 0)
 
-library(ggplot2)
-library(ggridges)
 
-ggplot(dat_long, aes(x = Talla, 
+lengyh1 <- ggplot(dat_long, aes(x = Talla, 
                      y = factor(year),
                      height = Frecuencia, 
                      group = year,
@@ -467,7 +465,13 @@ ggplot(dat_long, aes(x = Talla,
   labs(x = "", y = "", fill = "Año") +
   theme_few() +
   theme(legend.position = "none")
-
+ggsave(filename = file.path(fig_path,
+                                        "Length_compositions_wedge_clam.jpg"),
+       plot = lengyh1,
+       width = 8,
+       height = 5,
+       units = "in",
+       dpi = 300)
 ```
 
 
