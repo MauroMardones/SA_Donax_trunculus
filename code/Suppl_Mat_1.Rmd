@@ -102,6 +102,7 @@ required_packages <- c(
   "here",         # Reproducible file paths
   "openxlsx",    # Reading/writing Excel files
   #  Reporting and tables
+  "stringr",
   "kableExtra"    # Enhanced HTML/LaTeX tables
 )
 
@@ -119,13 +120,13 @@ purrr::walk(required_packages,
 ```{r echo=FALSE}
 # Set model and figure paths using `here::here()` for reproducibility
 # dir_test     <- here::here("s01")       # Test model
-dirb     <- here::here("basecase")        # Initial model (2.2 MLS fixed)
-dir0    <- here::here("s0")        # Scenario 2.2 (MLS fixed)
-dir1     <- here::here("s1")        # Reference model (2.3 MLS fixed)
+dirb     <- here::here("EM","basecase")        # Initial model (2.2 MLS fixed)
+dir0    <- here::here("EM","s0")        # Scenario 2.2 (MLS fixed)
+dir1     <- here::here("EM","s1")        # Reference model (2.3 MLS fixed)
 # Alternative management scenarios
-dir2 <- here::here("s2")       # Scenario 2.4 (MLS fixed)
-dir3 <- here::here("s3")       # Scenario 2.5 (MLS fixed) (current MLS)
-dir4 <- here::here("s4")       # Scenario 2.6 (MLS fixed)
+dir2 <- here::here("EM","s2")       # Scenario 2.4 (MLS fixed)
+dir3 <- here::here("EM","s3")       # Scenario 2.5 (MLS fixed) (current MLS)
+dir4 <- here::here("EM","s4")       # Scenario 2.6 (MLS fixed)
 # # Simulated mean-based models
 # dir2.3 <- here::here("s1_2.3")      # Simulated model: 2.3 mean MLS
 # dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MLS
@@ -353,20 +354,17 @@ ESC1 %>%
 ## Run models
 
 ```{r eval=F, message=F, include=FALSE}
-directorios <- c("s0",
-                 "s1",
-                 "s2",
-                 "s3",
-                 "s4") 
+directorios <- here::here("EM", c("s0", "s1", "s2", "s3", "s4"))
 
 for (dir in directorios) {
   r4ss::run(
     dir = dir,
-    exe = "../executable/ss3_opt_osx_arm64",
+    exe = here::here("executable", "ss3_opt_osx_arm64"),
     skipfinished = FALSE,
     show_in_console = TRUE
   )
 }
+
 ```
 
 ```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}

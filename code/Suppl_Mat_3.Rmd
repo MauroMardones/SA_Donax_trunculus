@@ -191,52 +191,65 @@ This generates `data_boot_001.ss`, `data_boot_002.ss`, ..., `data_boot_100.ss`
 2. Run each bootstrap model
 
 ```{r eval=FALSE, echo=TRUE}
-# 2.1 Crear directorio para resultados bootstrap
-dir.create("s01/bootstrap_runs", showWarnings = FALSE)
-# 2.2 Función para ejecutar un bootstrap individual
-run_bootstrap <- function(boot_num, base_dir = "s01", output_dir = "bootstrap_runs") {
-  # Crear directorio para este bootstrap
-  boot_dir <- file.path(output_dir, paste0("boot_", sprintf("%03d", boot_num)))
+# 1. Rutas absolutas y seguras
+dir_test         <- here("EM", "s01")
+dir_boots_master <- here("EM", "s01", "bootstrap_runs")
+exe_path         <- here("executable", "ss3_opt_osx_arm64")
+
+# IMPORTANTE: Dar permisos de ejecución al archivo (solo Mac/Linux)
+system(paste("chmod +x", exe_path))
+
+# 2. Función de ejecución con verificación de ruta
+run_bootstrap <- function(boot_num, base_dir, master_dir, exe) {
+  library(r4ss)
+  
+  boot_dir <- file.path(master_dir, sprintf("boot_%03d", boot_num))
   dir.create(boot_dir, showWarnings = FALSE, recursive = TRUE)
-  # Copiar todos los archivos excepto data.ss
-  files_to_copy <- list.files(base_dir, full.names = TRUE)
-  files_to_copy <- files_to_copy[!grepl("data.ss$|data_boot_", basename(files_to_copy))]
-  file.copy(from = files_to_copy, to = boot_dir, overwrite = TRUE)
-  # Copiar el archivo bootstrap específico como data.ss
-  boot_file <- file.path(base_dir, paste0("data_boot_", sprintf("%03d", boot_num), ".ss"))
-  if (file.exists(boot_file)) {
-    file.copy(from = boot_file, 
-              to = file.path(boot_dir, "data.ss"), 
-              overwrite = TRUE)
-    # Ejecutar modelo
-    system(paste0("cd ", boot_dir, " && ~/IEO/SA_Donax_trunculus/executable/ss3_opt_osx_arm64 -nox -nohess"))
-    return(TRUE)
-  } else {
-    warning(paste("Bootstrap file", boot_file, "not found"))
-    return(FALSE)
-  }
+  
+  # Archivo de datos bootstrap origen
+  boot_data_source <- file.path(base_dir, sprintf("data_boot_%03d.ss", boot_num))
+  if (!file.exists(boot_data_source)) return(FALSE)
+  
+  # Copiar archivos estructurales (starter, forecast, control)
+  # No copiamos subcarpetas para evitar bucles
+  all_files <- list.files(base_dir, full.names = TRUE, recursive = FALSE)
+  to_copy <- all_files[!file.info(all_files)$isdir & 
+                       !grepl("data.ss$|data_boot_|ss3", basename(all_files))]
+  file.copy(to_copy, boot_dir, overwrite = TRUE)
+  
+  # Copiar el bootstrap específico como data.ss
+  file.copy(boot_data_source, file.path(boot_dir, "data.ss"), overwrite = TRUE)
+  
+  # EJECUCIÓN: Usamos r4ss::run porque gestiona mejor el 'path' que system()
+  r4ss::run(dir = boot_dir, 
+            exe = exe, 
+            extras = "-nox -nohess", 
+            skipfinished = FALSE, 
+            show_in_console = FALSE)
+  
+  # Verificar si se creó el reporte
+  return(file.exists(file.path(boot_dir, "Report.sso")))
 }
-```
 
+# 3. Ejecución en paralelo
+# Borramos intentos previos para empezar de cero
+unlink(dir_boots_master, recursive = TRUE)
+dir.create(dir_boots_master)
 
-```{r eval=FALSE}
-# 2.3 Ejecutar todos los bootstrap (puede tomar tiempo)
-set.seed(123)
-n_bootstrap <- 100
-
-# Ejecutar en paralelo si tienes muchos cores
-library(parallel)
 cl <- makeCluster(detectCores() - 1)
+clusterExport(cl, c("dir_test", "dir_boots_master", "exe_path", "run_bootstrap"))
 clusterEvalQ(cl, library(r4ss))
 
-results <- parLapply(cl, 1:n_bootstrap, run_bootstrap)
+# Ejecutar modelos
+cat("Ejecutando bootstraps... esto puede tardar.\n")
+results_status <- parLapply(cl, 1:100, function(i) {
+  run_bootstrap(i, dir_test, dir_boots_master, exe_path)
+})
 stopCluster(cl)
 
-# O ejecutar secuencialmente
-# for (i in 1:n_bootstrap) {
-#   cat("Running bootstrap", i, "of", n_bootstrap, "\n")
-#   run_bootstrap(i)
-# }
+# 4. Verificar cuántos terminaron bien
+exitos <- sum(unlist(results_status))
+cat("Modelos finalizados con éxito:", exitos, "de 100\n")
 ```
 
 
@@ -277,17 +290,6 @@ bootstrap_results <- bootstrap_results[!sapply(bootstrap_results, is.null)]
 ```
 
 
-```{r eval=FALSE}
-save(bootstrap_results, ssb_boot_df, recruit_boot_df, 
-     ssb_base_df, recruit_base_df,
-     file = "s01/bootstrap_summary.RData")
-```
-
-
-```{r}
-# Carga el archivo
-load("s01/bootstrap_summary.RData") #verbose = TRUE si quiero ver los obj cargados
-```
 ## Testing Bias in Reference Model `s1` 
 
 ```{r}

@@ -29,36 +29,32 @@ Suppl_Mat_3_files/
 *sty
 
 # Ignorar todo dentro de las carpetas de los modelos
-s0/*
-s1/*
-s2/*
-s3/*
-s4/*
+EM/*
 
 
 # Pero no ignorar estos archivos
-!s0/*data.ss
-!s0/*control.ss
-!s0/starter.ss
-!s0/forecast.ss
+!EM/s0/*data.ss
+!EM/s0/*control.ss
+!EM/s0/starter.ss
+!EM/s0/forecast.ss
 
-!s1/*data.ss
-!s1/*control.ss
-!s1/starter.ss
-!s1/forecast.ss
+!EM/s1/*data.ss
+!EM/s1/*control.ss
+!EM/s1/starter.ss
+!EM/s1/forecast.ss
 
-!s2/*data.ss
-!s2/*control.ss
-!s2/starter.ss
-!s2/forecast.ss
+!EM/s2/*data.ss
+!EM/s2/*control.ss
+!EM/s2/starter.ss
+!EM/s2/forecast.ss
 
-!s3/*data.ss
-!s3/*control.ss
-!s3/starter.ss
-!s3/forecast.ss
+!EM/s3/*data.ss
+!EM/s3/*control.ss
+!EM/s3/starter.ss
+!EM/s3/forecast.ss
 
-!s4/*data.ss
-!s4/*control.ss
-!s4/starter.ss
-!s4/forecast.ss
+!EM/s4/*data.ss
+!EM/s4/*control.ss
+!EM/s4/starter.ss
+!EM/s4/forecast.ss
 
