@@ -86,67 +86,76 @@ The primary objective of this analysis is to identify whether the reference mode
 
 # Methodology
 
-To assess the estimation bias of the Stock Synthesis (SS3) model for *Donax trunculus* population dynamics in the Gulf of Cádiz, we performed a bootstrap resampling procedure. This approach enables the evaluation of bias and uncertainty in model parameter estimates by repeatedly fitting the model to resampled datasets generated from the original data. This methodology was follow advice in SS3 user Manual from @Methot2023.
+## Evaluation of Estimation Bias of the Base Assessment Model (25 mm TML)
 
-### Bootstrap Procedure
+The potential estimation bias of the base stock assessment model assuming a minimum total length of 25 mm (hereafter *base model*) was evaluated using a parametric bootstrap approach implemented in **Stock Synthesis**. The objective of this analysis was not to estimate formal statistical bias relative to a known operating model, but rather to assess the **stability and data-dependence of key population estimates** with respect to the observed data realization.
 
-1. **Resampling**: We generated 100 bootstrap replicates by sampling with replacement from the original observed datasets (e.g., catch-at-length, survey indices), preserving the structure of the data.
+### Bootstrap procedure
 
-2. **Model Fitting**: For each bootstrap replicate, the SS3 model was executed to estimate parameters such as biomass, fishing mortality, and recruitment. The SS3 executable was called programmatically from R using system calls, allowing automated batch processing.
+Bootstrap datasets were generated internally by Stock Synthesis using the expected values of the base model as the underlying data-generating process. For each bootstrap replicate ( b = 1, \dots, B ), a new dataset was simulated and the estimation model was refitted, producing a set of bootstrap estimates for key population variables.
 
-3. **Bias Calculation**: For each parameter $\theta$, the bootstrap estimate of bias was calculated as:
+Let ( \hat{\theta}b \) denote the estimate of a population quantity (e.g., spawning stock biomass, recruitment, or depletion) obtained from bootstrap replicate ( b ), and let ( \hat{\theta}*{\text{base}} \) denote the corresponding estimate from the base model fitted to the observed data.
 
-$$
-\hat{Bias}(\hat{\theta}) = \bar{\theta}^* - \hat{\theta}
-$$
-where $\hat{\theta}$ is the parameter estimate from the original data, and $\bar{\theta}^*$ is the mean of bootstrap estimates across replicates.
-
-4. **Confidence Intervals**: Bootstrap percentile confidence intervals were obtained from the empirical distribution of parameter estimates from the bootstrap replicates.
-
-## Parametric Bootstrapping Procedure in Stock Synthesis (`SS3`)
-
-The parametric bootstrapping approach implemented in **Stock Synthesis (SS3)** aims to simulate new datasets by sampling from the **observation model** used in the likelihood, conditional on the expected values predicted by the model. This procedure is useful for evaluating model performance and quantifying uncertainty in stock assessments.
-
-#### Step 1: Calculate Expected Values
-
-The model first calculates the **expected values** for each type of observation (abundance indices, length compositions, age compositions, discards, and tagging data). These values correspond to the model-predicted observations $\hat{y}_i$ that minimize the likelihood:
+To quantify departures of bootstrap estimates from the base model, relative deviations were computed as:
 
 $$
-\hat{y}_i = f(\theta)
+\text{RelDev}*b = \frac{\hat{\theta}*b - \hat{\theta}*{\text{base}}}{\hat{\theta}*{\text{base}}}
 $$
 
-where $\theta$ represents the vector of estimated parameters.
+This metric was calculated for spawning stock biomass (SSB), recruitment, and depletion, and summarized across bootstrap replicates using empirical distributions and histograms. A distribution centered around zero indicates that bootstrap estimates are consistent with the base model, whereas systematic shifts reflect sensitivity of the estimates to the particular realization of the observed data.
 
-These expected values are then used as the **mean** or **center** of the distributions from which new pseudo-observations are sampled.
+### Root Mean Squared Error (RMSE)
 
-#### Step 2: Simulate Observations Using Likelihood-Based Distributions
-
-Each observation type is resampled using a distribution **corresponding to its likelihood function**. The sampling includes observation error and model-estimated variability (such as overdispersion or extra SD).
-
-Abundance indices are typically assumed to follow a **log-normal distribution**:
+To further quantify estimation uncertainty, the root mean squared error (RMSE) of SSB estimates was computed across bootstrap replicates for each year ( t ):
 
 $$
-\log(I_i^{\text{boot}}) \sim \mathcal{N}\left( \log(\hat{I}_i), \sigma_i^2 \right)
+\text{RMSE}*t = \sqrt{
+\frac{1}{B}
+\sum*{b=1}^{B}
+\left(
+\hat{SSB}*{b,t} - \hat{SSB}*{\text{base},t}
+\right)^2
+}
 $$
 
-where:
+where ( \hat{SSB}{b,t} ) is the spawning stock biomass estimated in bootstrap replicate ( b ) for year ( t ), and ( \hat{SSB}*{\text{base},t} ) is the corresponding estimate from the base model.
 
-$I_i^{\text{boot}}$ is the bootstrapped index.
-$\hat{I}_i$ is the model-predicted index.
-$\sigma_i^2 = \text{Input CV}^2 + \text{Extra SD}^2 + \text{Variance Adjustment}$
+Because RMSE is scale-dependent, a relative RMSE was also computed to facilitate interpretation:
 
-Other error types (e.g., normal, t-distribution) may also be used depending on the `Errtype` setting in the control file.
+$$
+\text{RMSE}_{\text{rel},t} =
+\frac{
+\text{RMSE}*t
+}{
+\hat{SSB}*{\text{base},t}
+}
+$$
 
-> **Figure 1**: Sampling lognormal indices of abundance.
+This relative metric allows comparison of estimation error across years with different biomass levels and provides a dimensionless measure of estimator precision.
 
-```{r fig1, fig.cap="Lognormal sampling of abundance index", echo=FALSE}
-set.seed(42)
-x <- rlnorm(1000, meanlog = log(1), sdlog = 0.3)
-hist(x, breaks = 50, main = "Bootstrapped abundance index",
-     xlab = "Index value", 
-     col = "lightblue")
-abline(v = mean(x), col = "red", lwd = 2)
-```
+It is important to note that this bootstrap analysis does **not** represent a formal bias test relative to a known true operating model. Instead, it evaluates the extent to which estimates from the base model are influenced by the specific realization of the observed data. Systematic deviations between bootstrap distributions and base model estimates therefore indicate **data-dependence and estimation instability**, rather than intrinsic estimator bias.
+
+This diagnostic framework provides a practical and transparent assessment of uncertainty and robustness in the base assessment model under the assumed minimum size limit of 25 mm total length.
+
+
+
+### Mean Absolute Scaled Error (MASE)
+
+MASE is a **scale-independent measure of forecast accuracy**. It compares the mean absolute error of a model (here, between bootstrap SSB and base SSB) to the mean absolute error of a naive baseline forecast, typically the one-step lag model:
+
+$$
+\text{MASE} = \frac{\text{MAE}_{\text{model}}}{\text{MAE}_{\text{naive}}}
+$$
+
+Where the naive model assumes that the best forecast for year $t+1$ is the observed SSB in year $t$. MASE allows comparison of forecast performance across datasets with different scales. Interpretation:
+
+* **MASE < 1** → the model outperforms the naive forecast
+* **MASE ≈ 1** → the model performs similarly to naive forecast
+* **MASE > 1** → the model performs worse than naive forecast
+
+Thus, MASE indicates whether the bootstrap SSB predictions are **statistically better than a simple persistence model**, providing a standardized metric for model evaluation.
+
+
 
 # Results
 
@@ -158,46 +167,51 @@ The bootstrap focuses on manipulating the length composition data from your clam
 This is particularly important for clam assessments because size structure directly influences estimates of growth, mortality, and reproductive capacity. The randomization technique works by taking each length frequency observation and applying random multipliers between 0.9 and 1.1, which introduces plus or minus 10% variability around each observed proportion. It then resamples using a multinomial distribution to maintain realistic count structure, simulating the natural sampling variability you would see if you repeated your field sampling multiple times. This approach captures how uncertainty in size structure data propagates through to key management quantities like spawning stock biomass and recruitment estimates, giving you a realistic range of possible outcomes for your clam population assessment.
 
 
-1. Chunk to generate bootstrap files from `starter.ss` file.
-
 ```{r eval=FALSE}
-dir_test    <- here::here("s01")        # Reference model (2.5 MLS fixed)
-# 1.1 Modificar el archivo starter.ss para generar bootstrap
-starter_file <- SS_readstarter(file = file.path(dir_test,
-                                               "starter.ss"),
-                              verbose = FALSE)
-# Cambiar el número de archivos de datos a producir (3 o más para bootstrap)
-# 3 = archivo original + expected values + 1 bootstrap
-# Para 100 bootstrap, usar 102
-starter_file$N_bootstraps <- 102  # 100 bootstrap + original + expected values
-# esto cambiará el archivo original starter.ss. tener copia
-
-# Escribir el starter modificado
-SS_writestarter(starter_file, dir = dir_test, overwrite = TRUE)
-
-# 1.2 Ejecutar SS3 para generar los archivos bootstrap
-r4ss::run(
-  dir = dir_test,
-  exe = "../executable/ss3_opt_osx_arm64",
-  extras = "-nox -nohess",
-  skipfinished = FALSE,
-  show_in_console = TRUE# change to true to watch the output go past
-)
+dir_test <- here::here("EM", "s01")         # Reference model (2.5 MLS fixed)
+exe_path  <- here::here("executable", "ss3_opt_osx_arm64")
+dir_boots_master <- here::here("EM", "s01", "bootstrap_runs")
 ```
 
-This generates `data_boot_001.ss`, `data_boot_002.ss`, ..., `data_boot_100.ss`
+
+```{r}
+
+
+# ------------------------------------------------------------
+# Read base model
+# ------------------------------------------------------------
+base_model <- SS_output(
+  dir = dir_test,
+  verbose = FALSE,
+  printstats = FALSE
+)
+
+ssb_base_df <- base_model$timeseries |>
+  dplyr::select(Yr, SpawnBio) |>
+  dplyr::rename(SSB = SpawnBio) |>
+  mutate(Yr = as.numeric(Yr))
+
+recruit_base_df <- base_model$timeseries |>
+  dplyr::select(Yr, Recruit_0) |>
+  dplyr::rename(Recruitment = Recruit_0) |>
+  mutate(Yr = as.numeric(Yr))
+
+depl_base_df <- base_model$derived_quants |>
+  filter(grepl("^Bratio_", Label)) |>
+  transmute(
+    Yr = as.numeric(gsub("Bratio_", "", Label)),
+    depletion = Value
+  )
+
+```
 
 
 2. Run each bootstrap model
 
 ```{r eval=FALSE, echo=TRUE}
-# 1. Rutas absolutas y seguras
-dir_test         <- here("EM", "s01")
-dir_boots_master <- here("EM", "s01", "bootstrap_runs")
-exe_path         <- here("executable", "ss3_opt_osx_arm64")
 
 # IMPORTANTE: Dar permisos de ejecución al archivo (solo Mac/Linux)
-system(paste("chmod +x", exe_path))
+#system(paste("chmod +x", exe_path))
 
 # 2. Función de ejecución con verificación de ruta
 run_bootstrap <- function(boot_num, base_dir, master_dir, exe) {
@@ -253,127 +267,77 @@ cat("Modelos finalizados con éxito:", exitos, "de 100\n")
 ```
 
 
-```{r eval=FALSE}
-dir_test    <- here::here("s01")  
-#### PASO 3: LEER Y COMPILAR RESULTADOS
-# 3.1 Leer modelo base
-base_model <- SS_output(dir = dir_test, verbose = FALSE, printstats = FALSE)
-
-read_bootstrap_results <- function(boot_num, output_dir = "bootstrap_runs") {
-  boot_dir <- file.path(output_dir, paste0("boot_", sprintf("%03d", boot_num)))
-  
-  tryCatch({
-    model <- SS_output(dir = boot_dir, verbose = FALSE, printstats = FALSE)
-    
-    get_param <- function(label) {
-      val <- model$parameters$Value[model$parameters$Label == label]
-      if(length(val) == 0) return(NA_real_) else return(val)
-    }
-    # en esta lista agregar otras varibles o parametros
-    list(
-      bootstrap = boot_num,
-      SSB = model$timeseries[model$timeseries$Yr >= 2003 & model$timeseries$Yr <= 2023, c("Yr", "SpawnBio")],
-      recruitment = model$timeseries[model$timeseries$Yr >= 2003 & model$timeseries$Yr <= 2023, c("Yr", "Recruit_0")],
-      depletion = model$derived_quants[model$derived_quants$Label == "Bratio_2028", "Value"],
-      R0 = get_param("SR_LN(R0)"),
-      M = get_param("NatM_p_1_Fem_GP_1"),
-      h = get_param("SR_BH_steep")
-    )
-  }, error = function(e) {
-    warning(paste("Error reading bootstrap", boot_num, ":", e$message))
-    return(NULL)
-  })
-}
-# Read data of boostrap
-bootstrap_results <- lapply(1:n_bootstrap, read_bootstrap_results)
-bootstrap_results <- bootstrap_results[!sapply(bootstrap_results, is.null)]
-```
-
-
-## Testing Bias in Reference Model `s1` 
-
 ```{r}
-dir_test    <- here::here("s01")  
-#### PASO 3: LEER Y COMPILAR RESULTADOS
-# 3.1 Leer modelo base
-base_model <- SS_output(dir = dir_test, verbose = FALSE, printstats = FALSE)
-# compile SSB data
-ssb_boot_df <- do.call(rbind, lapply(bootstrap_results, function(x) {
-  if (!is.null(x$SSB)) {
-    data.frame(x$SSB, bootstrap = x$bootstrap)
-  }
-}))
-names(ssb_boot_df)[2] <- "SSB"
+# ------------------------------------------------------------
+# Read bootstrap models ONCE
+# ------------------------------------------------------------
+boot_dirs <- list.dirs(dir_boots, recursive = FALSE)
 
-# compile Recruitment data
-recruit_boot_df <- do.call(rbind, lapply(bootstrap_results, function(x) {
-  if (!is.null(x$recruitment)) {
-    data.frame(x$recruitment, bootstrap = x$bootstrap)
-  }
-}))
-names(recruit_boot_df)[2] <- "Recruitment"
+bootstrap_results <- lapply(seq_along(boot_dirs), function(i) {
+  
+  ss <- SS_output(
+    dir = boot_dirs[i],
+    verbose = FALSE,
+    printstats = FALSE
+  )
+  
+  list(
+    bootstrap = i,
+    parameters = ss$parameters,
+    derived_quants = ss$derived_quants,
+    timeseries = ss$timeseries
+  )
+})
 
-# Reference model
-ssb_base_df <- base_model$timeseries[base_model$timeseries$Yr >= 2003 & 
-                                       base_model$timeseries$Yr <= 2023, 
-                                     c("Yr", "SpawnBio")]
-names(ssb_base_df)[2] <- "SSB"
+bootstrap_results <- Filter(Negate(is.null), bootstrap_results)
 
-recruit_base_df <- base_model$timeseries[base_model$timeseries$Yr >= 2003 & 
-                                           base_model$timeseries$Yr <= 2023, 
-                                        c("Yr", "Recruit_0")]
-names(recruit_base_df)[2] <- "Recruitment"
 ```
+
 ```{r}
 # ====================================================================
 # Genera estadisticas simples
 # ====================================================================
 # 4.1 Estadísticas resumidas por año
-ssb_stats <- ssb_boot_df %>%
-  group_by(Yr) %>%
-  dplyr::summarise(
-    mean = mean(SSB, na.rm = TRUE),
-    median = median(SSB, na.rm = TRUE),
-    sd = sd(SSB, na.rm = TRUE),
-    q025 = quantile(SSB, 0.025, na.rm = TRUE),
-    q975 = quantile(SSB, 0.975, na.rm = TRUE),
-    cv = sd/mean,
-    .groups = 'drop'
-  )
-
-recruit_stats <- recruit_boot_df %>%
-  group_by(Yr) %>%
-  dplyr::summarise(
-    mean = mean(Recruitment, na.rm = TRUE),
-    median = median(Recruitment, na.rm = TRUE),
-    sd = sd(Recruitment, na.rm = TRUE),
-    q025 = quantile(Recruitment, 0.025, na.rm = TRUE),
-    q975 = quantile(Recruitment, 0.975, na.rm = TRUE),
-    cv = sd/mean,
-    .groups = 'drop'
-  )
-
-# 4.2 Parámetros derivados
-derived_params <- data.frame(
-  bootstrap = sapply(bootstrap_results, function(x) x$bootstrap),
-  depletion = sapply(bootstrap_results, function(x) x$depletion),
-  R0 = sapply(bootstrap_results, function(x) x$R0)
+# ------------------------------------------------------------
+# Long data.frames
+# ------------------------------------------------------------
+ssb_boot_df <- do.call(
+  rbind,
+  lapply(bootstrap_results, function(x) {
+    data.frame(
+      Yr = as.numeric(x$timeseries$Yr),
+      SSB = x$timeseries$SpawnBio,
+      bootstrap = x$bootstrap
+    )
+  })
 )
 
-# Estadísticas de parámetros derivados
-param_stats <- derived_params %>%
-  dplyr::summarise(
-    depletion_mean = mean(depletion, na.rm = TRUE),
-    depletion_sd = sd(depletion, na.rm = TRUE),
-    depletion_q025 = quantile(depletion, 0.025, na.rm = TRUE),
-    depletion_q975 = quantile(depletion, 0.975, na.rm = TRUE),
-    R0_mean = mean(R0, na.rm = TRUE),
-    R0_sd = sd(R0, na.rm = TRUE),
-    R0_q025 = quantile(R0, 0.025, na.rm = TRUE),
-    R0_q975 = quantile(R0, 0.975, na.rm = TRUE)
-  )
+rec_boot_df <- do.call(
+  rbind,
+  lapply(bootstrap_results, function(x) {
+    data.frame(
+      Yr = as.numeric(x$timeseries$Yr),
+      Recruitment = x$timeseries$Recruit_0,
+      bootstrap = x$bootstrap
+    )
+  })
+)
 
-kbl(param_stats)
+depl_boot_df <- do.call(
+  rbind,
+  lapply(bootstrap_results, function(x) {
+    
+    SSB0 <- x$timeseries$SpawnBio[x$timeseries$Yr == min(x$timeseries$Yr)]
+    
+    data.frame(
+      Yr = as.numeric(x$timeseries$Yr),
+      depletion = x$timeseries$SpawnBio / SSB0,
+      bootstrap = x$bootstrap
+    )
+  })
+)
+
+
 ```
 
 
@@ -381,258 +345,304 @@ kbl(param_stats)
 # ====================================================================
 # PASO 5: VISUALIZACIÓN
 # ====================================================================
-# 5.1 Gráfico de SSB con formato uniforme
-p_ssb <- ggplot() +
-  geom_line(data = ssb_boot_df, 
-            aes(x = Yr, y = SSB, group = bootstrap), 
-            color = "gray", alpha = 0.1) +
-  geom_ribbon(data = ssb_stats, 
-              aes(x = Yr, ymin = q025, ymax = q975), 
-              alpha = 0.2, fill = "gray80") +
-  # Media bootstrap línea gris dashed
-  geom_line(data = ssb_stats, 
-            aes(x = Yr, y = mean), 
-            color = "gray40", size = 1) +
-  # Modelo base línea azul sólida
-  geom_line(data = ssb_base_df, 
-            aes(x = Yr, y = SSB), 
-            color = "blue") +
-  labs(x = "", y = "SSB") +
-  scale_x_continuous(breaks = seq(2003,2023,2)) +
-  theme_few() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+trayb <- ggplot(ssb_boot_df, aes(x = Yr, y = SSB, group = bootstrap)) +
+  geom_line(alpha = 0.1, colour = "grey40") +
+  geom_line(
+    data = ssb_base_df,
+    aes(x = Yr, y = SSB),
+    inherit.aes = FALSE,
+    colour = "blue",
+    linewidth = 1
+  ) +
+  theme_bw()
 
-# 5.2 Gráfico de Reclutamiento con mismo estilo
-p_recruit <- ggplot() +
-  geom_line(data = recruit_boot_df, 
-            aes(x = Yr, y = Recruitment, group = bootstrap), 
-            color = "gray", alpha = 0.1) +
-  geom_ribbon(data = recruit_stats, 
-              aes(x = Yr, ymin = q025, ymax = q975), 
-              alpha = 0.2, fill = "gray80") +
-  geom_line(data = recruit_stats, 
-            aes(x = Yr, y = mean), 
-            color = "gray40", size = 1) +
-  geom_line(data = recruit_base_df, 
-            aes(x = Yr, y = Recruitment), 
-            color = "blue") +
-  labs(x = "", y = "Recruit") +
-  scale_x_continuous(breaks = seq(2003,2023,2)) +
-  theme_few() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
-# 5.3 Histogramas de parámetros derivados
-p_depletion <- ggplot(derived_params, aes(x = depletion)) +
-  geom_histogram(bins = 30, alpha = 0.7, color= "lightgrey", 
-                 fill = "lightblue") +
-  geom_vline(xintercept = base_model$derived_quants[base_model$derived_quants$Label == "Bratio_2026", "Value"], 
-             color = "red", size = 0.9) +
+trayre <- ggplot(rec_boot_df %>% 
+         filter(Yr >2002,
+             Yr < 2023), aes(x = Yr, y = Recruitment, group = bootstrap)) +
+  geom_line(alpha = 0.1, colour = "grey40") +
+  geom_line(
+    data = recruit_base_df%>% 
+      filter(Yr >2002,
+             Yr < 2023),
+    aes(x = Yr, y = Recruitment),
+    inherit.aes = FALSE,
+    colour = "blue",
+    linewidth = 1
+  ) +
+  theme_bw()
+
+traydepl <- ggplot(
+  depl_boot_df %>% filter(Yr >2002,
+             Yr < 2023),
+  aes(x = Yr, y = depletion, group = bootstrap)
+) +
+  geom_line(alpha = 0.1, colour = "grey40") +
+  geom_line(
+    data = depl_base_df %>% filter(Yr > 2002,
+             Yr < 2023),
+    aes(x = Yr, y = depletion),
+    inherit.aes = FALSE,
+    colour = "blue",
+    linewidth = 1
+  ) +
   labs(
-       x = "Bratio", y = "Frecuency") +
-  theme_few()
+    y = "Depletion",
+    x = "Year"
+  ) +
+  theme_bw()
+```
+
+
+```{r,fig.height=3, fig.width=10}
+ssb_compare <- ssb_boot_df |>
+  left_join(ssb_base_df, by = "Yr") |>
+  mutate(rel_dev = (SSB.x - SSB.y) / SSB.y)
+
+hist_ssb <- ggplot(ssb_compare, aes(x = rel_dev)) +
+  geom_histogram(bins = 30, fill = "grey70", color = "grey40") +
+  geom_vline(xintercept = 0, colour = "red") +
+  labs(
+    x = "SSB relative deviation (bootstrap - base) / base",
+    y = "Frequency",
+    title = "SSB – relative deviation (bootstrap)"
+  ) +
+  theme_minimal()
+rec_compare <- rec_boot_df |>
+  left_join(recruit_base_df, by = "Yr") |>
+  mutate(rel_dev = (Recruitment.x - Recruitment.y) / Recruitment.y)
+
+hist_rec <- ggplot(rec_compare, aes(x = rel_dev)) +
+  geom_histogram(bins = 30, fill = "grey70", color = "grey40") +
+  geom_vline(xintercept = 0, colour = "red") +
+  labs(
+    x = "Recruitment relative deviation (bootstrap - base) / base",
+    y = "Frequency",
+    title = "Recruitment – relative deviation (bootstrap)"
+  ) +
+  theme_minimal()
+depl_compare <- depl_boot_df |>
+  left_join(depl_base_df, by = "Yr") |>
+  mutate(rel_dev = (depletion.x - depletion.y) / depletion.y)
+
+hist_depl <- ggplot(depl_compare, aes(x = rel_dev)) +
+  geom_histogram(bins = 30, fill = "grey70", color = "grey40") +
+  geom_vline(xintercept = 0, colour = "red") +
+  labs(
+    x = "Depletion relative deviation (bootstrap - base) / base",
+    y = "Frequency",
+    title = "Depletion – relative deviation (bootstrap)"
+  ) +
+  theme_minimal()
+
+```
+
+
+
+```{r}
+fig_tray <- ggarrange(
+  trayb,
+  trayre,
+  traydepl,
+  ncol = 3,
+  labels = c("A", "B", "C")
+)
+
+fig_hist <- ggarrange(
+  hist_ssb,
+  hist_rec,
+  hist_depl,
+  ncol = 3,
+  labels = c("D", "E", "F")
+)
+
+fig_final <- ggarrange(
+  fig_tray,
+  fig_hist,
+  ncol = 1
+)
+fig_final
+
+```
+
+
+## Interpretation of Bootstrap Diagnostics
+
+Figure X summarizes the bootstrap diagnostics for the base assessment model assuming a minimum total length of 25 mm. Panels A–C show temporal trajectories of spawning stock biomass (SSB), recruitment, and depletion, respectively, with grey lines representing bootstrap replicates and the blue line indicating the base model fitted to the observed data. Panels D–F display the distributions of relative deviations between bootstrap estimates and the base model for the same variables.
+
+### Trajectory-based diagnostics (Panels A–C)
+
+Bootstrap trajectories broadly reproduce the temporal patterns of the base model for all three population variables, indicating that the estimation model is structurally capable of recovering the main population dynamics implied by the assessment. However, bootstrap trajectories are consistently centered above the base model in several periods, particularly for SSB and depletion. This pattern suggests that estimates derived from the observed dataset represent a lower realization within the distribution of plausible model outcomes rather than the central tendency of the estimation model.
+
+Recruitment trajectories exhibit substantially higher variability than SSB and depletion, with pronounced dispersion across bootstrap replicates. This behavior is expected given the weak direct observability of recruitment and its strong dependence on process error and model assumptions. Despite this variability, the base recruitment trajectory remains within the bootstrap envelope throughout the time series.
+
+### Relative deviation diagnostics (Panels D–F)
+
+Relative deviation distributions provide a complementary view of estimator behavior. For SSB (Panel D), deviations are moderately centered near zero but exhibit a right-skewed distribution, indicating that bootstrap estimates tend to exceed the base model estimate more frequently than they fall below it. Recruitment deviations (Panel E) display a broader and more asymmetric distribution, reflecting high estimation uncertainty and sensitivity to data realization. In contrast, depletion deviations (Panel F) are comparatively narrower and more symmetric, indicating greater stability of this derived quantity.
+
+Importantly, none of the relative deviation distributions exhibit extreme displacement away from zero, suggesting the absence of severe systematic estimation bias. Instead, the observed patterns are consistent with moderate data-dependence of the estimation results.
+
+
+
+```{r}
+ssb_compare <- ssb_boot_df |>
+  left_join(
+    ssb_base_df |> dplyr::rename(SSB_base = SSB),
+    by = "Yr"
+  ) |>
+  dplyr::rename(SSB_boot = SSB)
+
+rec_compare <- rec_boot_df |>
+  left_join(
+    recruit_base_df |> dplyr::rename(Recruitment_base = Recruitment),
+    by = "Yr"
+  ) |>
+  dplyr::rename(Recruitment_boot = Recruitment)
+
+depl_compare <- depl_boot_df |>
+  left_join(
+    depl_base_df |> dplyr::rename(depletion_base = depletion),
+    by = "Yr"
+  ) |>
+  dplyr::rename(depletion_boot = depletion)
+```
+
+
+
+```{r}
+p_ssb <- ggplot(
+  ssb_compare,
+  aes(x = SSB_base, y = SSB_boot)
+) +
+  geom_point(alpha = 0.05) +
+  geom_abline(slope = 1, intercept = 0, colour = "red") +
+  coord_equal() +
+  labs(
+    x = "SSB (base model)",
+    y = "SSB (bootstrap)"
+  ) +
+  theme_bw()
+
+p_rec <- ggplot(
+  rec_compare,
+  aes(x = Recruitment_base, y = Recruitment_boot)
+) +
+  geom_point(alpha = 0.05) +
+  geom_abline(slope = 1, intercept = 0, colour = "red") +
+  coord_equal() +
+  labs(
+    x = "Recruitment (base model)",
+    y = "Recruitment (bootstrap)"
+  ) +
+  theme_bw()
+
+p_depl <- ggplot(
+  depl_compare,
+  aes(x = depletion_base, y = depletion_boot)
+) +
+  geom_point(alpha = 0.05) +
+  geom_abline(slope = 1, intercept = 0, colour = "red") +
+  coord_equal() +
+  labs(
+    x = "Depletion (base model)",
+    y = "Depletion (bootstrap)"
+  ) +
+  theme_bw()
+```
+
+
+
+```{r}
+ggarrange(
+  p_ssb,
+  p_rec,
+  p_depl,
+  ncol = 3,
+  labels = c("A", "B", "C")
+)
+```
+
+
+* **Puntos sobre la línea roja** → bootstrap ≈ base
+* **Nube simétrica alrededor de la línea** → estimador no sesgado
+* **Nube sistemáticamente sobre la línea** → base subestima
+* **Recruitment** debería verse más disperso (normal)
+* **Depletion** debería verse más compacto (buena señal)
+
+
+
+```{r}
+# ------------------------------------------------------------
+# RMSE
+# ------------------------------------------------------------
+ssb_compare <- ssb_boot_df |>
+  left_join(
+    ssb_base_df |> dplyr::rename(SSB_base = SSB),
+    by = "Yr"
+  ) |>
+  dplyr::rename(SSB_boot = SSB)
+
+
+rmse_by_year_rel <- ssb_compare |>
+  dplyr::filter(!is.na(SSB_base)) |>
+  dplyr::group_by(Yr) |>
+  dplyr::summarise(
+    RMSE_rel = sqrt(mean((SSB_boot - SSB_base)^2)) /
+      mean(SSB_base),
+    .groups = "drop"
+  )
+
+ggplot(rmse_by_year_rel, aes(x = Yr, y = RMSE_rel)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(
+    yintercept = c(0.1, 0.2, 0.3),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  labs(
+    y = "Relative RMSE (RMSE / SSB_base)",
+    x = "Year"
+  ) +
+  theme_bw()
+
+
+
+
 ```
 
 
 ```{r}
-# 5.4 Mostrar gráficos
-ggarrange(
-  ggarrange(p_ssb, p_recruit, ncol = 2, labels = c("A", "B")),
-  p_depletion,
-  ncol = 1, nrow = 2,
-  heights = c(1, 1), # puedes ajustar proporción de altura
-  labels = c("", "C")
+# MAE del modelo naive (random walk)
+mae_naive <- mean(
+  abs(diff(ssb_base_df$SSB)),
+  na.rm = TRUE
 )
 
-```
-The bias analysis based on SSB, recruitment, and depletion reveals distinct patterns that point to potential structural issues in the model prior to 2013. In the **SSB** trajectory (panel A), bootstrap replicates show considerable dispersion and a tendency to deviate from the base model in the early period (2003–2012), suggesting instability in biomass estimates. This instability is also reflected in the **recruitment** estimates (panel B), where the spread among bootstrap realizations is wider before 2013, indicating higher sensitivity to input data and model assumptions. In both cases, the magnitude and variability of the bias diminish noticeably after 2013. The **depletion** distribution (panel C) further supports this pattern: the variability in the terminal Bratio estimates is relatively low, but the central tendency shifts closer to the base model’s value after 2013.
-
-This temporal shift coincides with the introduction of length–frequency data and the commencement of the abundance index series in 2013. The alignment between improved bias performance and these data additions suggests that the earlier bias patterns may have been driven by structural limitations in the model related to insufficient data support—particularly the absence of size composition and abundance index information—rather than purely stochastic variation. In this context, the post-2013 period benefits from richer and more informative datasets, allowing for better constraint of population parameters and a reduction of structural bias.
-
-Calcular desviación relativa entre bootstrap y modelo base por año
-
-```{r fig.width=6, fig.height=8, out.width="100%"}
-# 1. 
-ssb_devs <- ssb_boot_df %>%
-  left_join(ssb_base_df, by = "Yr") %>%
-  dplyr::rename(ssb_boot = SSB.x, ssb_base = SSB.y) %>%
-  mutate(rel_dev = (ssb_boot - ssb_base) / ssb_base)
-
-# 2. Histograma por año
-histboo <- ggplot(ssb_devs, aes(x = rel_dev)) +
-  geom_histogram(bins = 30, fill = "grey", color = "darkgrey") +
-  facet_wrap(~Yr, scales = "free_y",
-             ncol=4) +
-  geom_vline(xintercept = 0, color = "red") +
-  labs(
-    x = "SSB Relative Deviation (bootstrap - base) / base",
-    y = "Frecuency",
-    title = ""
-  ) +
-  theme_minimal()
-histboo
-```
-There is a right (positive) skewness: many years exhibit long right tails, indicating that several bootstrap replicates overestimated the spawning stock biomass (SSB) compared to the base model. In other words, the bias tends to be positive. Some years show more bias than others; for example, 2013, 2016, and 2020 display distributions clearly shifted to the right, suggesting the model may be more sensitive in those years, possibly due to smaller sample sizes, changes in selectivity, high recruitment, or other factors worth exploring.
-
-```{r }
-# Extraer valores como escalares individuales
-ssb_2023_val <- ssb_base_df$SSB[ssb_base_df$Yr == 2023]
-recruit_2023_val <- recruit_base_df$Recruitment[recruit_base_df$Yr == 2023]
-depletion_2023_val <- base_model$derived_quants$Value[base_model$derived_quants$Label == "Bratio_2023"]
-
-ssb_boot_mean <- ssb_stats$mean[ssb_stats$Yr == 2023]
-recruit_boot_mean <- recruit_stats$mean[recruit_stats$Yr == 2023]
-depletion_boot_mean <- param_stats$depletion_mean
-
-ssb_boot_sd <- ssb_stats$sd[ssb_stats$Yr == 2023]
-recruit_boot_sd <- recruit_stats$sd[recruit_stats$Yr == 2023]
-depletion_boot_sd <- param_stats$depletion_sd
-
-ssb_boot_q025 <- ssb_stats$q025[ssb_stats$Yr == 2023]
-recruit_boot_q025 <- recruit_stats$q025[recruit_stats$Yr == 2023]
-depletion_boot_q025 <- param_stats$depletion_q025
-
-ssb_boot_q975 <- ssb_stats$q975[ssb_stats$Yr == 2023]
-recruit_boot_q975 <- recruit_stats$q975[recruit_stats$Yr == 2023]
-depletion_boot_q975 <- param_stats$depletion_q975
-
-comparison_table <- data.frame(
-  Parameter = c("SSB_2023", "Recruit_2023", "Depletion_2023"),
-  Base_Model = c(ssb_2023_val, recruit_2023_val, depletion_2023_val),
-  Bootstrap_Mean = c(ssb_boot_mean, recruit_boot_mean, depletion_boot_mean),
-  Bootstrap_SD = c(ssb_boot_sd, recruit_boot_sd, depletion_boot_sd),
-  CI_Lower = c(ssb_boot_q025, recruit_boot_q025, depletion_boot_q025),
-  CI_Upper = c(ssb_boot_q975, recruit_boot_q975, depletion_boot_q975)
+# MAE del modelo (bootstrap vs base)
+mae_model <- mean(
+  abs(ssb_compare$SSB_boot - ssb_compare$SSB_base),
+  na.rm = TRUE
 )
 
-print(comparison_table)
-
-```
-
-
-```{r eval=FALSE}
-# Guardar resultados
-write.csv(ssb_stats, "ssb_bootstrap_stats.csv", row.names = FALSE)
-write.csv(recruit_stats, "recruitment_bootstrap_stats.csv", row.names = FALSE)
-write.csv(comparison_table, "bootstrap_comparison.csv", row.names = FALSE)
-```
-
-
-## Parameters distribution in resampling (100)
-
-```{r }
-# Parámetros base:
-h_base <- base_model$parameters$Value[base_model$parameters$Label == "SR_BH_steep"]
-R0_base <- base_model$parameters$Value[base_model$parameters$Label == "SR_LN(R0)"]
-
-# Extraer de la lista bootstrap_results
-h_boot <- sapply(bootstrap_results, function(x) x$h)
-R0_boot <- sapply(bootstrap_results, function(x) x$R0)
-
-```
-
-
-```{r }
-plot_histogram <- function(boot_values, base_value, param_name) {
-  df <- data.frame(value = boot_values)
-  ggplot(df, aes(x = value)) +
-    geom_histogram(binwidth = diff(range(boot_values))/30, fill = "lightgrey", color = "grey") +
-    geom_vline(xintercept = base_value, color = "red") +
-    labs(x = param_name,
-         y = "Frequency") +
-    theme_few()
-}
-
-p_h <- plot_histogram(h_boot, h_base, "Steepness (h)")
-p_R0 <- plot_histogram(R0_boot, R0_base, "R0")
-
-ggarrange(p_h, p_R0,
-          ncol = 2, nrow = 1,
-          labels = c("A", "B"))
-```
-## Assessment of Forecast Accuracy: RMSE and MASE
-
-**RMSE (Root Mean Squared Error) calculation:**
-
-Methodologically, RMSE quantifies the **average magnitude of the error** between model predictions (here, bootstrap estimates of SSB) and observed or reference values (base SSB from the fitted model), giving higher weight to larger errors due to the squaring of differences. It is defined as:
-
-$$
-\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (SSB_{\text{boot},i} - SSB_{\text{base},i})^2}
-$$
-
-RMSE is widely used to assess model fit and forecast accuracy. Lower RMSE values indicate closer agreement between model predictions and reference data. There are no strict universal thresholds, but as a rule of thumb:
-
-* **RMSE ≈ 0** → excellent fit
-* **RMSE small relative to the mean or range of the data** → acceptable model performance
-* High RMSE → large deviations, suggesting poor predictive accuracy
-
-In this context, RMSE provides a global measure of **how well bootstrap replicates reproduce the base SSB trajectory**, which is essential for evaluating model stability and uncertainty.
-
----
-
-**MASE (Mean Absolute Scaled Error) calculation:**
-MASE is a **scale-independent measure of forecast accuracy**. It compares the mean absolute error of a model (here, between bootstrap SSB and base SSB) to the mean absolute error of a naive baseline forecast, typically the one-step lag model:
-
-$$
-\text{MASE} = \frac{\text{MAE}_{\text{model}}}{\text{MAE}_{\text{naive}}}
-$$
-
-Where the naive model assumes that the best forecast for year $t+1$ is the observed SSB in year $t$. MASE allows comparison of forecast performance across datasets with different scales. Interpretation:
-
-* **MASE < 1** → the model outperforms the naive forecast
-* **MASE ≈ 1** → the model performs similarly to naive forecast
-* **MASE > 1** → the model performs worse than naive forecast
-
-Thus, MASE indicates whether the bootstrap SSB predictions are **statistically better than a simple persistence model**, providing a standardized metric for model evaluation.
-
-For wedge clam analysis, the performance metrics are:
-
-
-```{r }
-# Unir por año
-ssb_compare <- left_join(ssb_boot_df, ssb_base_df, by = "Yr", suffix = c("_boot", "_base"))
-
-# Calcular el RMSE global (todos los bootstraps juntos)
-rmse <- ssb_compare %>%
-  mutate(error = SSB_boot - SSB_base) %>%
-  summarise(RMSE = sqrt(mean(error^2))) %>%
-  pull(RMSE)
-
-cat("RMSE:", round(rmse, 3), "\n")
-
-```
-
-
-```{r }
-# Crear serie base con lag para modelo naive
-ssb_base_df <- ssb_base_df %>%
-  arrange(Yr) %>%
-  mutate(SSB_lag1 = lag(SSB))
-
-# Calcular MAE del modelo naive (base)
-mae_naive <- mean(abs(diff(ssb_base_df$SSB)), na.rm = TRUE)
-
-# Calcular MAE entre cada bootstrap y el modelo base
-mae_model <- ssb_compare %>%
-  mutate(abs_error = abs(SSB_boot - SSB_base)) %>%
-  summarise(mae = mean(abs_error, na.rm = TRUE)) %>%
-  pull(mae)
-
-# Calcular MASE
+# Mean Absolute Scaled Error
 mase <- mae_model / mae_naive
 
-cat("MASE:", round(mase, 3), "\n")
+mase
 
 ```
 
-# Discussion
 
-To assess the robustness of model estimates and diagnose potential sources of structural bias, we conducted a non-parametric bootstrap analysis focusing on uncertainty in the length composition data. A total of 100 bootstrap replicates were generated by resampling the observed length compositions with replacement. Each replicate was used to refit the Stock Synthesis (SS3) model, maintaining all structural assumptions constant. The resulting bootstrap runs provided distributions of spawning stock biomass (SSB), recruitment, and depletion (Bratio), which were compared against the reference model.
+## Discussion
 
-Panel **A** of the figure illustrates the trajectories of spawning stock biomass (SSB) from 2003 to 2023 for each bootstrap replicate (gray lines), with the reference model shown in blue. Panel **B** shows analogous results for recruitment. Both panels reveal that during the initial years of the time series (2003–2017), there is substantial variability across bootstrap runs, indicating greater model sensitivity to resampled input data. This increased uncertainty and apparent bias in the early years is likely due to the **absence of fishery-independent index data and length composition data before 2018**. Consequently, model estimates for the early period are driven primarily by priors and assumptions (e.g., initial equilibrium conditions, natural mortality, and selectivity patterns), rather than empirical data. This results in **higher inter-replicate variability and bias**, particularly evident in SSB estimates.
+The bootstrap diagnostics indicate that the base assessment model is generally stable and internally consistent under resampling of expected data. However, the systematic positioning of the base model trajectories toward the lower tail of the bootstrap distributions for SSB and depletion suggests that the assessment outcomes are sensitive to the specific realization of the observed data. This behavior reflects estimation instability rather than formal statistical bias, as the bootstrap simulations are centered on expected values rather than a known operating model truth.
 
-In contrast, from **2018 onward**, when both length composition and index data are available, the bootstrap trajectories converge more closely around the reference model, indicating greater stability and less bias in estimated trends. This improvement highlights the critical role of observational data in constraining model outputs.
+Recruitment exhibits the highest uncertainty among the evaluated variables, which is consistent with theoretical expectations and empirical experience in integrated stock assessments. In contrast, depletion emerges as the most robust metric, displaying relatively low dispersion and limited skewness across bootstrap replicates. This result supports the use of depletion as a reliable indicator for management advice under the assumed minimum size limit.
 
-Panel **C** displays the distribution of depletion (Bratio) in 2028 across bootstrap replicates (histogram), with the reference model’s estimate indicated by the vertical red line. The histogram shows a moderately right-skewed distribution centered around 0.49–0.50, while the reference model estimate is lower than most replicates (around 0.43). This suggests that, under data resampling, the model tends to produce slightly **higher estimates of depletion** than the reference scenario, indicating a **possible downward bias in the reference model’s Bratio**. Such discrepancy may reflect structural assumptions, data weighting, or lack of informative data in the final projected year.
+Overall, these results suggest that while the base model provides a coherent description of population dynamics, management conclusions—particularly those relying on absolute biomass levels—should account for the observed sensitivity to data realization. Incorporating this uncertainty explicitly in decision-making frameworks would improve the robustness of management advice derived from the assessment.
+
+
+There is a right (positive) skewness: many years exhibit long right tails, indicating that several bootstrap replicates overestimated the spawning stock biomass (SSB) compared to the base model. In other words, the bias tends to be positive. Some years show more bias than others; for example, 2013, 2016, and 2020 display distributions clearly shifted to the right, suggesting the model may be more sensitive in those years, possibly due to smaller sample sizes, changes in selectivity, high recruitment, or other factors worth exploring.
 
 # Conclusion
 
