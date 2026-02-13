@@ -135,6 +135,7 @@ dir4 <- here::here("EM","s4")       # Scenario 2.6 (MLS fixed)
 
 # Output figure path
 fig_path <- here::here("Fig")           # Directory for saving figures
+exe <- here::here("executable", "ss3_opt_osx_arm64")
 ```
 
 ## Stock assessment model
@@ -288,7 +289,7 @@ selfix <- ggplot() +
   geom_col(data = hist_df, aes(x = length, y = density),
            fill = "grey70", color = "white", alpha = 0.2, width = 1) +
   geom_line(data = selectivity_data, 
-            aes(x = length, y = selectivity, color = Scenario), size = 1.2) +
+            aes(x = length, y = selectivity, color = Scenario), size = 0.9) +
   geom_line(data = maturity_data, 
             aes(x = length, y = maturity, color = Scenario), 
             linetype = "dotted", size=0.8) +
@@ -369,8 +370,8 @@ for (dir in directorios) {
 
 ```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
 r4ss::run(
-  dir = dirb,
-  exe = "../executable/ss3_opt_osx_arm64",
+  dir = dir3,
+  exe = here::here("executable", "ss3_opt_osx_arm64"),
   skipfinished = FALSE,
   show_in_console = TRUE
 )
@@ -379,9 +380,9 @@ r4ss::run(
 
 ```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
 #dir_test<-here("s01")
-base <- SS_output(dir=dirb,
-                         covar=T,
-                         forecast=T)
+# base <- SS_output(dir=dirb,
+#                          covar=T,
+#                          forecast=T)
 
 # SS_plots(base,
 #          uncertainty=T,
@@ -1496,7 +1497,9 @@ Retrospective analyses provide insights into the differences in estimation patte
 directorios <- c("s0",
                  "s1",
                  "s2",
-                 "s3",
+                 "s3",trtr
+                 
+                 
                  "s4")  
 for (dir in directorios) {
   retro(

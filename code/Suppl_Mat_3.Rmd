@@ -1,16 +1,16 @@
 ---
-title: "![](IEO-logo2.png){width=10cm}"
+title: "![](../Fig/IEO-logo2.png){width=10cm}"
 output:
   bookdown::pdf_document2:
     includes:
-      before_body: titulo3.sty
+      before_body: ../bib/titulo3.sty
     keep_tex: true
     latex_engine: xelatex
     number_sections: no
     toc: true
     toc_depth: 3
-bibliography: Donax.bib
-csl: apa.csl
+bibliography: ../bib/Donax.bib
+csl: ../bib/apa.csl
 link-citations: yes
 linkcolor: blue
 indent: no
@@ -167,7 +167,7 @@ The bootstrap focuses on manipulating the length composition data from your clam
 This is particularly important for clam assessments because size structure directly influences estimates of growth, mortality, and reproductive capacity. The randomization technique works by taking each length frequency observation and applying random multipliers between 0.9 and 1.1, which introduces plus or minus 10% variability around each observed proportion. It then resamples using a multinomial distribution to maintain realistic count structure, simulating the natural sampling variability you would see if you repeated your field sampling multiple times. This approach captures how uncertainty in size structure data propagates through to key management quantities like spawning stock biomass and recruitment estimates, giving you a realistic range of possible outcomes for your clam population assessment.
 
 
-```{r eval=FALSE}
+```{r}
 dir_test <- here::here("EM", "s01")         # Reference model (2.5 MLS fixed)
 exe_path  <- here::here("executable", "ss3_opt_osx_arm64")
 dir_boots_master <- here::here("EM", "s01", "bootstrap_runs")
@@ -175,8 +175,6 @@ dir_boots_master <- here::here("EM", "s01", "bootstrap_runs")
 
 
 ```{r}
-
-
 # ------------------------------------------------------------
 # Read base model
 # ------------------------------------------------------------
@@ -271,7 +269,7 @@ cat("Modelos finalizados con éxito:", exitos, "de 100\n")
 # ------------------------------------------------------------
 # Read bootstrap models ONCE
 # ------------------------------------------------------------
-boot_dirs <- list.dirs(dir_boots, recursive = FALSE)
+boot_dirs <- list.dirs(dir_boots_master, recursive = FALSE)
 
 bootstrap_results <- lapply(seq_along(boot_dirs), function(i) {
   
@@ -345,16 +343,21 @@ depl_boot_df <- do.call(
 # ====================================================================
 # PASO 5: VISUALIZACIÓN
 # ====================================================================
-trayb <- ggplot(ssb_boot_df, aes(x = Yr, y = SSB, group = bootstrap)) +
+trayb <- ggplot(ssb_boot_df %>% 
+         filter(Yr >2002,
+             Yr < 2023), aes(x = Yr, y = SSB, group = bootstrap)) +
   geom_line(alpha = 0.1, colour = "grey40") +
   geom_line(
-    data = ssb_base_df,
+    data = ssb_base_df %>% 
+      filter(Yr >2002,
+             Yr < 2023),
     aes(x = Yr, y = SSB),
     inherit.aes = FALSE,
     colour = "blue",
     linewidth = 1
   ) +
-  theme_bw()
+  theme_bw()+
+  xlab("")
 
 
 trayre <- ggplot(rec_boot_df %>% 
@@ -370,7 +373,8 @@ trayre <- ggplot(rec_boot_df %>%
     colour = "blue",
     linewidth = 1
   ) +
-  theme_bw()
+  theme_bw()+
+  xlab("")
 
 traydepl <- ggplot(
   depl_boot_df %>% filter(Yr >2002,
@@ -388,9 +392,10 @@ traydepl <- ggplot(
   ) +
   labs(
     y = "Depletion",
-    x = "Year"
+    x = ""
   ) +
-  theme_bw()
+  theme_bw()+
+  xlab("")
 ```
 
 
@@ -554,11 +559,14 @@ p_depl <- ggplot(
 
 ```{r}
 ggarrange(
-  p_ssb,
+  trayre,
+  trayb,
+  traydepl,
   p_rec,
+  p_ssb,
   p_depl,
   ncol = 3,
-  labels = c("A", "B", "C")
+  nrow = 2
 )
 ```
 
@@ -592,7 +600,7 @@ rmse_by_year_rel <- ssb_compare |>
     .groups = "drop"
   )
 
-ggplot(rmse_by_year_rel, aes(x = Yr, y = RMSE_rel)) +
+p_rmse_ssb<- ggplot(rmse_by_year_rel, aes(x = Yr, y = RMSE_rel)) +
   geom_line() +
   geom_point() +
   geom_hline(
@@ -605,9 +613,67 @@ ggplot(rmse_by_year_rel, aes(x = Yr, y = RMSE_rel)) +
     x = "Year"
   ) +
   theme_bw()
-
-
-
+rec_compare <- rec_boot_df |>
+  left_join(
+    recruit_base_df |> dplyr::rename(Recruitment_base = Recruitment),
+    by = "Yr"
+  ) |>
+  dplyr::rename(Recruitment_boot = Recruitment)
+rmse_by_year_rel_rec <- rec_compare |>
+  dplyr::filter(!is.na(Recruitment_base)) |>
+  dplyr::group_by(Yr) |>
+  dplyr::summarise(
+    RMSE_rel = sqrt(mean((Recruitment_boot - Recruitment_base)^2)) /
+               mean(Recruitment_base),
+    .groups = "drop"
+  )
+p_rmse_rec <- ggplot(rmse_by_year_rel_rec, aes(x = Yr, y = RMSE_rel)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(
+    yintercept = c(0.1, 0.2, 0.3),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  labs(
+    y = "Relative RMSE (Recruitment)",
+    x = "Year"
+  ) +
+  theme_bw()
+depl_compare <- depl_boot_df |>
+  left_join(
+    depl_base_df |> dplyr::rename(depletion_base = depletion),
+    by = "Yr"
+  ) |>
+  dplyr::rename(depletion_boot = depletion)
+rmse_by_year_rel_depl <- depl_compare |>
+  dplyr::filter(!is.na(depletion_base)) |>
+  dplyr::group_by(Yr) |>
+  dplyr::summarise(
+    RMSE_rel = sqrt(mean((depletion_boot - depletion_base)^2)) /
+               mean(depletion_base),
+    .groups = "drop"
+  )
+p_rmse_depl <- ggplot(rmse_by_year_rel_depl, aes(x = Yr, y = RMSE_rel)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(
+    yintercept = c(0.1, 0.2, 0.3),
+    linetype = "dashed",
+    colour = "grey50"
+  ) +
+  labs(
+    y = "Relative RMSE (Depletion)",
+    x = "Year"
+  ) +
+  theme_bw()
+ggarrange(
+  p_rmse_ssb,   # el que ya hiciste
+  p_rmse_rec,
+  p_rmse_depl,
+  ncol = 3,
+  labels = c("A", "B", "C")
+)
 
 ```
 
