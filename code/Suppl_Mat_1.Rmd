@@ -499,7 +499,7 @@ indexplot <- ggplot(dat3_std, aes(x = year,
                                    group = index, 
                                    color = category)) +
   geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
+  geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(~index, scales = "free_y", ncol = 5) +
   scale_color_manual(values = c("FISHERY" = '#1b9e77', 
                                 "SURVEY" = '#d95f02')) + 
