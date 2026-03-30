@@ -130,7 +130,7 @@ dir2 <- here::here("EM","s2")       # Scenario 2.4 (MLS fixed)
 dir3 <- here::here("EM","s3")       # Scenario 2.5 (MLS fixed) (current MLS)
 dir4 <- here::here("EM","s4")       # Scenario 2.6 (MLS fixed)
 # # Simulated mean-based models
-# dir2.3 <- here::here("s1_2.3")      # Simulated model: 2.3 mean MLS
+dir2.3 <- here::here("EM","s1_2.3")      # Simulated model: 2.3 mean MLS
 # dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MLS
 # dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MLS (current MLS)
 # dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MLS
@@ -367,12 +367,11 @@ for (dir in directorios) {
     show_in_console = TRUE
   )
 }
-
 ```
 
 ```{r eval=F, echo=F, message=FALSE, warning=FALSE, include=FALSE}
 r4ss::run(
-  dir = dir3,
+  dir = dir1,
   exe = here::here("executable", "ss3_opt_osx_arm64"),
   skipfinished = FALSE,
   show_in_console = TRUE
@@ -382,9 +381,9 @@ r4ss::run(
 
 ```{r echo=F, message=FALSE, warning=FALSE, include=FALSE}
 #dir_test<-here("s01")
-# base <- SS_output(dir=dirb,
+# base <- SS_output(dir=dir2.3,
 #                          covar=T,
-#                          forecast=T)
+#                           forecast=T)
 
 # SS_plots(base,
 #          uncertainty=T,
@@ -567,7 +566,7 @@ tabla_resumen_texto <- tabla_resumen %>%
 ```
 Main variables population by scenario (Figure \@ref(fig:popvar2))
 
-```{r popvar2, fig.height=4, fig.width=8, out.width="100%", fig.cap="Time series of different populations variables"}
+```{r popvar2, fig.height=4, fig.width=9, fig.cap="Time series of different populations variables"}
 # Función de gráfico genérica
 # 1) Crear datos relativos a la media, manteniendo tus colores/escenarios
 # Relativo a la media para todas excepto Depletion
@@ -2083,45 +2082,51 @@ Final summary table (Table \@ref(tab:modelsummary)) with key metrics for each sc
 
 ```{r modelsummary, message=FALSE, warning=FALSE, fig.cap="Summary of key metrics across model scenarios"}
 
-extract_metrics <- function(model, name){
+extract_metrics <- function(model, name, ref_model = NULL){
   
-  # Valores SSB y Depletion en 2024 (último año de tu serie)
+  # Valores SSB y Depletion en 2024 (último año de la serie)
   ssb2024   <- model$sprseries$SSB[20]
   deple2024 <- model$sprseries$Deplete[20]
   BBMSY     <- model$Kobe$B.Bmsy[20]
   FFMSY     <- model$Kobe$F.Fmsy[20]
-  bio2024  <- model$timeseries$Bio_all[20]
-  ratiossb <- model$sprseries$SSBfished_eq[20] / model$SBzero
-  currentF <- model$timeseries$`F:_1`[20]
-  catchpre <- model$exploitation[20,7]
+  bio2024   <- model$timeseries$Bio_all[20]
+  ratiossb  <- model$sprseries$SSBfished_eq[20] / model$SBzero
+  currentF  <- model$timeseries$`F:_1`[20]
+  catchpre  <- model$exploitation[20, 7]
   
   # Decline últimos 5 años (%)
-  ssb <- model$sprseries$SSB[1:20]
-  last5 <- tail(ssb, 5)
+  ssb    <- model$sprseries$SSB[1:20]
+  last5  <- tail(ssb, 5)
   decline_pct <- (last5[1] - last5[5]) / last5[1] * 100
   
-  # Fallos de reclutamiento (%)
-  reclut <- model$timeseries$Recruit_0
-  threshold <- 0.5 * mean(reclut, na.rm = TRUE)
-  failures <- mean(reclut < threshold, na.rm = TRUE) * 100
+  # Reclutamiento: CV como medida de variabilidad
+  reclut       <- model$timeseries$Recruit_0
+  reclut_valid <- reclut[reclut > 0 & !is.na(reclut)]
+  cv_recruit   <- sd(reclut_valid) / mean(reclut_valid) * 100
   
-
+  # Años bajo percentil 25 del modelo de referencia (s3)
+  # Si se pasa ref_model se usa su distribución como baseline
+  if (!is.null(ref_model)) {
+    reclut_ref  <- ref_model$timeseries$Recruit_0
+    reclut_ref  <- reclut_ref[reclut_ref > 0 & !is.na(reclut_ref)]
+    threshold   <- quantile(reclut_ref, 0.25)
+  } else {
+    threshold   <- quantile(reclut_valid, 0.25)
+  }
+  low_recruit_pct <- mean(reclut_valid < threshold) * 100
+  
   # Devolver como data.frame
   data.frame(
-    Scenario = name,
-    SSB2024 = ssb2024,
-    Depletion2024 = deple2024,
-    B_Bmsy = BBMSY,
-    F_Fmsy = FFMSY,
-    Decline5yr_pct = decline_pct,
-    Recruitment_failures_pct = failures,
-    Bio2024 = bio2024,
-    Ratio_SSB = ratiossb,
-    CurrentF = currentF,
-    Catch_pre = catchpre
+    Scenario           = name,
+    SSB2024            = ssb2024,
+    Depletion2024      = deple2024,
+    B_Bmsy             = BBMSY,
+    Decline5yr_pct     = decline_pct,
+    CV_Recruitment     = cv_recruit,
+    LowRecruitment_pct = low_recruit_pct,
+    Bio2024            = bio2024
   )
 }
-
 
 # --------------------------------------
 # Listado de modelos y nombres
@@ -2134,31 +2139,47 @@ models_list <- list(
   "s4" = base.model4
 )
 
-# Extraer métricas principales
+# Modelo de referencia (s3 = MLS 25 mm)
+ref_model <- models_list$s3
+
+# Extraer métricas usando s3 como baseline para low recruitment
 metrics_list <- lapply(names(models_list), function(x){
-  extract_metrics(models_list[[x]], x)
+  extract_metrics(models_list[[x]], x, ref_model = ref_model)
 })
+
 res_final <- bind_rows(metrics_list)
 
-res_wide <- res_final %>%
-  pivot_longer(
-    cols = -Scenario,
-    names_to = "Metric",
-    values_to = "Value"
-  ) %>%
-  pivot_wider(
-    names_from = Scenario,
-    values_from = Value
-  )
+# Etiquetas legibles para las métricas
+metric_labels <- c(
+  SSB2024            = "SSB 2024 (t)",
+  Depletion2024      = "Depletion 2024 (B/B0)",
+  B_Bmsy             = "B/Bmsy",
+  Decline5yr_pct     = "SSB decline last 5 yr (%)",
+  CV_Recruitment     = "CV Recruitment (%)",
+  LowRecruitment_pct = "Years below ref. P25 (%)",
+  Bio2024            = "Total biomass 2024 (t)"
+)
 
-kbl(res_wide, 
-    caption = "Summary of key metrics across model scenarios", 
-    digits = 2) %>%
-  kable_styling(full_width = FALSE,
-                position = "center",
-                bootstrap_options = c("striped", "hover")) %>%
-  row_spec(0, bold = TRUE) %>%  # Encabezados en negrita
-  column_spec(1, bold = TRUE)   # Primera columna en negrita (opcional)
+res_wide <- res_final %>%
+  pivot_longer(cols = -Scenario, names_to = "Metric", values_to = "Value") %>%
+  pivot_wider(names_from = Scenario, values_from = Value) %>%
+  mutate(Metric = recode(Metric, !!!metric_labels))
+
+# Tabla
+kbl(res_wide,
+    caption = "Summary of key population metrics across MLS scenarios",
+    digits  = 2,
+    align   = c("l", rep("r", length(models_list)))) %>%
+  kable_styling(
+    full_width        = FALSE,
+    position          = "center",
+    bootstrap_options = c("striped", "hover", "condensed")
+  ) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE) %>%
+  # Resaltar fila de depletion (fila 2) como métrica clave
+  row_spec(2, background = "#EAF4FB")
+
 ```
 
 
