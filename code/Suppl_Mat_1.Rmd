@@ -47,9 +47,9 @@ options(bitmapType = "cairo")
 # Context
 
 
-This document contains the workflow and supplementary analyses for the manuscript "Evaluating the effects of varying minimum legal sizes on population variables in the wedge clam (*Donax trunculus*) fishery using a length-to-age model". It provides a fully self-contained, code-based framework including all scripts required to run the stock assessment models, generate outputs, and evaluate management scenarios.
+This document contains the workflow and supplementary analyses for the manuscript "Evaluating the effects of varying Minimum Conservation Reference Sizes on population variables in the wedge clam (*Donax trunculus*) fishery using a length-to-age model". It provides a fully self-contained, code-based framework including all scripts required to run the stock assessment models, generate outputs, and evaluate management scenarios.
 
-The assessment is based on an integrated length-to-age structured model implemented in Stock Synthesis (SS3, version 3.30.23) [@Methot2013; @Methot2023], applied to the Gulf of Cádiz, Spain. The analyses explore how alternative minimum legal size regulations affect key population variables such as spawning biomass, recruitment, and fishing mortality, thus offering scientific support for management advice.
+The assessment is based on an integrated length-to-age structured model implemented in Stock Synthesis (SS3, version 3.30.23) [@Methot2013; @Methot2023], applied to the Gulf of Cádiz, Spain. The analyses explore how alternative Minimum Conservation Reference Size regulations affect key population variables such as spawning biomass, recruitment, and fishing mortality, thus offering scientific support for management advice.
 
 This work is conducted within the framework of scientific advice coordinated by the Centro Oceanografico Cádiz (IEO-CSIC), building upon the long-term monitoring program FEMP 04, which has collected biological, fishery-dependent, and environmental data since 2013. These data provide the foundation for this first formal stock assessment of *D. trunculus* in the region using an integrated modeling approach.
 
@@ -122,18 +122,18 @@ purrr::walk(required_packages,
 ```{r echo=FALSE}
 # Set model and figure paths using `here::here()` for reproducibility
 # dir_test     <- here::here("s01")       # Test model
-dirb     <- here::here("EM","basecase")        # Initial model (2.2 MLS fixed)
-dir0    <- here::here("EM","s0")        # Scenario 2.2 (MLS fixed)
-dir1     <- here::here("EM","s1")        # Reference model (2.3 MLS fixed)
+dirb     <- here::here("EM","basecase")        # Initial model (2.2 MCRS fixed)
+dir0    <- here::here("EM","s0")        # Scenario 2.2 (MCRS fixed)
+dir1     <- here::here("EM","s1")        # Reference model (2.3 MCRS fixed)
 # Alternative management scenarios
-dir2 <- here::here("EM","s2")       # Scenario 2.4 (MLS fixed)
-dir3 <- here::here("EM","s3")       # Scenario 2.5 (MLS fixed) (current MLS)
-dir4 <- here::here("EM","s4")       # Scenario 2.6 (MLS fixed)
+dir2 <- here::here("EM","s2")       # Scenario 2.4 (MCRS fixed)
+dir3 <- here::here("EM","s3")       # Scenario 2.5 (MCRS fixed) (current MCRS)
+dir4 <- here::here("EM","s4")       # Scenario 2.6 (MCRS fixed)
 # # Simulated mean-based models
-dir2.3 <- here::here("EM","s1_2.3")      # Simulated model: 2.3 mean MLS
-# dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MLS
-# dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MLS (current MLS)
-# dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MLS
+dir2.3 <- here::here("EM","s1_2.3")      # Simulated model: 2.3 mean MCRS
+# dir2.4 <- here::here("s1_2.4")      # Simulated model: 2.4 mean MCRS
+# dir2.5 <- here::here("s1_2.5")      # Simulated model: 2.5 mean MCRS (current MCRS)
+# dir2.6 <- here::here("s1_2.6")      # Simulated model: 2.6 mean MCRS
 
 # Output figure path
 fig_path <- here::here("Fig")           # Directory for saving figures
@@ -281,11 +281,11 @@ hist_df <- data.frame(
 
 
 esc_labels <- c(
-  "s0" = "s0: MLS = 22 mm",
-  "s1" = "s1: MLS = 23 mm",
-  "s2" = "s2: MLS = 24 mm",
-  "s3" = "s3: MLS = 25 mm (Baseline)",
-  "s4" = "s4: MLS = 26 mm"
+  "s0" = "s0: MCRS = 22 mm",
+  "s1" = "s1: MCRS = 23 mm",
+  "s2" = "s2: MCRS = 24 mm",
+  "s3" = "s3: MCRS = 25 mm (Baseline)",
+  "s4" = "s4: MCRS = 26 mm"
 )
 selfix <- ggplot() +
   geom_col(data = hist_df, aes(x = length, y = density),
@@ -322,20 +322,25 @@ selfix <- ggplot() +
   xlim(5, 40)
 
 selfix
-
+ggsave(filename = file.path(fig_path, "Scenarios.jpeg"),
+       plot = selfix,
+       width = 8,
+       height = 3,
+       units = "in",
+       dpi = 300)
 ```
 
-This dual approach allows for evaluating the effect of hypothetical changes in population structure (e.g., as a result of shifting LMLS), and the influence of assuming specific selectivity patterns in the assessment model, independent of actual data structure. By combining observed and simulated datasets, this strategy supports a robust evaluation of how assumed biological structure and model assumptions interact, particularly regarding exploitation patterns and size-based selectivity in this artisanal fishery. Total set of scenario testes is displayed in Table \@ref{tab:Tab2}.
+This dual approach allows for evaluating the effect of hypothetical changes in population structure (e.g., as a result of shifting MCRS), and the influence of assuming specific selectivity patterns in the assessment model, independent of actual data structure. By combining observed and simulated datasets, this strategy supports a robust evaluation of how assumed biological structure and model assumptions interact, particularly regarding exploitation patterns and size-based selectivity in this artisanal fishery. Total set of scenario testes is displayed in Table \@ref{tab:Tab2}.
 
 ```{r Tab2, message=FALSE, warning=FALSE, fig.cap="Description of the alternative scenarios and variants of the base model"}
 esc <- c("s0","s1", "s2", "s3", "s4")
 
 description <- c(
-   "22 mm. Strong reduction of current MLS",
-  "23 mm. Lower-than-current MLS",
-  "24 mm. Slightly below current MLS",
-  "25 mm. Current MLS (baseline)",
-  "26 mm. Above current MLS"
+   "22 mm. Strong reduction of current MCRS",
+  "23 mm. Lower-than-current MCRS",
+  "24 mm. Slightly below current MCRS",
+  "25 mm. Current MCRS (baseline)",
+  "26 mm. Above current MCRS"
 )
 
 ESC1 <- cbind(esc, description)
@@ -836,7 +841,7 @@ ggpubr::ggarrange(p0,
                   nrow = 1, common.legend = TRUE)
 ```
 
-The figure shows the autocorrelation functions (ACF) of predicted recruitment for the five scenarios (`s0` to `s4`). Each panel represents one scenario, with lag on the x-axis and autocorrelation on the y-axis. All scenarios show strong positive autocorrelation at lag 1, indicating that recruitment in one year is positively correlated with recruitment in the previous year. The decay rate and the magnitude of negative autocorrelation at intermediate lags are broadly similar across scenarios, indicating consistent short-term dynamics in recruitment deviations across management scenarios. In summary, recruitment residuals exhibit strong short-term autocorrelation, but the effect diminishes quickly after a few years, and the different MLS scenarios do not strongly alter this autocorrelation pattern.
+The figure shows the autocorrelation functions (ACF) of predicted recruitment for the five scenarios (`s0` to `s4`). Each panel represents one scenario, with lag on the x-axis and autocorrelation on the y-axis. All scenarios show strong positive autocorrelation at lag 1, indicating that recruitment in one year is positively correlated with recruitment in the previous year. The decay rate and the magnitude of negative autocorrelation at intermediate lags are broadly similar across scenarios, indicating consistent short-term dynamics in recruitment deviations across management scenarios. In summary, recruitment residuals exhibit strong short-term autocorrelation, but the effect diminishes quickly after a few years, and the different MCRS scenarios do not strongly alter this autocorrelation pattern.
 
 
 ### Productivity and Interannual Variability by Scenario
@@ -981,7 +986,7 @@ The convergence criterion used for model calibration is set to a final threshold
 
 ### Length Expected
 
-Figure \@ref(fig:lengthexp) illustrates the expected length distributions over time for fleet 1 (COMERCIAL) across different scenarios. The ridgeline plots display the expected length frequencies (Exp) for each year, with the x-axis representing length bins (Bin) and the y-axis representing years (Yr). Each panel corresponds to a different scenario, allowing for a comparative visualization of how length distributions evolve under varying management strategies. The red points indicate the weighted mean length for each year, providing a summary measure of central tendency within the length distributions. Additionally, vertical red lines denote the minimum legal size (MLS) for each scenario, highlighting how changes in MLS influence the observed length structure of the population over time.
+Figure \@ref(fig:lengthexp) illustrates the expected length distributions over time for fleet 1 (COMERCIAL) across different scenarios. The ridgeline plots display the expected length frequencies (Exp) for each year, with the x-axis representing length bins (Bin) and the y-axis representing years (Yr). Each panel corresponds to a different scenario, allowing for a comparative visualization of how length distributions evolve under varying management strategies. The red points indicate the weighted mean length for each year, providing a summary measure of central tendency within the length distributions. Additionally, vertical red lines denote the Minimum Conservation Reference Size (MCRS) for each scenario, highlighting how changes in MCRS influence the observed length structure of the population over time.
 
 ```{r lengthexp, fig.height=4, fig.width=12, out.width="100%", fig.cap="Expected length distribution by scenario and fleet"}
 # Preparar los datos por escenario y flota 1
@@ -1036,7 +1041,7 @@ lengthexp
 ```
 ### Pearson Residuals 
 
-This Figure \@ref(fig:pearson) provides a diagnostic assessment of the statistical performance of alternative model scenarios in fitting length composition data across years, fleets, and model assumptions. Across the four model scenarios, representing a baseline (2.5 cm as reference) and three values of Minimum Legal Size (MLS: 2.3 cm, 2.4 cm, and 2.6 cm), the reference model generally shows balanced and relatively small residuals across both commercial and populational fleets, suggesting a good fit to the observed data. However, as MLS increases, particularly in the 2.4 cm and 2.6 cm scenarios, a pattern of larger and more systematic residuals emerges, especially within the populational fleet. These patterns are most evident from 2016 onwards and are concentrated in mid-size length bins, indicating a potential mismatch between the model's structural assumptions and the actual population dynamics under stricter MLS regimes. Specifically, the models may be underestimating the proportion of intermediate-size individuals, suggesting limitations in capturing shifts in selectivity, growth, or recruitment processes. The commercial fleet, in contrast, shows more consistent residual behavior across all scenarios, which may imply a better alignment between model assumptions and observed exploitation dynamics. Temporally, early years (2013–2015) show relatively small and scattered residuals, but residual magnitude and clustering increase in later years, reinforcing the need to consider temporal variability in key processes. Overall, this residual analysis indicates a decline in model fit quality with increasing MLS, highlighting the need for more flexible model structures—such as time-varying selectivity or refined growth and recruitment models—to improve biological realism and ensure robust predictions in management strategy evaluations.
+This Figure \@ref(fig:pearson) provides a diagnostic assessment of the statistical performance of alternative model scenarios in fitting length composition data across years, fleets, and model assumptions. Across the four model scenarios, representing a baseline (2.5 cm as reference) and three values of Minimum Conservation Reference Size (MCRS: 2.3 cm, 2.4 cm, and 2.6 cm), the reference model generally shows balanced and relatively small residuals across both commercial and populational fleets, suggesting a good fit to the observed data. However, as MCRS increases, particularly in the 2.4 cm and 2.6 cm scenarios, a pattern of larger and more systematic residuals emerges, especially within the populational fleet. These patterns are most evident from 2016 onwards and are concentrated in mid-size length bins, indicating a potential mismatch between the model's structural assumptions and the actual population dynamics under stricter MCRS regimes. Specifically, the models may be underestimating the proportion of intermediate-size individuals, suggesting limitations in capturing shifts in selectivity, growth, or recruitment processes. The commercial fleet, in contrast, shows more consistent residual behavior across all scenarios, which may imply a better alignment between model assumptions and observed exploitation dynamics. Temporally, early years (2013–2015) show relatively small and scattered residuals, but residual magnitude and clustering increase in later years, reinforcing the need to consider temporal variability in key processes. Overall, this residual analysis indicates a decline in model fit quality with increasing MCRS, highlighting the need for more flexible model structures—such as time-varying selectivity or refined growth and recruitment models—to improve biological realism and ensure robust predictions in management strategy evaluations.
 
 
 
@@ -1334,7 +1339,7 @@ rmse <-ggplot(dfrmse_long, aes(x = variable,
 ```
 
 
-Model performance differed across scenarios (Figure \@ref(fig:rmse3)). RMSE values (left panel) were lowest under s0 and increased progressively through s1–s4, with higher medians and greater variability at larger MLS values. Scenario s3 (25 mm MLS, reference case) showed intermediate RMSE values relative to the other scenarios. Residual distributions (right panel) were centered around zero in all cases, with similar overall patterns across scenarios.
+Model performance differed across scenarios (Figure \@ref(fig:rmse3)). RMSE values (left panel) were lowest under s0 and increased progressively through s1–s4, with higher medians and greater variability at larger MCRS values. Scenario s3 (25 mm MCRS, reference case) showed intermediate RMSE values relative to the other scenarios. Residual distributions (right panel) were centered around zero in all cases, with similar overall patterns across scenarios.
 
 
 ```{r rmse3, fig.cap="RMSE and Residual values for krill model evaluation across scenarios (s1.1-s1.4), highlighting precision and prediction errors."}
@@ -2139,7 +2144,7 @@ models_list <- list(
   "s4" = base.model4
 )
 
-# Modelo de referencia (s3 = MLS 25 mm)
+# Modelo de referencia (s3 = MCRS 25 mm)
 ref_model <- models_list$s3
 
 # Extraer métricas usando s3 como baseline para low recruitment
@@ -2167,7 +2172,7 @@ res_wide <- res_final %>%
 
 # Tabla
 kbl(res_wide,
-    caption = "Summary of key population metrics across MLS scenarios",
+    caption = "Summary of key population metrics across MCRS scenarios",
     digits  = 2,
     align   = c("l", rep("r", length(models_list)))) %>%
   kable_styling(
